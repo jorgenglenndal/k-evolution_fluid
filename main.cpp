@@ -77,6 +77,7 @@ using namespace LATfield2;
 
 int main(int argc, char **argv)
 {
+
 #ifdef BENCHMARK
 	//benchmarking variables
 	double ref_time, ref2_time, cycle_start_time;
@@ -596,11 +597,11 @@ for (x.first(); x.test(); x.next())
   char filename_redshift[60];
   char filename_snapshot[60];
 
-  snprintf(filename_avg, sizeof(filename_avg),"./output/Result_avg.txt");
-  snprintf(filename_real, sizeof(filename_real),"./output/Result_real.txt");
-  snprintf(filename_fourier, sizeof(filename_fourier),"./output/Result_fourier.txt");
-  snprintf(filename_max, sizeof(filename_max),"./output/Results_max.txt");
-  snprintf(filename_snapshot, sizeof(filename_snapshot),"./output/snapshots.txt");
+  snprintf(filename_avg, sizeof(filename_avg),"../output/Result_avg.txt");
+  snprintf(filename_real, sizeof(filename_real),"../output/Result_real.txt");
+  snprintf(filename_fourier, sizeof(filename_fourier),"../output/Result_fourier.txt");
+  snprintf(filename_max, sizeof(filename_max),"../output/Results_max.txt");
+  snprintf(filename_snapshot, sizeof(filename_snapshot),"../output/snapshots.txt");
 
   // ofstream out(filename_avg,ios::out);
   ofstream out_avg(filename_avg,ios::out);
