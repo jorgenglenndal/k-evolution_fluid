@@ -38,6 +38,8 @@
 #include <iomanip>
 #include<fstream>
 #include<sstream>
+#include <limits> // Include the <limits> header
+#include <cmath>
 #endif
 #if defined(HAVE_CLASS) || defined(HAVE_HICLASS)
 #include "class.h"
@@ -320,6 +322,20 @@ COUT << "running on " << n*m << " cores." << endl;
   Field<Real> zeta_half_old;
   Field<Cplx> scalarFT_pi_old;
   Field<Cplx> scalarFT_zeta_half_old;
+  
+  //new
+  
+  //Field<Real> Sij;
+  //Field<Cplx> SijFT;
+  //Field<Real> Bi;
+  //Field<Cplx> BiFT;
+  //Sij.initialize(lat,3,3,symmetric);
+  //SijFT.initialize(latFT,3,3,symmetric);
+  //PlanFFT<Cplx> plan_Sij(&Sij, &SijFT);
+  //Bi.initialize(lat,3);
+  //BiFT.initialize(latFT,3);
+  //PlanFFT<Cplx> plan_Bi(&Bi, &BiFT);
+
   #endif
 	Field<Real> pi_k;
 	// Field<Real> zeta_integer;
@@ -590,18 +606,19 @@ for (x.first(); x.test(); x.next())
   FILE* Redshifts;
   FILE* snapshots_file;
 
-  char filename_avg[60];
-  char filename_real[60];
-  char filename_fourier[60];
-  char filename_max[60];
-  char filename_redshift[60];
-  char filename_snapshot[60];
+  char filename_avg[100];
+  char filename_real[100];
+  char filename_fourier[100];
+  char filename_max[100];
+  char filename_redshift[100];
+  char filename_snapshot[100];
 
-  snprintf(filename_avg, sizeof(filename_avg),"../output/Result_avg.txt");
-  snprintf(filename_real, sizeof(filename_real),"../output/Result_real.txt");
-  snprintf(filename_fourier, sizeof(filename_fourier),"../output/Result_fourier.txt");
-  snprintf(filename_max, sizeof(filename_max),"../output/Results_max.txt");
-  snprintf(filename_snapshot, sizeof(filename_snapshot),"../output/snapshots.txt");
+
+  snprintf(filename_avg, sizeof(filename_avg), "%sResult_avg.txt",sim.output_path);
+  snprintf(filename_real, sizeof(filename_real),"%sResult_real.txt",sim.output_path);
+  snprintf(filename_fourier, sizeof(filename_fourier),"%sResult_fourier.txt",sim.output_path);
+  snprintf(filename_max, sizeof(filename_max),"%sResults_max.txt",sim.output_path);
+  snprintf(filename_snapshot, sizeof(filename_snapshot),"%ssnapshots.txt",sim.output_path);
 
   // ofstream out(filename_avg,ios::out);
   ofstream out_avg(filename_avg,ios::out);
@@ -700,7 +717,14 @@ string str_filename3 ;
       //****PRINTING AVERAGE OVER TIME
       //****************************
       // check_field(  zeta_half, 1. , " H pi_k", numpts3d);
-      avg_pi =average(  pi_k, Hconf(a, fourpiG, cosmo), numpts3d ) ;
+	
+      avg_pi =average(  pi_k, Hconf(a, fourpiG,
+	  #ifdef HAVE_HICLASS_BG
+	  H_spline,acc
+	  #else
+	  cosmo
+	  #endif
+	  ), numpts3d ) ;
       avg_zeta =average(  zeta_half,1., numpts3d ) ;
       avg_phi =average(  phi , 1., numpts3d ) ;
 
@@ -711,7 +735,7 @@ string str_filename3 ;
         #else
           cosmo
         #endif
-        ,numpts3d ) ;
+	  ),numpts3d ) ;
       max_zeta =maximum(  zeta_half,1., numpts3d ) ;
       max_phi =maximum(  phi , 1., numpts3d ) ;
 
@@ -719,7 +743,7 @@ string str_filename3 ;
       // if(parallel.isRoot())
       // {
         // fprintf(Result_avg,"\n %20.20e %20.20e ", tau, avg ) ;
-      out_avg<<setw(9) << tau <<"\t"<< setw(9) << avg_pi<<"\t"<< setw(9) << avg_zeta<<"\t"<< setw(9) << avg_phi<<"\t"<< setw(9) << 1./a -1.<<endl;
+      out_avg<<setw(9) << tau <<"\t"<< setw(9) << avg_pi<<"\t"<< setw(9) << avg_zeta<<"\t"<< setw(9) << avg_phi<<"\t"<< setw(9) << 1./a -1. << endl;
 
         out_max<<setw(9) << tau <<"\t"<< setw(9) << max_pi<<"\t"<< setw(9) << max_zeta<<"\t"<< setw(9) << max_phi<<endl;
 
@@ -1282,17 +1306,65 @@ for (x.first(); x.test(); x.next())
 //**********************
 //Kessence - LeapFrog:START
 //**********************
+#ifdef NONLINEAR_TEST
+
+  double max_absValue_zeta = numeric_limits<double>::min();
+  double max_absValue_pi = numeric_limits<double>::min();
+  //double max_absValue_zeta_old = numeric_limits<double>::min();
+  //double max_absValue_pi_old = numeric_limits<double>::min();
+  double avg_absValue_zeta = 0.;
+  double avg_absValue_pi= 0.;
+  //double avg_absValue_zeta_old = 0.;
+  //double avg_absValue_pi_old= 0.;	
+  //double absValue_zeta_old;
+  //double absValue_pi_old;
+  double absValue_zeta;
+  double absValue_pi;
+  int numpts = sim.numpts; 
+  double previous_avg_zeta;// = average(  zeta_half,1., numpts3d ) ;
+  //double avg_zeta_old =average(  zeta_half,1., numpts3d ) ;
+
+
+//  for (int x_ind = 0; x_ind < numpts; x_ind++) {
+//         for (int y_ind = 0; y_ind < numpts; y_ind++) {
+//            for (int z_ind = 0; z_ind < numpts; z_ind++) {
+//	  	     //absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
+//			 //absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
+//			 absValue_zeta_old = abs(zeta_half_old(x_ind,y_ind,z_ind));
+//			 absValue_pi_old = abs(pi_k_old(x_ind,y_ind,z_ind));
+//			 //avg_absValue_zeta += absValue_zeta;
+//			 //avg_absValue_pi += absValue_pi;
+//			 avg_absValue_zeta_old += absValue_zeta_old;
+//             avg_absValue_pi_old += absValue_pi_old;
+//               if (absValue_zeta_old > max_absValue_zeta_old){
+//                  max_absValue_zeta_old = absValue_zeta_old;
+//               }
+//			   if (absValue_pi_old > max_absValue_pi_old){
+//                  max_absValue_pi_old = absValue_pi_old;
+//               }
+//            }
+//         }
+//      }
+//	  avg_absValue_zeta_old /= numpts3d;
+//	  avg_absValue_pi_old /= numpts3d;
+#endif
   double a_kess=a;
   if(cycle==0)
   {
     for (i=0;i<sim.nKe_numsteps;i++)
     {
+	  #ifdef NONLINEAR_TEST
+	  previous_avg_zeta = average(  zeta_half,1., numpts3d ) ;
+	  #endif
       update_zeta_eq(-dtau/ (2. * sim.nKe_numsteps), dx, a_kess, phi, phi_old, chi, chi_old, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
       zeta_half.updateHalo();
     }
   }
 	for (i=0;i<sim.nKe_numsteps;i++)
 	{
+    #ifdef NONLINEAR_TEST
+	previous_avg_zeta = average(  zeta_half,1., numpts3d ) ;	
+	#endif
     update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess, phi, phi_old, chi, chi_old, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     zeta_half.updateHalo();
     rungekutta4bg(a_kess, fourpiG, H_spline, acc, dtau  / sim.nKe_numsteps / 2.0);
@@ -1317,21 +1389,79 @@ for (x.first(); x.test(); x.next())
 
       // NL TESTS
       #ifdef NONLINEAR_TEST
-      //   //Make snapshots and power arround blowup TIME
-      avg_zeta =average(  zeta_half,1., numpts3d ) ;
-      avg_zeta_old =average(  zeta_half_old,1., numpts3d ) ;
-      avg_pi =average(  pi_k,1., numpts3d ) ;
-      avg_phi =average(  phi , 1., numpts3d ) ;
-      // avg_pi_old =average(  pi_k_old, 1., numpts3d ) ;
+      //   //Make snapshots and power around blowup TIME
+	  //std::string output_path_string = sim.output_path;
+	  //std::cout << "cycle = " << cycle << std::endl;
+	  //std::cout << "before test" << std::endl;
 
-      if ( avg_zeta > 1.e-7 && abs(avg_zeta/avg_zeta_old)>1.02 && snapcount_b< sim.num_snapshot_kess )
-      {
+      avg_zeta =average(  zeta_half,1., numpts3d ) ;
+      //avg_zeta_old =average(  zeta_half_old,1., numpts3d ) ;
+      //avg_pi =average(  pi_k,1., numpts3d ) ;
+      //avg_phi =average(  phi , 1., numpts3d ) ;
+      // avg_pi_old =average(  pi_k_old, 1., numpts3d ) ;
+	  //if (parallel.isRoot()){
+	  
+	  //int numpts = sim.numpts;  
+      // Find the maximum value in the grid
+//      for (int x_ind = 0; x_ind < numpts; x_ind++) {
+//         for (int y_ind = 0; y_ind < numpts; y_ind++) {
+//            for (int z_ind = 0; z_ind < numpts; z_ind++) {
+//	  	     absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
+//			 absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
+//			 avg_absValue_zeta += absValue_zeta;
+//			 avg_absValue_pi += absValue_pi;
+//			 
+//               if (absValue_zeta > max_absValue_zeta){
+//                  max_absValue_zeta = absValue_zeta;
+//               }
+//			   if (absValue_pi > max_absValue_pi){
+//                  max_absValue_pi = absValue_pi;
+//               }
+//            }
+//         }
+//      }
+//	  avg_absValue_zeta /= numpts3d;
+//	  avg_absValue_pi /= numpts3d;
+
+
+      if (parallel.isRoot()){
+        cout << " " << endl;
+        cout << "z                          = " << 1./(a_kess) -1.  << endl;
+		cout << "iteration in kessence loop = " << i << endl;
+        //cout << "max |zeta|                 = " << max_absValue_zeta << endl;//",     max zeta old = " << max_absValue_zeta_old  <<endl;
+        //cout << "avg |zeta|                 = " << avg_absValue_zeta << endl;//",     avg zeta old = "  << avg_absValue_zeta_old<<  endl;
+		//cout << "max |pi|                   = " << max_absValue_pi <<   endl;//",     max pi old   = " << max_absValue_pi_old << endl;
+        //cout << "avg |pi|                   = " << avg_absValue_pi <<   endl;//",     avg pi old   = " << avg_absValue_pi_old<< endl;
+		//cout << "max |zeta| / avg |zeta|    = " << max_absValue_zeta/avg_absValue_zeta << endl;
+		//cout <<  "avg zeta / avg zeta      = " << avg_absValue_zeta/avg_absValue_zeta_old << endl;
+		//cout << "max |pi| / avg |pi|        = " << max_absValue_pi/avg_absValue_pi << endl;
+		//cout << "avg zeta_old               = " << avg_zeta_old << endl;
+		cout << "avg zeta                   = " << avg_zeta << endl;
+		//cout <<  "avg pi / avg pi old      = " << avg_absValue_pi/avg_absValue_pi_old << endl;
+
+		
+		//cout << "avgValue pi = " << avg_pi << endl;
+		//cout << " " << endl;
+		//if (std::isnan(avgValue_pi)){
+		//	parallel.abortForce();
+		//}
+
+		//parallel.abortForce();
+	  }
+
+      //if ( avg_zeta > 1.e-7 && abs(avg_zeta/avg_zeta_old)>1.0001 && snapcount_b< sim.num_snapshot_kess )
+      if (abs(avg_zeta/previous_avg_zeta) > 10. && snapcount_b <= sim.num_snapshot_kess && avg_zeta > 1e-7) //(max_absValue_pi/avg_absValue_pi < 1.005 && snapcount_b <= sim.num_snapshot_kess)) || (abs(avg_zeta) >  && snapcount_b <= sim.num_snapshot_kess))
+	  {
       if(parallel.isRoot())  cout << "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";
+	     std::string output_path_string = sim.output_path;
+
+     	  //std::string output_path_string = sim.output_path;
+
         // writeSpectra(sim, cosmo, fourpiG, a, snapcount_b,
         //           &pcls_cdm, &pcls_b, pcls_ncdm, &phi,&pi_k, &zeta_half, &chi, &Bi,&T00_Kess, &T0i_Kess, &Tij_Kess, &source, &Sij, &scalarFT ,&scalarFT_pi, &scalarFT_zeta_half, &BiFT, &T00_KessFT, &T0i_KessFT, &Tij_KessFT, &SijFT, &plan_phi, &plan_pi_k, &plan_zeta_half, &plan_chi, &plan_Bi, &plan_T00_Kess, &plan_T0i_Kess, &plan_Tij_Kess, &plan_source, &plan_Sij);
-          str_filename =  "./output/pi_k_" + to_string(snapcount_b) + ".h5";
-          str_filename2 = "./output/zeta_" + to_string(snapcount_b) + ".h5";
-          str_filename3 = "./output/phi_" + to_string(snapcount_b) + ".h5";
+          str_filename =  output_path_string + "pi_k_" + to_string(snapcount_b) + ".h5";
+          str_filename2 = output_path_string + "zeta_" + to_string(snapcount_b) + ".h5";
+          str_filename3 = output_path_string + "phi_" + to_string(snapcount_b) + ".h5";
           pi_k.saveHDF5(str_filename);
           zeta_half.saveHDF5(str_filename2);
           phi.saveHDF5(str_filename3);
@@ -1349,10 +1479,28 @@ for (x.first(); x.test(); x.next())
           // {
           // out_snapshots<<"### 1- tau\t2- z \t3- a\t 4- zeta_avg\t 5- avg_pi\t 6- avg_phi\t 7- tau/boxsize\t 8- H_conf/H0 \t 9- snap_count"<<endl;
 
-          out_snapshots<<setw(9) << tau + dtau/sim.nKe_numsteps <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG, cosmo) / Hconf(1., fourpiG, cosmo)<<"\t"<< setw(9) <<snapcount_b  <<endl;
+          out_snapshots<<setw(9) << tau + dtau/sim.nKe_numsteps <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG,
+		  #ifdef HAVE_HICLASS_BG
+	          H_spline,acc
+	      #else
+	          cosmo
+	      #endif 
+		  ) / Hconf(1., fourpiG,
+		  #ifdef HAVE_HICLASS_BG
+	        H_spline, acc
+	      #else
+            cosmo
+	      #endif 
+		  ) << "\t"<< setw(9) <<snapcount_b  <<endl;
+		  
+		  sim.change_nKe_numsteps(100);
+		  if (parallel.isRoot()) cout << "nKe_numsteps = " << sim.nKe_numsteps << endl;
+
+	      
         }
-    #endif
-    }
+	
+	#endif
+	}
 
 
 #ifdef BENCHMARK
@@ -1415,9 +1563,9 @@ for (x.first(); x.test(); x.next())
       if ( avg_zeta > 1.e-7 && abs(avg_zeta/avg_zeta_old)>1.02 && snapcount_b< sim.num_snapshot_kess )
       {
       if(parallel.isRoot())  cout << "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";
-          str_filename =  "./output/pi_k_" + to_string(snapcount_b) + ".h5";
-          str_filename2 = "./output/zeta_" + to_string(snapcount_b) + ".h5";
-          str_filename3 = "./output/phi_" + to_string(snapcount_b) + ".h5";
+          str_filename =  "../output/pi_k_" + to_string(snapcount_b) + ".h5";
+          str_filename2 = "../output/zeta_" + to_string(snapcount_b) + ".h5";
+          str_filename3 = "../output/phi_" + to_string(snapcount_b) + ".h5";
           pi_k.saveHDF5(str_filename);
           zeta_half.saveHDF5(str_filename2);
           phi.saveHDF5(str_filename3);
@@ -1676,6 +1824,6 @@ for (x.first(); x.test(); x.next())
 		ioserver.stop();
 	}
 #endif
-
+        //std::cout << Hconf() << std::endl;
 	return 0;
 }

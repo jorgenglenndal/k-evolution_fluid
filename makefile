@@ -1,15 +1,13 @@
 # programming environment
 
-COMPILER     := mpic++
-INCLUDE      := -I/home/jorgen/src/master/master_project/LATfield2  -I/usr/include/hdf5/openmpi -I/home/jorgen/Documents/GitHub/hi_class/include  
+COMPILER     := mpicxx
+INCLUDE      := -I../../LATfield2 -I../hi_class/include  
 
 
 # add the path to LATfield2 and other libraries (if necessary)
-LIB          := -L/home/jorgen/src/lib/hdf5openmpi -L$(HOME)/local/lib -lhdf5 -lfftw3 -lm -lgsl -lgslcblas -L/home/jorgen/Documents/GitHub/hi_class -lclass
+LIB          := -lhdf5 -lfftw3 -lm -lgsl -lgslcblas -L../hi_class -lclass
 
-
-
-
+    
 
 
 EXEC         := kevolution_fluid
@@ -40,7 +38,7 @@ CDBG +=
 CFLAGS += $(CDBG)
 
 # further compiler options
-OPT          := -O3 -std=c++11
+OPT          := -fopenmp -O3 -std=c++11 
 
 $(EXEC): $(SOURCE) $(HEADERS) makefile
 	$(COMPILER) $< -o $@ $(OPT) $(DLATFIELD2) $(DGEVOLUTION) $(INCLUDE) $(LIB)

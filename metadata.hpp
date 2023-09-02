@@ -73,6 +73,8 @@
 #define MASK_PHI_PRIME 1048576
 #define MASK_DELTAKESS_DELTA 2097152
 
+//new
+//#define MASK_T0i_KESS 4194304
 
 #define ICFLAG_CORRECT_DISPLACEMENT 1
 #define ICFLAG_KSPHERE              2
@@ -256,7 +258,11 @@ struct metadata
 	int nKe_numsteps;
 	int Kess_source_gravity;
   int NL_kessence;
-  int bg_hiclass;// Using hiclass to evaluate time dependence of quantities!
+  int bg_hiclass;
+  void change_nKe_numsteps(int newValue){
+	nKe_numsteps = newValue;
+  }
+  // Using hiclass to evaluate time dependence of quantities!
 	//kessence end
 };
 
