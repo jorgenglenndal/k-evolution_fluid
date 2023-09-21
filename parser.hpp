@@ -1890,6 +1890,16 @@ parallel.abortForce();
   {
     sim.nKe_numsteps = 1;
   }
+  #ifdef NONLINEAR_TEST
+  if (!parseParameter(params, numparam, "new_nKe_numsteps",  sim.new_nKe_numsteps))
+  {
+    sim.new_nKe_numsteps = 10;
+    if(parallel.isRoot())  cout << "new_nKe_numsteps not specified "<< endl;	
+  }
+  #endif
+
+
+
   if (!parseParameter(params, numparam, "Kessence source gravity", sim.Kess_source_gravity))
   {
     sim.Kess_source_gravity = 0;

@@ -255,12 +255,21 @@ struct metadata
 	char restart_path[PARAM_MAX_LENGTH];
 	char basename_restart[PARAM_MAX_LENGTH];
 	//Kessence part
+	int snapcount_b = 1;
 	int nKe_numsteps;
+	int new_nKe_numsteps;
+	bool kess_inner_loop_check = false;
 	int Kess_source_gravity;
   int NL_kessence;
   int bg_hiclass;
   void change_nKe_numsteps(int newValue){
 	nKe_numsteps = newValue;
+  }
+  void kess_inner_loop_check_func(bool kess_bool){
+	kess_inner_loop_check = kess_bool;
+  }
+  void snapcount_b_add_one(){
+	snapcount_b += 1;
   }
   // Using hiclass to evaluate time dependence of quantities!
 	//kessence end

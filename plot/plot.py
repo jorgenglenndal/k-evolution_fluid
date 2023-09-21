@@ -1,30 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
+from matplotlib import cm
+
 from matplotlib import colors
-from matplotlib.colors import LogNorm
+#from matplotlib.colors import LogNorm
 import sys
-
-a = 5
-for i in range(a):
-    print(i)
-    if i ==3:
-        a = 10
-
-sys.exit(0)
+import matplotlib.animation as animation
+from matplotlib.animation import FuncAnimation
 
 
-#info
-### 1- tau      2- z    3- a     4- zeta_avg     5- avg_pi       6- avg_phi      7- tau/boxsize  8- H_conf/H0    9- snap_count
-#  3.00006         99.9101       0.00990981      1.95906e-14             0       2.38228e-22       2.99928         5.69406               2
-#  20.2266         1.89461         0.34547       -9.43277e-07    -0.00259686     -0.0130097        20.2258         1.00844               3
-#  20.2266         1.89415        0.345524       0.00378031      -0.00259686     -0.0130097        20.2258         1.00838               4
-#  20.2266         1.89392        0.345552          1.8174       -0.00259686     -0.0130097        20.2258         1.00835               5
-#  20.2266         1.89369        0.345579          186623       -0.00259686     -0.0130097        20.2258         1.00833               6
-#  20.2266         1.89347        0.345606       7.73383e+13     -0.00259686     -0.0130097        20.2258          1.0083               7
-#  20.2344         1.89324        0.345633       1.08417e+63     6.09617e+09     -0.0130422        20.2337         1.00827               8
 
-with open('/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test4/snapshots.txt', 'r') as file:
+
+
+path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/test_test_test/'
+
+with open(path + "snapshots.txt", 'r') as file:
     z = []
     for line in file:
         if line.startswith('#'):
@@ -36,6 +27,7 @@ with open('/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test4/snapshots.
                words[word] = float(words[word])
                
            if words[1] > 99:
+              print("Blowup before z = 99")
               continue
            else:
               z.append(words[1])
@@ -44,16 +36,25 @@ with open('/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test4/snapshots.
     #print(z[i])
 #sys.exit(0)
 filenames = []
+#filenames.append('/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test4/pi_k_5.h5')
+
 for i in range(len(z)):
-    filenames.append('/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test4/pi_k_' + str(i+1)+'.h5')
+
+    filenames.append(path + "pi_k_" + str(i+1)+'.h5')
 
 
 
 #filenames = ['/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_2.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_3.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_4.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_5.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_6.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_7.h5']
 #info = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test1/snapshots.txt'
 #zs = [1.89461,1.89415,1.89392,1.89369,1.89347,1.89324]
-for i in range(len(filenames)):
 
+data = []
+ims = []
+
+for i in range(len(filenames)):
+    #print(i)
+#cbar = 0
+#def update(i):
     with h5py.File(filenames[i], "r") as f:
         # Print all root level object names (aka keys) 
         # these can be group or dataset names 
@@ -98,23 +99,205 @@ for i in range(len(filenames)):
     #derivderiv = np.gradient(deriv[1])
     #max_derivderiv= np.argmax(np.ndarray.flatten(derivderiv[1]))
     #multi_indices = np.unravel_index(max_derivderiv, derivderiv[1].shape)
-
+    
     #print(multi_indices)
     x = np.abs(ds_arr[:,multi_indices[1],:])
-    min_overdensity = np.percentile(x,0)
-    max_overdensity = np.percentile(x,100)
+    #data.append(np.log10(x))
+    data.append(x)
+    print('Done file '+str(i+1) + '/' +str(int(len(filenames))))
+    #x_log = np.log10(x)
+    #not_first = False
+    
+    #if  i==0:
+    #min_overdensity = np.percentile(x,0)
+    #max_overdensity = np.percentile(x,100)
+    #   im = ax.imshow(x, cmap='magma', aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=colors.LogNorm(vmin=min_overdensity,vmax=max_overdensity), interpolation='bicubic')#)
+       #cbar = fig.colorbar(im, ax=ax, orientation='vertical')
+       #im.set_array(x.flatten())
+     #  ims.append([im])
+     #  continue
 
+       #return im
+    
+       #not_first = True
+    #xx = np.linspace(0,300,64)
+    #yy = np.linspace(0,300,64)
+    #XX,YY = np.meshgrid(xx,yy)
+
+    
+    #pcm = ax[0].pcolor(X, Y, Z,
+    #               norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()),
+    #               cmap='PuBu_r', shading='auto')
+    #fig.colorbar(pcm, ax=ax[0], extend='max')
+
+    #min_overdensity = np.percentile(x,0)
+    #max_overdensity = np.percentile(x,100)
     #offset = colors.TwoSlopeNorm(vmin=min_overdensity,vcenter=np.average(x) ,vmax=max_overdensity)
 
     #x = np.abs(ds_arr[:,multi_indices[1],:])
     #plt.imshow(np.abs(ds_arr[:,multi_indices[1],:])/np.amax(np.abs(ds_arr[:,multi_indices[1],:])), extent=[0, 200, 0, 200],cmap='viridis', aspect='auto', origin='lower')
-    plt.imshow(x,cmap='inferno', aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=LogNorm(vmin=min_overdensity,vmax=max_overdensity), interpolation='bicubic')#vmin=min_overdensity,vmax=max_overdensity)#,norm=LogNorm(),extent=[0, 200, 0, 200])#vmin=min_overdensity,vmax=max_overdensity)
-    #plt.title("Redshift = " + str(zs[i]))
-    plt.colorbar(label='Colorbar Label')
-    plt.xlabel('Mpc/h comoving')
-    plt.ylabel('Mpc/h comoving')
+    #plt.imshow(x,cmap='magma', aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=LogNorm(vmin=min_overdensity,vmax=max_overdensity), interpolation='bicubic')#vmin=min_overdensity,vmax=max_overdensity)#,norm=LogNorm(),extent=[0, 200, 0, 200])#vmin=min_overdensity,vmax=max_overdensity)
+
+
+    #im = ax.imshow(x,cmap='magma', aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=colors.LogNorm(vmin=min_overdensity,vmax=max_overdensity), interpolation='bicubic',animated=True,)#vmin=min_overdensity,vmax=max_overdensity)#,norm=LogNorm(),extent=[0, 200, 0, 200])#vmin=min_overdensity,vmax=max_overdensity)
+    #ims.append([im])
+    #return im
+    #plt.contourf(XX,YY,x,cmap='magma', origin='lower',extent=[0, 300, 0, 300])#,norm=colors.LogNorm(vmin=min_overdensity,vmax=max_overdensity))#,animated=True
+    #plt.colorbar(cm.ScalarMappable(norm=colors.LogNorm(vmin=min_overdensity,vmax=max_overdensity), cmap='magma'), ax=ax)
+
+    #im = ax.imshow(x, animated=True)
+    #ims.append([im])
+    #plt.title("Redshift = " + str(z[i]))
+    #plt.colorbar(label='Colorbar Label')
+    #plt.xlabel('Mpc/h comoving')
+    #plt.ylabel('Mpc/h comoving')
+    #plt.colorbar(label='Colorbar Label')
+
+#ani = animation.ArtistAnimation(fig, ims, interval=100, blit=True,
+                                #repeat_delay=5000)
+#plt.show()
+#ani.save("movie.mp4")
+
     #plt.savefig('number_'+str(i)+'.pdf')
-    plt.show(block=False)
-    plt.pause(6)
-    plt.close()
+    #plt.show(block=False)
+    #plt.pause(2)
+    #plt.close()
     #print('all done')
+#fig.colorbar(plot,ax=ax, extend='max')
+print('Finding extrema...')
+min_list = []
+max_list = []
+for i in range(len(data)):
+    min_list.append(np.nanmin(data[i]))
+    max_list.append(np.nanmax(data[i][data[i] != np.inf]))
+
+
+#vmax = np.max(np.array(max_list))
+#vmax = 10000
+vmax = max_list[0]#0.008
+#vmin = np.min(np.array(min_list))
+vmin = min_list[0]#
+#vmax = vmin*1e3
+#vmin = min(data_.get_array().min() for data_ in data)
+#vmax = max(data_.get_array().max() for data_ in data)
+print('max = ' + str(vmax)+ ',   min = ' + str(vmin))
+base = 100
+def _forward(x):
+    return np.emath.logn(base, x)
+
+
+def _inverse(x):
+    return base**x
+
+#min_perc = np.percentile(data[10],0)
+#max_perc = np.percentile(data[10],100)
+
+#vmin = min_perc
+#vmax = max_perc
+
+#norm = colors.FuncNorm((_forward, _inverse), vmin=vmin, vmax=vmax)
+
+norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
+
+#norm = colors.Normalize(vmin=vmin, vmax=vmax,clip=False)
+
+
+
+print('Making artists...')
+fig, ax = plt.subplots()
+images = []
+for i in range(len(data)):
+    title = plt.text(0.5, 1.01,"z = " +str(z[i]), horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
+
+    im = ax.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='bicubic',animated=True)
+    plt.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='bicubic')#,animated=True)
+    plt.colorbar()
+    plt.show()
+    #ax.set_title(i)
+    #if i == 42:
+    #    plt.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='none',animated=True)
+    #    #plt.colorbar()
+    #    plt.show()
+    images.append([im,title])
+print('Done making artists.')
+#print('171')
+#plt.show()
+
+#vmin = min(image.get_array().min() for image in images)
+#vmax = max(image.get_array().max() for image in images)
+#print('176')
+#plt.show()
+
+#vmin = min(data_.get_array().min() for data_ in data)
+#vmax = max(data_.get_array().max() for data_ in data)
+
+#norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+#print('183')
+#plt.show()
+#for im in images:
+#    im.set_norm(norm)
+
+
+#fig.colorbar(images[0], ax=ax, orientation='horizontal', fraction=.1)
+#print('190')
+#plt.show()
+
+#fig.colorbar()
+###min_overdensity = np.percentile(data[0],0)
+###max_overdensity = np.percentile(data[-1],100)
+#im = ax.imshow(data[-1], cmap='magma', aspect='auto', origin='lower',extent=[0, 300, 0, 300],vmin=min_overdensity,vmax=max_overdensity, interpolation='bicubic')#vmin=min_overdensity,vmax=max_overdensity)
+
+#vmin = min(image.get_array().min() for image in images)
+#vmax = max(image.get_array().max() for image in images)
+#norm = colors.Normalize(vmin=vmin, vmax=vmax)
+#for im in images:
+#    im.set_norm(norm)
+
+#im = ax.imshow(data[-1], cmap='magma', aspect='auto', origin='lower',extent=[0, 300, 0, 300],vmin=min_overdensity,vmax=max_overdensity, interpolation='bicubic')#vmin=min_overdensity,vmax=max_overdensity)
+
+#cbar = fig.colorbar(im)
+
+#im = ax.imshow(([],[]), cmap='viridis')
+#line, = ax.imshow([], lw=2)
+
+#def init():
+#    line.set_data([], [])
+#    return line,
+
+#cbar = fig.colorbar(im, ax=ax, orientation='vertical')
+#def update(frame):
+#   number = 100*frame/(len(data)-1)
+#   formatted_number = f'{number:.3f}'
+#   print(formatted_number+ '%')
+#   print(frame)
+#   im = ax.imshow(data[frame], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='bicubic',animated=True)#vmin
+#   #im.set_array(data[frame])
+#   #im.set_norm(norm)
+#   #im.set_title("Time = " +str(frame))
+#       #cax.set_array(tas[frame,:,:].values.flatten())
+#
+#
+#   #im.set_array(data[frame].flatten())
+#   #min_overdensity = np.percentile(data[frame],0)
+#   #max_overdensity = np.percentile(data[frame],100)
+#   #im = ax.imshow(data[frame], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='bicubic')#vmin=min_overdensity,vmax=max_overdensit
+#   #fig.colorbar(im)
+#   #im = ax.imshow(data[frame])
+#   return [im]
+##print(len(data))
+#fig,ax = plt.subplots()
+#im = ax.imshow(data[0], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='bicubic',animated=True)#vmin
+##im = ax.imshow(origin='lower',extent=[0, 300, 0, 300],norm=norm,add_colorbar=True,cmap='coolwarm')#vmin
+fig.colorbar(cm.ScalarMappable(norm=norm),ax=ax)
+#cbar = fig.colorbar(cax)
+
+
+#fig.colorbar(im, ax=ax, orientation='horizontal', fraction=.1)
+print('Making animation...')
+#img_eff = images[:10]
+ani = animation.ArtistAnimation(fig, images)#,interval = 5)
+#animation.ArtistAnimation(fig, images)
+#ani.save("current_test_custom_from_280.mp4")#,dpi=300)
+#ani.save("small_test.mp4")
+#print('Done all.')
+plt.show()
