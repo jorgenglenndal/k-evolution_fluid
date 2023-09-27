@@ -599,77 +599,110 @@ for (x.first(); x.test(); x.next())
 //   //****************************
 //   //****SAVE DATA To test Backreaction
 //   //****************************
-  FILE* Result_avg;
-  FILE* Result_real;
-  FILE* Result_fourier;
-  FILE* Result_max;
-  FILE* Redshifts;
-  FILE* snapshots_file;
+  
+  
+//  FILE* Result_avg;
+//  FILE* Result_real;
+//  FILE* Result_fourier;
+//  FILE* Result_max;
+//  FILE* Redshifts;
+//  FILE* snapshots_file;
+//  FILE* div_variables;
+//
+//  char filename_avg[150];
+//  char filename_real[150];
+//  char filename_fourier[150];
+//  char filename_max[150];
+//  char filename_redshift[150];
+//  char filename_snapshot[150];
+//  char filename_div_variables[150];
+//
+//
+//  snprintf(filename_avg, sizeof(filename_avg), "%sResult_avg.txt",sim.output_path);
+//  snprintf(filename_real, sizeof(filename_real),"%sResult_real.txt",sim.output_path);
+//  snprintf(filename_fourier, sizeof(filename_fourier),"%sResult_fourier.txt",sim.output_path);
+//  snprintf(filename_max, sizeof(filename_max),"%sResults_max.txt",sim.output_path);
+//  snprintf(filename_snapshot, sizeof(filename_snapshot),"%ssnapshots.txt",sim.output_path);
+//  snprintf(filename_div_variables, sizeof(filename_div_variables),"%sdiv_variables.txt",sim.output_path);
+//
+//  // ofstream out(filename_avg,ios::out);
+//  ofstream out_avg(filename_avg,ios::out);
+//  ofstream out_real(filename_real,ios::out);
+//  ofstream out_fourier(filename_fourier,ios::out);
+//  ofstream out_max(filename_max,ios::out);
+//  ofstream out_snapshots(filename_snapshot,ios::out);
+//  ofstream out_div_variables(filename_div_variables,ios::out);
+//
+//  snapshots_file=fopen(filename_snapshot,"w");
+//  div_variables=fopen(filename_div_variables,"w");
+//
+//  Result_avg=fopen(filename_avg,"w");
+//  Result_real=fopen(filename_real,"w");
+//  Result_fourier=fopen(filename_fourier,"w");
+//  Result_max=fopen(filename_max,"w");
+//  snapshots_file=fopen(filename_snapshot,"w");
 
-  char filename_avg[100];
-  char filename_real[100];
-  char filename_fourier[100];
-  char filename_max[100];
-  char filename_redshift[100];
-  char filename_snapshot[100];
+  std::ofstream Result_avg;
+  std::ofstream Result_real;
+  std::ofstream Result_fourier;
+  std::ofstream Result_max;
+  std::ofstream Redshifts;
+  std::ofstream kess_snapshots;
+  std::ofstream div_variables;
+  std::string output_path = sim.output_path;
+  std::string filename_avg = output_path + "Result_avg.txt";
+  std::string filename_real = output_path + "Result_real.txt";
+  std::string filename_fourier = output_path + "Result_fourier.txt";
+  std::string filename_max = output_path + "Results_max.txt";
+  std::string filename_redshift = output_path + "redshifts.txt";
+  std::string filename_kess_snapshots = output_path + "kess_snapshots.txt";
+  std::string filename_div_variables = output_path + "div_variables.txt";
+  Result_avg.open(filename_avg, std::ios::out);
+  Result_real.open(filename_real, std::ios::out);
+  Result_fourier.open(filename_fourier, std::ios::out);
+  Result_max.open(filename_max, std::ios::out);
+  Redshifts.open(filename_redshift, std::ios::out);
+  kess_snapshots.open(filename_kess_snapshots, std::ios::out);
+  div_variables.open(filename_div_variables, std::ios::out);
+
+  div_variables<<"### Here are the variables" << endl;
+  div_variables<<"### (z)                 Largest relative difference in pi                     avg pi"<<endl;
+
+  Result_avg<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
+  Result_avg<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
+  Result_avg<<"### initial time = "<< tau <<endl;
+  Result_avg<<"### 1- tau\t2- average(H pi_k)\t3- average (zeta)\t 4- average (phi)\t5-z(redshift)   " <<endl;
 
 
-  snprintf(filename_avg, sizeof(filename_avg), "%sResult_avg.txt",sim.output_path);
-  snprintf(filename_real, sizeof(filename_real),"%sResult_real.txt",sim.output_path);
-  snprintf(filename_fourier, sizeof(filename_fourier),"%sResult_fourier.txt",sim.output_path);
-  snprintf(filename_max, sizeof(filename_max),"%sResults_max.txt",sim.output_path);
-  snprintf(filename_snapshot, sizeof(filename_snapshot),"%ssnapshots.txt",sim.output_path);
-
-  // ofstream out(filename_avg,ios::out);
-  ofstream out_avg(filename_avg,ios::out);
-  ofstream out_real(filename_real,ios::out);
-  ofstream out_fourier(filename_fourier,ios::out);
-  ofstream out_max(filename_max,ios::out);
-  ofstream out_snapshots(filename_snapshot,ios::out);
-  snapshots_file=fopen(filename_snapshot,"w");
+  Result_max<<"### The result of the maximum over time \n### d tau = "<< dtau<<endl;
+  Result_max<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
+  Result_max<<"### initial time = "<< tau <<endl;
+  Result_max<<"### 1- tau\t2- max(H pi_k)\t3- max (zeta)\t 4- max (phi)   " <<endl;
 
 
-  Result_avg=fopen(filename_avg,"w");
-  Result_real=fopen(filename_real,"w");
-  Result_fourier=fopen(filename_fourier,"w");
-  Result_max=fopen(filename_max,"w");
-  snapshots_file=fopen(filename_snapshot,"w");
-
-  out_avg<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
-  out_avg<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
-  out_avg<<"### initial time = "<< tau <<endl;
-  out_avg<<"### 1- tau\t2- average(H pi_k)\t3- average (zeta)\t 4- average (phi)\t5-z(redshift)   " <<endl;
+  Result_real<<"### The result of the verage over time \n### d tau = "<< dtau<<endl;
+  Result_real<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
+  Result_real<<"### initial time = "<< tau <<endl;
+  Result_real<<"### 1- tau\t2- pi_k(x)\t3-zeta(x)\t 4-x" <<endl;
 
 
-  out_max<<"### The result of the maximum over time \n### d tau = "<< dtau<<endl;
-  out_max<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
-  out_max<<"### initial time = "<< tau <<endl;
-  out_max<<"### 1- tau\t2- max(H pi_k)\t3- max (zeta)\t 4- max (phi)   " <<endl;
+  Result_fourier<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
+  Result_fourier<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
+  Result_fourier<<"### initial time = "<< tau <<endl;
+  Result_fourier<<"### 1- tau\t 2- pi_k(k)\t\t3-zeta(k)\t\t4-|k|\t\t 5-vec{k} \t 6-|k|^2"<<endl;
 
 
-  out_real<<"### The result of the verage over time \n### d tau = "<< dtau<<endl;
-  out_real<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
-  out_real<<"### initial time = "<< tau <<endl;
-  out_real<<"### 1- tau\t2- pi_k(x)\t3-zeta(x)\t 4-x" <<endl;
-
-
-  out_fourier<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
-  out_fourier<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
-  out_fourier<<"### initial time = "<< tau <<endl;
-  out_fourier<<"### 1- tau\t 2- pi_k(k)\t\t3-zeta(k)\t\t4-|k|\t\t 5-vec{k} \t 6-|k|^2"<<endl;
-
-
-  out_snapshots<<"### The result of the snapshots produced over time for blow-up \n### d tau = "<< dtau<<endl;
-  out_snapshots<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
-  out_snapshots<<"### initial time = "<< tau <<endl;
-  out_snapshots<<"### H0 = " <<Hconf(1., fourpiG,
+  kess_snapshots<<"### The result of the snapshots produced over time for blow-up \n### d tau = "<< dtau<<endl;
+  kess_snapshots<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
+  kess_snapshots<<"### initial time = "<< tau <<endl;
+  kess_snapshots<<"### H0 = " <<Hconf(1., fourpiG,
 		  #ifdef HAVE_HICLASS_BG
 	        H_spline, acc
 	      #else
             cosmo
 	      #endif 
 		  )  << endl;
-  out_snapshots<<"### 1- tau\t2- z \t3- a\t 4- zeta_avg\t 5- avg_pi\t 6- avg_phi\t 7- tau/boxsize\t 8- H_conf/H0 \t 9- snap_count"<<endl;
+  kess_snapshots<<"### 1- tau\t2- z \t3- a\t 4- zeta_avg\t 5- avg_pi\t 6- avg_phi\t 7- tau/boxsize\t 8- H_conf/H0 \t 9- snap_count"<<endl;
 
 
 //defining the average
@@ -750,9 +783,9 @@ string str_filename3 ;
       // if(parallel.isRoot())
       // {
         // fprintf(Result_avg,"\n %20.20e %20.20e ", tau, avg ) ;
-      out_avg<<setw(9) << tau <<"\t"<< setw(9) << avg_pi<<"\t"<< setw(9) << avg_zeta<<"\t"<< setw(9) << avg_phi<<"\t"<< setw(9) << 1./a -1. << endl;
+      Result_avg<<setw(9) << tau <<"\t"<< setw(9) << avg_pi<<"\t"<< setw(9) << avg_zeta<<"\t"<< setw(9) << avg_phi<<"\t"<< setw(9) << 1./a -1. << endl;
 
-        out_max<<setw(9) << tau <<"\t"<< setw(9) << max_pi<<"\t"<< setw(9) << max_zeta<<"\t"<< setw(9) << max_phi<<endl;
+        Result_max<<setw(9) << tau <<"\t"<< setw(9) << max_pi<<"\t"<< setw(9) << max_zeta<<"\t"<< setw(9) << max_phi<<endl;
 
       // }
       //****************************
@@ -765,7 +798,7 @@ string str_filename3 ;
         {
           // if(parallel.isRoot())
           // {
-          out_real<<setw(9) << tau <<"\t"<< setw(9) <<pi_k (x)<<"\t"<< setw(9)<<zeta_half (x)<<"\t"<<x<<endl;
+          Result_real<<setw(9) << tau <<"\t"<< setw(9) <<pi_k (x)<<"\t"<< setw(9)<<zeta_half (x)<<"\t"<<x<<endl;
           // }
         }
     	}
@@ -777,7 +810,7 @@ string str_filename3 ;
         norm_kFT_squared= kFT.coord(0)*kFT.coord(0) + kFT.coord(1) * kFT.coord(1) + kFT.coord(2) * kFT.coord(2);
         if(norm_kFT_squared == 1)
         {
-          out_fourier<<setw(9) << tau <<"\t"<< setw(9) << scalarFT_pi(kFT)<<"\t"<< setw(9)<<scalarFT_zeta_half (kFT)<<"\t"<<kFT<<"\t"<<norm_kFT_squared<<endl;
+          Result_fourier<<setw(9) << tau <<"\t"<< setw(9) << scalarFT_pi(kFT)<<"\t"<< setw(9)<<scalarFT_zeta_half (kFT)<<"\t"<<kFT<<"\t"<<norm_kFT_squared<<endl;
         }
       }
       //**********************
@@ -1317,6 +1350,13 @@ for (x.first(); x.test(); x.next())
 
   double max_absValue_zeta = numeric_limits<double>::min();
   double max_absValue_pi = numeric_limits<double>::min();
+  double largest_relative_difference;
+  double relative_difference;
+  double largest_perturbation;
+  double previous_largest_perturbation;
+  double previous_a_kess;
+  double avg_pi_check;
+  double avg_zeta_check;
   //double max_absValue_zeta_old = numeric_limits<double>::min();
   //double max_absValue_pi_old = numeric_limits<double>::min();
   double avg_absValue_zeta = 0.;
@@ -1328,6 +1368,7 @@ for (x.first(); x.test(); x.next())
   double absValue_zeta;
   double absValue_pi;
   int numpts = sim.numpts; 
+  double previous_avg_pi;
   double previous_avg_zeta;// = average(  zeta_half,1., numpts3d ) ;
   //double avg_zeta_old =average(  zeta_half,1., numpts3d ) ;
 
@@ -1352,20 +1393,22 @@ for (x.first(); x.test(); x.next())
 //            }
 //         }
 //      }
-//	  avg_absValue_zeta_old /= numpts3d;
-//	  avg_absValue_pi_old /= numpts3d;
+	  //avg_absValue_zeta_old /= numpts3d;
+	  //avg_absValue_pi_old /= numpts3d;
   //int loop_in_loop = 0;
-  const int old_nKe_numsteps = sim.nKe_numsteps;
+  double old_nKe_numsteps = sim.nKe_numsteps;
   int remaining_steps_with_new_nKe_numsteps;
+
 #endif
   double a_kess=a;
   if(cycle==0)
   {
     for (i=0;i<sim.nKe_numsteps;i++)
     {
-	  #ifdef NONLINEAR_TEST
-	  previous_avg_zeta = average(  zeta_half,1., numpts3d ) ;
-	  #endif
+	  //#ifdef NONLINEAR_TEST
+	  //previous_avg_zeta = average_func(  zeta_half,1., numpts3d ) ;
+	  //previous_largest_perturbation = 
+	  //#endif
       update_zeta_eq(-dtau/ (2. * sim.nKe_numsteps), dx, a_kess, phi, phi_old, chi, chi_old, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
       zeta_half.updateHalo();
     }
@@ -1377,7 +1420,12 @@ for (x.first(); x.test(); x.next())
 	  sim.change_nKe_numsteps(sim.new_nKe_numsteps);
 	  COUT << "nKe_numsteps has been changed in the outer loop"<< endl;
 	  }
-	previous_avg_zeta = average(  zeta_half,1., numpts3d );
+	// optimize by if test. No need to compute this for larger z than in the blowup criteria
+	previous_avg_zeta = average_func(  zeta_half,1., numpts3d );
+	previous_avg_pi = average_func(pi_k,1.,numpts3d);
+	previous_largest_perturbation = abs_largest_perturbation_func(pi_k,1.,previous_avg_pi);
+	set_field1_equal_to_field2(pi_k_old,pi_k);
+	previous_a_kess = a_kess;
 	#endif
     update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess, phi, phi_old, chi, chi_old, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     zeta_half.updateHalo();
@@ -1402,60 +1450,122 @@ for (x.first(); x.test(); x.next())
       dtau  / sim.nKe_numsteps / 2.0 );
 
       // NL TESTS
-      #ifdef NONLINEAR_TEST
+    #ifdef NONLINEAR_TEST
       //   //Make snapshots and power around blowup TIME
 	  //std::string output_path_string = sim.output_path;
 	  //std::cout << "cycle = " << cycle << std::endl;
 	  //std::cout << "before test" << std::endl;
-
-      avg_zeta =average(  zeta_half,1., numpts3d ) ;
-      //avg_zeta_old =average(  zeta_half_old,1., numpts3d ) ;
-      //avg_pi =average(  pi_k,1., numpts3d ) ;
+	avg_zeta =average_func(  zeta_half,1., numpts3d ) ;
+	      //avg_zeta_old =average(  zeta_half_old,1., numpts3d ) ;
+    //avg_pi =average(  pi_k,1., numpts3d ) ;
+	  
       //avg_phi =average(  phi , 1., numpts3d ) ;
       // avg_pi_old =average(  pi_k_old, 1., numpts3d ) ;
 	  //if (parallel.isRoot()){
 	  
-	  int numpts = sim.numpts;  
-      // Find the maximum value in the grid
-      for (int x_ind = 0; x_ind < numpts; x_ind++) {
-         for (int y_ind = 0; y_ind < numpts; y_ind++) {
-            for (int z_ind = 0; z_ind < numpts; z_ind++) {
-	  	     //absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
-			 absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
-			 //avg_absValue_zeta += absValue_zeta;
-			 avg_absValue_pi += absValue_pi;
-			 
-               //if (absValue_zeta > max_absValue_zeta){
-               //   max_absValue_zeta = absValue_zeta;
-               //}
-			   if (absValue_pi > max_absValue_pi){
-                  max_absValue_pi = absValue_pi;
-               }
-            }
-         }
-      }
+	//int numpts = sim.numpts; 
+	//largest_relative_difference = 0.; 
+	//avg_pi_check = 0.;
+	//avg_zeta_check = 0.;
+//      for (int x_ind = 0; x_ind < numpts; x_ind++) {
+//         for (int y_ind = 0; y_ind < numpts; y_ind++) {
+//            for (int z_ind = 0; z_ind < numpts; z_ind++) {
+//				avg_pi_check += pi_k(x_ind,y_ind,z_ind);
+//	  	     //absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
+//			 //absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
+//			 //avg_absValue_zeta += absValue_zeta;
+//			 //avg_absValue_pi += absValue_pi;
+//			   // relative_difference = abs(pi_k(x_ind,y_ind,z_ind)-avg_pi);
+//			   //
+//			 //
+//               //if (relative_difference > largest_relative_difference){
+//               //   largest_relative_difference = relative_difference;
+//               //}
+//			   //if (absValue_pi > max_absValue_pi){
+//               //   max_absValue_pi = absValue_pi;
+//               //}
+//            }
+//         }
+//      }
+
+	//for(x.first();x.test();x.next()){
+	//	avg_zeta_check += zeta_half(x);
+	//}
+	//COUT << "Before parallel.sum --> " << avg_zeta_check << endl;  
+	//parallel.sum(avg_zeta_check);
+	//COUT << "After parallel.sum --> " << avg_zeta_check << endl;
+	//avg_zeta_check /= numpts3d;
+
+	//avg_zeta_check = average_check(zeta_half,1., numpts3d);
+	//COUT << "avg_zeta       = " << avg_zeta << endl;
+	//COUT << "avg_zeta_check = " << avg_zeta_check << endl;
+
+	//for(x.first();x.test();x.next()){
+	//	avg_pi_check += pi_k(x);
+	//}
+	//avg_pi_check /= numpts3d;
+	//
+	//for(x.first();x.test();x.next()){
+	//	relative_difference = abs(pi_k(x)-avg_pi_check);
+//
+	//    if (relative_difference > largest_relative_difference){
+	//    	largest_relative_difference = relative_difference;
+    //    }	
+	//}
+
 	  //avg_absValue_zeta /= numpts3d;
-	  avg_absValue_pi /= numpts3d;
+	  //avg_pi_check /= numpts3d;
+//	  for (int x_ind = 0; x_ind < numpts; x_ind++) {
+//         for (int y_ind = 0; y_ind < numpts; y_ind++) {
+//            for (int z_ind = 0; z_ind < numpts; z_ind++) {
+//				//avg_pi_check += pi_k(x_ind,y_ind,z_ind);
+//	  	     //absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
+//			 //absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
+//			 //avg_absValue_zeta += absValue_zeta;
+//			 //avg_absValue_pi += absValue_pi;
+//			    relative_difference = abs(pi_k(x_ind,y_ind,z_ind)-avg_pi_check);
+//			   
+//			 
+//               if (relative_difference > largest_relative_difference){
+//                  largest_relative_difference = relative_difference;
+//               }
+//			   //if (absValue_pi > max_absValue_pi){
+//               //   max_absValue_pi = absValue_pi;
+//               //}
+//            }
+//         }
+//      }
+
+
+
+	  //avg_absValue_pi /= numpts3d;
+	  //COUT << "LD          = "<<largest_relative_difference<<"         avg_pi         = " <<avg_pi_check <<"        LRD       = "  << largest_relative_difference/avg_pi_check <<endl;
+	  //COUT << "avg_zeta = " << avg_zeta << "       avg_zeta_check = " << avg_zeta_check << endl;
+	  //largest_relative_difference /= avg_pi_check;
+	  //out_div_variables <<  1./(a_kess) -1. <<"          "<< largest_relative_difference << endl;
       ////int root_check = 0;
 	  ////if (parallel.isRoot()) root_check = 1;
 	  ////std::cout << root_check << std::endl;
-      
+      avg_pi = average_func(pi_k,1.,numpts3d);
+	  largest_perturbation = abs_largest_perturbation_func(pi_k,1.,avg_pi);
       if (parallel.isRoot()){
+		div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation << "          "<<avg_zeta<<endl;
+		//"              " <<avg_pi<< "       avg_pi_check =  "<< avg_pi_check<<endl;
         cout << " " << endl;
         cout << "z                          = " << 1./(a_kess) -1.  << endl;
 		cout << "iteration in kessence loop = " << i << endl;
 //        //cout << "max |zeta|                 = " << max_absValue_zeta << endl;//",     max zeta old = " << max_absValue_zeta_old  <<endl;
 //        //cout << "avg |zeta|                 = " << avg_absValue_zeta << endl;//",     avg zeta old = "  << avg_absValue_zeta_old<<  endl;
-		cout << "max |pi|                   = " << max_absValue_pi <<   endl;//",     max pi old   = " << max_absValue_pi_old << endl;
-        cout << "avg |pi|                   = " << avg_absValue_pi <<   endl;//",     avg pi old   = " << avg_absValue_pi_old<< endl;
-        cout << "cycle                      = " << cycle << endl;
-		cout << "DONE printing" << endl;
+		//cout << "max |pi|                   = " << max_absValue_pi <<   endl;//",     max pi old   = " << max_absValue_pi_old << endl;
+        //cout << "avg |pi|                   = " << avg_absValue_pi <<   endl;//",     avg pi old   = " << avg_absValue_pi_old<< endl;
+        //cout << "cycle                      = " << cycle << endl;
 //		//cout << "max |zeta| / avg |zeta|    = " << max_absValue_zeta/avg_absValue_zeta << endl;
 //		//cout <<  "avg zeta / avg zeta      = " << avg_absValue_zeta/avg_absValue_zeta_old << endl;
 //		//cout << "max |pi| / avg |pi|        = " << max_absValue_pi/avg_absValue_pi << endl;
 //		//cout << "avg zeta_old               = " << avg_zeta_old << endl;
-//		cout << "avg zeta                   = " << avg_zeta << endl;
+		//cout << "avg zeta                   = " << avg_zeta << endl;
 		//cout <<  "avg pi / avg pi old      = " << avg_absValue_pi/avg_absValue_pi_old << endl;
+//		cout << "DONE printing" << endl;
 
 		
 		//cout << "avgValue pi = " << avg_pi << endl;
@@ -1468,29 +1578,37 @@ for (x.first(); x.test(); x.next())
 	  }
 
       //if ( avg_zeta > 1.e-7 && abs(avg_zeta/avg_zeta_old)>1.0001 && snapcount_b< sim.num_snapshot_kess )
-      if ((abs(avg_zeta/previous_avg_zeta) > 1.01 && avg_zeta > 1e-7) || (sim.kess_inner_loop_check)){ //(max_absValue_pi/avg_absValue_pi < 1.005 && snapcount_b <= sim.num_snapshot_kess)) || (abs(avg_zeta) >  && snapcount_b <= sim.num_snapshot_kess))
-	  
+      //if ((abs(avg_zeta/previous_avg_zeta) > 1.005 && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){ //(max_absValue_pi/avg_absValue_pi < 1.005 && snapcount_b <= sim.num_snapshot_kess)) || (abs(avg_zeta) >  && snapcount_b <= sim.num_snapshot_kess))
+	  if ((largest_perturbation >= previous_largest_perturbation && 1./(a_kess) -1.0 < 20.) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){
+	  if (parallel.isRoot()&& !(sim.kess_inner_loop_check)) div_variables <<"### Blowup has happened. The above line is the first in the blowup." << endl;  
+
       // Aborting if we have all the snapshots...
 //	  if (!(snapcount_b <= sim.num_snapshot_kess)){
 //		COUT << "Aborting as we have all the kess_snapshots..." << endl;
 //	    parallel.abortForce();
 //	  }
       //kess_inner_loop_check_func(true);
-	  if (!(sim.kess_inner_loop_check)) COUT << i <<" "<<cycle<<" "<< "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";
+	  if (!(sim.kess_inner_loop_check)) COUT << "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";
 	  //COUT << "loop_in_loop = " << loop_in_loop << endl;
-	  //if(parallel.isRoot())  cout << i <<" "<<cycle<<" "<< "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";
-      if(sim.snapcount_b <= sim.num_snapshot_kess){
-	
-	    
+	  //if(parallel.isRoot())  cout << i <<" "<<cycle<<" "<< "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";  
+
+	  if(sim.snapcount_b <= sim.num_snapshot_kess){
 	    std::string output_path_string = sim.output_path;
 
      	  //std::string output_path_string = sim.output_path;
 
         // writeSpectra(sim, cosmo, fourpiG, a, snapcount_b,
         //           &pcls_cdm, &pcls_b, pcls_ncdm, &phi,&pi_k, &zeta_half, &chi, &Bi,&T00_Kess, &T0i_Kess, &Tij_Kess, &source, &Sij, &scalarFT ,&scalarFT_pi, &scalarFT_zeta_half, &BiFT, &T00_KessFT, &T0i_KessFT, &Tij_KessFT, &SijFT, &plan_phi, &plan_pi_k, &plan_zeta_half, &plan_chi, &plan_Bi, &plan_T00_Kess, &plan_T0i_Kess, &plan_Tij_Kess, &plan_source, &plan_Sij);
-        str_filename =  output_path_string + "pi_k_" + to_string(sim.snapcount_b) + ".h5";
           //str_filename2 = output_path_string + "zeta_" + to_string(snapcount_b) + ".h5";
           //str_filename3 = output_path_string + "phi_" + to_string(snapcount_b) + ".h5";
+		if (sim.snapcount_b == 1){
+			str_filename =  output_path_string + "pi_k_" + to_string(sim.snapcount_b) + ".h5";
+			pi_k_old.saveHDF5(str_filename);
+			kess_snapshots<<setw(9) << tau + dtau/sim.nKe_numsteps*(i+1.-1.) <<"\t"<< setw(9) << 1./(previous_a_kess) -1.0 <<"\t"<< setw(9) << previous_a_kess <<"\t"<< setw(9) << previous_avg_zeta <<"\t"<< setw(9) << previous_avg_pi <<"\t"<< setw(9) << "######" <<"\t"<< setw(9) <<"######" <<"\t"<< setw(9) << "######"
+			 << "\t"<< setw(9) << sim.snapcount_b  << endl;
+        	sim.snapcount_b_add_one();
+		}
+		str_filename =  output_path_string + "pi_k_" + to_string(sim.snapcount_b) + ".h5";
 		pi_k.saveHDF5(str_filename);
           //zeta_half.saveHDF5(str_filename2);
           //phi.saveHDF5(str_filename3);
@@ -1507,7 +1625,7 @@ for (x.first(); x.test(); x.next())
           // {
           // out_snapshots<<"### 1- tau\t2- z \t3- a\t 4- zeta_avg\t 5- avg_pi\t 6- avg_phi\t 7- tau/boxsize\t 8- H_conf/H0 \t 9- snap_count"<<endl;
 
-        out_snapshots<<setw(9) << tau + dtau/sim.nKe_numsteps*(i+1.) <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG,
+        kess_snapshots<<setw(9) << tau + dtau/sim.nKe_numsteps*(i+1.) <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG,
 		#ifdef HAVE_HICLASS_BG
 	        H_spline,acc
 	    #else
@@ -1536,6 +1654,7 @@ for (x.first(); x.test(); x.next())
 		  COUT << "nKe_numsteps before inner loop = " << sim.nKe_numsteps << endl;
 		  /////////////////////////
 		  //loop_in_loop = 1;
+		  COUT << i << "    " << sim.new_nKe_numsteps << "      " << old_nKe_numsteps << "    " << sim.new_nKe_numsteps*(1-(i+1)/old_nKe_numsteps) << endl;
 		  sim.kess_inner_loop_check_func(true);
 		  COUT << "remaining steps = "<<remaining_steps_with_new_nKe_numsteps << endl;
 		  for (j=0;j<remaining_steps_with_new_nKe_numsteps;j++)
@@ -1570,13 +1689,84 @@ for (x.first(); x.test(); x.next())
 		      dtau  / sim.nKe_numsteps / 2.0 );
 
 
-		    avg_zeta =average(  zeta_half,1., numpts3d ) ;	
+		    avg_zeta =average_func(  zeta_half,1., numpts3d ) ;
+			//avg_pi =average(  pi_k,1., numpts3d ) ;	
 			  ////int root_check_2 = 0;
 	          ////if (parallel.isRoot()) root_check_2 = 1;
 	          ////  std::cout << root_check_2 << std::endl;	
+			//largest_relative_difference = 0.;
+			//avg_pi_check = 0.;
+//			for (int x_ind = 0; x_ind < numpts; x_ind++) {
+//            	for (int y_ind = 0; y_ind < numpts; y_ind++) {
+//                	for (int z_ind = 0; z_ind < numpts; z_ind++) {
+//						avg_pi_check += pi_k(x_ind,y_ind,z_ind);
+//	  	     //absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
+//			 //absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
+//			 //avg_absValue_zeta += absValue_zeta;
+//			 //avg_absValue_pi += absValue_pi;
+//			        	//relative_difference = abs(pi_k(x_ind,y_ind,z_ind)-avg_pi);
+//			   //
+//			 //
+//               			//if (relative_difference > largest_relative_difference){
+//               			//   largest_relative_difference = relative_difference;
+//               			//}
+//			   //if (absValue_pi > max_absValue_pi){
+//               //   max_absValue_pi = absValue_pi;
+//               //}
+//                    }
+//         		}
+//     	    }
+//
+//			for(x.first();x.test();x.next()){
+//				avg_pi_check += pi_k(x);
+//			}
+//			avg_pi_check /= numpts3d;
+//	
+//			for(x.first();x.test();x.next()){
+//				relative_difference = abs(pi_k(x)-avg_pi_check);
+//
+//			    if (relative_difference > largest_relative_difference){
+//	    			largest_relative_difference = relative_difference;
+//        		}	
+//			}
 
+
+
+
+			
+			
+
+//			for (int x_ind = 0; x_ind < numpts; x_ind++) {
+//            	for (int y_ind = 0; y_ind < numpts; y_ind++) {
+//                	for (int z_ind = 0; z_ind < numpts; z_ind++) {
+//						//avg_pi_check += pi_k(x_ind,y_ind,z_ind);
+//	  	     //absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
+//			 //absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
+//			 //avg_absValue_zeta += absValue_zeta;
+//			 //avg_absValue_pi += absValue_pi;
+//			        	relative_difference = abs(pi_k(x_ind,y_ind,z_ind)-avg_pi_check);
+//			   
+//			 
+//               			if (relative_difference > largest_relative_difference){
+//               			   largest_relative_difference = relative_difference;
+//               			}
+//			   //if (absValue_pi > max_absValue_pi){
+//               //   max_absValue_pi = absValue_pi;
+//               //}
+//                    }
+//         		}
+//     	    }
+	  		//avg_absValue_zeta /= numpts3d;
+	  		//avg_absValue_pi /= numpts3d;
+			//COUT << "LD          = "<<largest_relative_difference<<"         avg_pi         = " <<avg_pi_check <<"        LRD       = "  << largest_relative_difference/avg_pi_check <<endl;
+	  		//largest_relative_difference /= avg_pi_check;
+			
+			avg_pi = average_func(pi_k,1.,numpts3d);
+	  		largest_perturbation = abs_largest_perturbation_func(pi_k,1.,avg_pi);
             if (parallel.isRoot()){
-              cout << " " << endl;
+			  div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation <<"        " << avg_zeta<<endl;//"           "<< avg_pi <<"     avg_pi_check =  "<<avg_pi_check<<endl;
+              //out_div_variables << pi_k(0)
+			  cout << " " << endl;
               cout << "z                          = " << 1./(a_kess) -1.  << endl;
       		  cout << "i                          = " << i << endl;
       		  cout << "j                          = " << j << endl;
@@ -1588,9 +1778,10 @@ for (x.first(); x.test(); x.next())
       		  //cout <<  "avg zeta / avg zeta      = " << avg_absValue_zeta/avg_absValue_zeta_old << endl;
       		  //cout << "max |pi| / avg |pi|        = " << max_absValue_pi/avg_absValue_pi << endl;
       		  //cout << "avg zeta_old               = " << avg_zeta_old << endl;
-      		  cout << "avg zeta                   = " << avg_zeta << endl;
+      		  //cout << "avg zeta                   = " << avg_zeta << endl;
       		  cout << "cycle                      = " << cycle << endl;
-              cout << "DONE printing" << endl;
+			  cout << "snapcount_b                = " << sim.snapcount_b << endl;
+              //cout << "DONE printing" << endl;
       		  //cout <<  "avg pi / avg pi old      = " << avg_absValue_pi/avg_absValue_pi_old << endl;
       		  //cout << "avgValue pi = " << avg_pi << endl;
       		  cout << " " << endl;
@@ -1631,7 +1822,7 @@ for (x.first(); x.test(); x.next())
 		          // {
 		          // out_snapshots<<"### 1- tau\t2- z \t3- a\t 4- zeta_avg\t 5- avg_pi\t 6- avg_phi\t 7- tau/boxsize\t 8- H_conf/H0 \t 9- snap_count"<<endl;
 
-		      out_snapshots<<setw(9) << tau + dtau/old_nKe_numsteps*(i+1.)+dtau/sim.nKe_numsteps*(j+1.) <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG,
+		      kess_snapshots<<setw(9) << tau + dtau/old_nKe_numsteps*(i+1.)+dtau/sim.nKe_numsteps*(j+1.) <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG,
 				#ifdef HAVE_HICLASS_BG
 			        H_spline,acc
 			    #else
@@ -1730,7 +1921,7 @@ for (x.first(); x.test(); x.next())
           zeta_half.saveHDF5(str_filename2);
           phi.saveHDF5(str_filename3);
           sim.snapcount_b_add_one();
-          out_snapshots<<setw(9) << tau + dtau/sim.nKe_numsteps <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG, cosmo) / Hconf(1., fourpiG, cosmo)<<"\t"<< setw(9) <<sim.snapcount_b  <<endl;
+          kess_snapshots<<setw(9) << tau + dtau/sim.nKe_numsteps <<"\t"<< setw(9) << 1./(a_kess) -1.0 <<"\t"<< setw(9) << a_kess <<"\t"<< setw(9) << avg_zeta <<"\t"<< setw(9) << avg_pi <<"\t"<< setw(9) << avg_phi <<"\t"<< setw(9) <<tau <<"\t"<< setw(9) <<Hconf(a_kess, fourpiG, cosmo) / Hconf(1., fourpiG, cosmo)<<"\t"<< setw(9) <<sim.snapcount_b  <<endl;
         }
     #endif
     }

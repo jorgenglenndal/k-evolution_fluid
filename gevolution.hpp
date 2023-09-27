@@ -531,6 +531,49 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
     // cout.flags(f);
     }
 
+	template <class FieldType>
+    double average_func(Field<FieldType> & field, double constant , long n3)
+    {
+    Site x(field.lattice());
+    double avg = 0., temp;
+    for(x.first(); x.test(); x.next())
+    {
+    temp = field(x);
+    avg += temp;
+    }
+    parallel.sum(avg); // summing over all processes...
+    avg /= n3;
+    return avg * constant;
+    }
+
+	template <class FieldType>
+    double abs_largest_perturbation_func(Field<FieldType> & field, double constant,double average_double)
+    {
+    Site x(field.lattice());
+    double largest_pert = 0., temp,pert;
+    for(x.first(); x.test(); x.next())
+    {
+    temp = field(x);
+	pert = abs(temp-average_double);
+    if (pert > largest_pert) largest_pert = pert;
+    }
+	parallel.max(largest_pert); // max of all processes...
+    largest_pert /= average_double;
+    return abs(largest_pert * constant);
+    }
+
+  template <class FieldType>
+    void set_field1_equal_to_field2(Field<FieldType> & field1,Field<FieldType> & field2)
+    {
+    Site x(field2.lattice());
+    for(x.first(); x.test(); x.next())
+    {
+    field1(x) = field2(x);
+    }
+    }
+
+
+
 #endif
 			//////////////////////////
 			// Update K-essence field (pi)

@@ -256,6 +256,7 @@ struct metadata
 	char basename_restart[PARAM_MAX_LENGTH];
 	//Kessence part
 	int snapcount_b = 1;
+	double known_blowup_time;
 	int nKe_numsteps;
 	int new_nKe_numsteps;
 	bool kess_inner_loop_check = false;

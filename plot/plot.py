@@ -8,14 +8,17 @@ from matplotlib import colors
 import sys
 import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation
+import colorcet as cc
 
 
 
 
 
-path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/test_test_test/'
 
-with open(path + "snapshots.txt", 'r') as file:
+path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/L300_N256_cs2_1e_10/'
+
+
+with open(path + "kess_snapshots.txt", 'r') as file:
     z = []
     for line in file:
         if line.startswith('#'):
@@ -23,14 +26,68 @@ with open(path + "snapshots.txt", 'r') as file:
     
         else:
            words = line.split()
-           for word in range(len(words)):
-               words[word] = float(words[word])
+           #for word in range(len(words)):
+           #    words[word] = float(words[word])
                
-           if words[1] > 99:
-              print("Blowup before z = 99")
-              continue
-           else:
-              z.append(words[1])
+           #if words[1] > 99:
+           #   print("Blowup before z = 99")
+           #   continue
+           #else:
+           z.append(float(words[1]))
+
+with open(path + "div_variables.txt", 'r') as file:
+    z_div_variables = []
+    delta_div_variables =[]
+    avg_zeta_div_variables = []
+    for line in file:
+        if line.startswith('#'):
+            continue
+    
+        else:
+            words = line.split()
+           #for word in range(len(words)):
+           #    #words[word] = float(words[word])
+           #    z.append(words[word])
+            z_div_variables.append(float(words[0]))
+            delta_div_variables.append(float(words[1]))
+            avg_zeta_div_variables.append(float(words[2]))
+
+
+           #if words[1] > 99:
+           #   print("Blowup before z = 99")
+           #   continue
+           #else:
+           #   z.append(words[1])
+z_div_variables = np.array(z_div_variables)
+delta_div_variables = np.array(delta_div_variables)
+avg_zeta_div_variables = np.array(avg_zeta_div_variables)
+#z_div_variables = abs(z_div_variables)
+#delta_div_variables = abs(delta_div_variables)
+###plt.scatter(z_div_variables,avg_zeta_div_variables)
+###plt.yscale('log')
+###plt.show()
+
+"""
+Plotting the largest perturbation vs. redshift
+"""
+#plt.semilogy(z_div_variables,delta_div_variables)
+plt.scatter(z_div_variables[1:],delta_div_variables[1:],color='k')
+plt.plot(z_div_variables[1:],delta_div_variables[1:],color ='r')
+plt.plot(np.ones(2)*z[0],np.linspace(np.nanmin(delta_div_variables[1:])/100,np.nanmax(delta_div_variables[1:])*100,2))
+#plt.plot(z_div_variables[1:],delta_div_variables[1:])
+plt.yscale('log')
+plt.gca().invert_xaxis()
+plt.xlabel("z")
+plt.title('The largest perturbation in absolute value',size=15)
+#plt.title("Largest absolute value of the perturbations in field")
+plt.show()
+
+"""
+Plotting the Figure 2...
+"""
+path_to_cs2_data = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/"
+
+
 
 #for i in range(len(z)):
     #print(z[i])
@@ -39,10 +96,11 @@ filenames = []
 #filenames.append('/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test4/pi_k_5.h5')
 
 for i in range(len(z)):
-
     filenames.append(path + "pi_k_" + str(i+1)+'.h5')
 
-
+###filenames.append(path + "snap_000_pi_k.h5")
+###filenames.append(path + "snap_001_pi_k.h5")
+###filenames.append(path + "snap_002_pi_k.h5")
 
 #filenames = ['/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_2.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_3.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_4.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_5.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_6.h5','/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test2/pi_k_7.h5']
 #info = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test1/snapshots.txt'
@@ -51,7 +109,7 @@ for i in range(len(z)):
 data = []
 ims = []
 
-for i in range(len(filenames)):
+for i in range(len(filenames)): # excluding last
     #print(i)
 #cbar = 0
 #def update(i):
@@ -79,15 +137,15 @@ for i in range(len(filenames)):
 
 
 
+    if i == 0:
+        grad_x, grad_y, grad_z = np.gradient(ds_arr)
 
-    grad_x, grad_y, grad_z = np.gradient(ds_arr)
-
-    # Compute the second derivatives by applying the gradient function again
-    second_derivative_x = np.gradient(grad_x)[0]
-    second_derivative_y = np.gradient(grad_y)[1]
-    second_derivative_z = np.gradient(grad_z)[2]
-    index = np.argmax(np.ndarray.flatten(abs(second_derivative_y)))
-    multi_indices = np.unravel_index(index, second_derivative_y.shape)
+        # Compute the second derivatives by applying the gradient function again
+        second_derivative_x = np.gradient(grad_x)[0]
+        second_derivative_y = np.gradient(grad_y)[1]
+        second_derivative_z = np.gradient(grad_z)[2]
+        index = np.argmax(np.ndarray.flatten(abs(second_derivative_y)))
+        multi_indices = np.unravel_index(index, second_derivative_y.shape)
 
 
     #print(np.shape(ds_arr))
@@ -104,7 +162,9 @@ for i in range(len(filenames)):
     x = np.abs(ds_arr[:,multi_indices[1],:])
     #data.append(np.log10(x))
     data.append(x)
+    #print("y coordinate = " +str(multi_indices[1]))
     print('Done file '+str(i+1) + '/' +str(int(len(filenames))))
+    
     #x_log = np.log10(x)
     #not_first = False
     
@@ -174,13 +234,15 @@ for i in range(len(data)):
 
 #vmax = np.max(np.array(max_list))
 #vmax = 10000
-vmax = max_list[0]#0.008
+#vmax = 10
 #vmin = np.min(np.array(min_list))
-vmin = min_list[0]#
-#vmax = vmin*1e3
-#vmin = min(data_.get_array().min() for data_ in data)
-#vmax = max(data_.get_array().max() for data_ in data)
-print('max = ' + str(vmax)+ ',   min = ' + str(vmin))
+#vmin = min_list[0]
+#vmax = max_list[0]
+#vmin = 1e-5
+#vmax = 10
+##vmin = min(data_.get_array().min() for data_ in data)
+##vmax = max(data_.get_array().max() for data_ in data)
+#print('max = ' + str(vmax)+ ',   min = ' + str(vmin))
 base = 100
 def _forward(x):
     return np.emath.logn(base, x)
@@ -189,28 +251,49 @@ def _forward(x):
 def _inverse(x):
     return base**x
 
-#min_perc = np.percentile(data[10],0)
-#max_perc = np.percentile(data[10],100)
+#min_perc = np.percentile(data[np.argmin(np.array(min_list))],0)
+#max_perc = np.percentile(data[np.argmax(np.array(max_list))],99)
 
 #vmin = min_perc
-#vmax = max_perc
-
-#norm = colors.FuncNorm((_forward, _inverse), vmin=vmin, vmax=vmax)
-
-norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
+#vmax = 10
+#
+##norm = colors.FuncNorm((_forward, _inverse), vmin=vmin, vmax=vmax)
+#
+###norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
 
 #norm = colors.Normalize(vmin=vmin, vmax=vmax,clip=False)
+
 
 
 
 print('Making artists...')
 fig, ax = plt.subplots()
 images = []
-for i in range(len(data)):
-    title = plt.text(0.5, 1.01,"z = " +str(z[i]), horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
+#plt.imshow(data[-3],cmap = "jet", aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic')#,animated=True)
+#plt.colorbar()
+#plt.show()
+#
+#plt.imshow(data[-2],cmap = "jet", aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic')#,animated=True)
+#plt.colorbar()
+#plt.show()
+#
+#min_perc = np.percentile(data[-1],0)
+#max_perc = np.percentile(data[-1],100)
+vmin = min_list[-1]#min_perc
+vmax = max_list[-1]
+norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
 
-    im = ax.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='bicubic',animated=True)
-    plt.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='bicubic')#,animated=True)
+
+#plt.imshow(data[-1],cmap=cc.cm.rainbow4, aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic')#,norm=norm)#,animated=True)
+#plt.colorbar()
+#plt.show()
+
+for i in range(30,len(data)):
+    ###title = plt.text(0.5, 1.01,"z = " +str(z[i]), horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
+   
+    
+    #im = ax.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm interpolation='bicubic',animated=True)
+    plt.imshow(data[i],cmap=cc.cm.rainbow4, aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic')#,norm=norm)#,animated=True)
     plt.colorbar()
     plt.show()
     #ax.set_title(i)
@@ -218,7 +301,7 @@ for i in range(len(data)):
     #    plt.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm, interpolation='none',animated=True)
     #    #plt.colorbar()
     #    plt.show()
-    images.append([im,title])
+    ###images.append([im,title])
 print('Done making artists.')
 #print('171')
 #plt.show()
