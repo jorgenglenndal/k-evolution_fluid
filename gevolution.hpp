@@ -547,17 +547,17 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
     }
 
 	template <class FieldType>
-    double abs_largest_perturbation_func(Field<FieldType> & field, double constant,double average_double)
+    double abs_largest_perturbation_func(Field<FieldType> & field, double constant,double average_double) // returns the largest absolute value perturbation 
     {
     Site x(field.lattice());
     double largest_pert = 0., temp,pert;
     for(x.first(); x.test(); x.next())
     {
-    temp = field(x);
-	pert = abs(temp-average_double);
-    if (pert > largest_pert) largest_pert = pert;
+      temp = field(x);
+	    pert = abs(temp-average_double);
+      if (pert > largest_pert) largest_pert = pert;
     }
-	parallel.max(largest_pert); // max of all processes...
+	  parallel.max(largest_pert); // max of all processes...
     largest_pert /= average_double;
     return abs(largest_pert * constant);
     }

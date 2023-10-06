@@ -12,16 +12,17 @@ import colorcet as cc
 
 
 
+H0 = 0.100069 # directly from k-evolution
 
 
-
-path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/L300_N256_cs2_1e_10/'
+path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/L300_N256_cs2_1e_6/snapshots/'
 
 
 with open(path + "kess_snapshots.txt", 'r') as file:
     z = []
     for line in file:
         if line.startswith('#'):
+
             continue
     
         else:
@@ -38,7 +39,7 @@ with open(path + "kess_snapshots.txt", 'r') as file:
 with open(path + "div_variables.txt", 'r') as file:
     z_div_variables = []
     delta_div_variables =[]
-    avg_zeta_div_variables = []
+    delta_ratio_div_variables = []
     for line in file:
         if line.startswith('#'):
             continue
@@ -50,7 +51,7 @@ with open(path + "div_variables.txt", 'r') as file:
            #    z.append(words[word])
             z_div_variables.append(float(words[0]))
             delta_div_variables.append(float(words[1]))
-            avg_zeta_div_variables.append(float(words[2]))
+            #delta_ratio_div_variables.append(float(words[2]))
 
 
            #if words[1] > 99:
@@ -60,10 +61,13 @@ with open(path + "div_variables.txt", 'r') as file:
            #   z.append(words[1])
 z_div_variables = np.array(z_div_variables)
 delta_div_variables = np.array(delta_div_variables)
-avg_zeta_div_variables = np.array(avg_zeta_div_variables)
+delta_ratio_div_variables = np.array(delta_ratio_div_variables)
 #z_div_variables = abs(z_div_variables)
 #delta_div_variables = abs(delta_div_variables)
-###plt.scatter(z_div_variables,avg_zeta_div_variables)
+###plt.scatter(z_div_variables,delta_ratio_div_variables)
+###plt.plot(np.ones(2)*z[0],np.linspace(np.nanmin(delta_div_variables[1:])/100,np.nanmax(delta_div_variables[1:])*100,2))
+###
+###plt.gca().invert_xaxis()
 ###plt.yscale('log')
 ###plt.show()
 
@@ -73,21 +77,29 @@ Plotting the largest perturbation vs. redshift
 #plt.semilogy(z_div_variables,delta_div_variables)
 plt.scatter(z_div_variables[1:],delta_div_variables[1:],color='k')
 plt.plot(z_div_variables[1:],delta_div_variables[1:],color ='r')
-plt.plot(np.ones(2)*z[0],np.linspace(np.nanmin(delta_div_variables[1:])/100,np.nanmax(delta_div_variables[1:])*100,2))
+plt.plot(np.ones(2)*z[1],np.linspace(np.nanmin(delta_div_variables[1:])/100,np.nanmax(delta_div_variables[1:])*100,2))
 #plt.plot(z_div_variables[1:],delta_div_variables[1:])
 plt.yscale('log')
 plt.gca().invert_xaxis()
 plt.xlabel("z")
-plt.title('The largest perturbation in absolute value',size=15)
+plt.title('The largest |(pi - pi_avg)/pi_avg| at every redshift',size=15)
 #plt.title("Largest absolute value of the perturbations in field")
 plt.show()
 
 """
 Plotting the Figure 2...
 """
-path_to_cs2_data = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/"
+#path_to_cs2_data = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/"
 
+cs2 = [1e-10,1e-11,1e-12,1e-5,1e-7,1e-9,1e-13,1e-8,1e-6,5e-6]
+zb = [15.9305,33.3975,56.7875,0.524534,4.01823,6.97263,75.2454,4.2553,3.18422,1.32337]
 
+plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 256^3, L = 300 \mathrm{Mpc/h}, w = -0.9$")
+plt.scatter(zb,cs2)
+plt.ylabel(r"$c_s^2$")
+plt.xlabel(r"$z_b$")
+plt.yscale('log')
+plt.show()
 
 #for i in range(len(z)):
     #print(z[i])
@@ -232,10 +244,10 @@ for i in range(len(data)):
     max_list.append(np.nanmax(data[i][data[i] != np.inf]))
 
 
-#vmax = np.max(np.array(max_list))
+vmax = np.max(np.array(max_list[15]))
 #vmax = 10000
 #vmax = 10
-#vmin = np.min(np.array(min_list))
+vmin = np.min(np.array(min_list[15]))
 #vmin = min_list[0]
 #vmax = max_list[0]
 #vmin = 1e-5
@@ -243,7 +255,7 @@ for i in range(len(data)):
 ##vmin = min(data_.get_array().min() for data_ in data)
 ##vmax = max(data_.get_array().max() for data_ in data)
 #print('max = ' + str(vmax)+ ',   min = ' + str(vmin))
-base = 100
+base = 1000
 def _forward(x):
     return np.emath.logn(base, x)
 
@@ -257,9 +269,9 @@ def _inverse(x):
 #vmin = min_perc
 #vmax = 10
 #
-##norm = colors.FuncNorm((_forward, _inverse), vmin=vmin, vmax=vmax)
+#norm = colors.FuncNorm((_forward, _inverse), vmin=vmin, vmax=vmax)
 #
-###norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
+norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
 
 #norm = colors.Normalize(vmin=vmin, vmax=vmax,clip=False)
 
@@ -277,10 +289,27 @@ images = []
 #plt.colorbar()
 #plt.show()
 #
-#min_perc = np.percentile(data[-1],0)
-#max_perc = np.percentile(data[-1],100)
-vmin = min_list[-1]#min_perc
-vmax = max_list[-1]
+#######################################################min_perc = np.percentile(data[:17],1)
+#######################################################max_perc = np.percentile(data[:17],100)
+#######################################################vmin = min_perc*H0
+#######################################################vmax = max_perc*H0
+#vmax = max_list[15]
+min_list = []
+max_list = []
+for i in range(10,16):
+    min_list.append(np.nanmin(data[i]))
+    max_list.append(np.nanmax(data[i][data[i] != np.inf]))
+
+#vmin = np.min(min_list)*H0
+#vmax = np.max(max_list)*H0
+argmin = np.argmin(min_list)
+argmax = np.argmax(max_list)
+min_perc = np.percentile(data[argmin+10],0)
+max_perc = np.percentile(data[argmax+10],100)
+vmin = min_perc*H0
+vmax = max_perc*H0
+
+#vmax = data[15]
 norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
 
 
@@ -288,13 +317,27 @@ norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
 #plt.colorbar()
 #plt.show()
 
-for i in range(30,len(data)):
+for i in range(10,16):
     ###title = plt.text(0.5, 1.01,"z = " +str(z[i]), horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
    
-    
+    print(i)
+#    min_perc = np.percentile(data[i],0)
+#    max_perc = np.percentile(data[i],100)
+#    vmin = min_perc
+#    vmax = max_perc
+#    #vmax = max_list[15]
+#
+#    #vmax = data[15]
+#    norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
+
     #im = ax.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm interpolation='bicubic',animated=True)
-    plt.imshow(data[i],cmap=cc.cm.rainbow4, aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic')#,norm=norm)#,animated=True)
+    plt.title(r"$|H_0\pi|$" " at " "z = " +str(z[i]))
+    plt.imshow(data[i]*H0,cmap=cc.cm.rainbow4, aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='none',norm=norm)# set interpolation to bicubic for smooth plots
+    #plt.imshow(data[i],cmap="seismic", aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic',norm=norm)#,
+    plt.xlabel("[Mpc/h]")
+    plt.ylabel("[Mpc/h]")
     plt.colorbar()
+    #plt.savefig("fig1")
     plt.show()
     #ax.set_title(i)
     #if i == 42:

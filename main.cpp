@@ -666,7 +666,7 @@ for (x.first(); x.test(); x.next())
   div_variables.open(filename_div_variables, std::ios::out);
 
   div_variables<<"### Here are the variables" << endl;
-  div_variables<<"### (z)                 Largest relative difference in pi                     avg pi"<<endl;
+  div_variables<<"### (z),                 Largest relative difference in pi,                     zeta_blowup"<<endl;
 
   Result_avg<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
   Result_avg<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
@@ -1369,7 +1369,10 @@ for (x.first(); x.test(); x.next())
   double absValue_pi;
   int numpts = sim.numpts; 
   double previous_avg_pi;
-  double previous_avg_zeta;// = average(  zeta_half,1., numpts3d ) ;
+  double previous_avg_zeta;
+  //double perturbation_ratio;
+  //double previous_perturbation_ratio;
+  // = average(  zeta_half,1., numpts3d ) ;
   //double avg_zeta_old =average(  zeta_half,1., numpts3d ) ;
 
 
@@ -1408,6 +1411,7 @@ for (x.first(); x.test(); x.next())
 	  //#ifdef NONLINEAR_TEST
 	  //previous_avg_zeta = average_func(  zeta_half,1., numpts3d ) ;
 	  //previous_largest_perturbation = 
+	  //COUT << "cs^2    = "<<gsl_spline_eval(cs2_spline, a_kess, acc) << endl;
 	  //#endif
       update_zeta_eq(-dtau/ (2. * sim.nKe_numsteps), dx, a_kess, phi, phi_old, chi, chi_old, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
       zeta_half.updateHalo();
@@ -1426,6 +1430,7 @@ for (x.first(); x.test(); x.next())
 	previous_largest_perturbation = abs_largest_perturbation_func(pi_k,1.,previous_avg_pi);
 	set_field1_equal_to_field2(pi_k_old,pi_k);
 	previous_a_kess = a_kess;
+	//COUT << "cs^2    = "<<gsl_spline_eval(cs2_spline, a_kess, acc) << endl;
 	#endif
     update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess, phi, phi_old, chi, chi_old, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     zeta_half.updateHalo();
@@ -1548,12 +1553,15 @@ for (x.first(); x.test(); x.next())
 	  ////std::cout << root_check << std::endl;
       avg_pi = average_func(pi_k,1.,numpts3d);
 	  largest_perturbation = abs_largest_perturbation_func(pi_k,1.,avg_pi);
-      if (parallel.isRoot()){
-		div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation << "          "<<avg_zeta<<endl;
+
+	  //perturbation_ratio = largest_perturbation/previous_largest_perturbation;
+      //if (parallel.isRoot()){
+		//if (abs(avg_zeta/previous_avg_zeta) > 1.005 && avg_zeta > 1e-7) div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation << "            " <<        <<endl;
+		div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation << "             "<<largest_perturbation/previous_largest_perturbation  <<endl;
 		//"              " <<avg_pi<< "       avg_pi_check =  "<< avg_pi_check<<endl;
-        cout << " " << endl;
-        cout << "z                          = " << 1./(a_kess) -1.  << endl;
-		cout << "iteration in kessence loop = " << i << endl;
+        //cout << " " << endl;
+        //cout << "z                          = " << 1./(a_kess) -1.  << endl;
+		//cout << "iteration in kessence loop = " << i << endl;
 //        //cout << "max |zeta|                 = " << max_absValue_zeta << endl;//",     max zeta old = " << max_absValue_zeta_old  <<endl;
 //        //cout << "avg |zeta|                 = " << avg_absValue_zeta << endl;//",     avg zeta old = "  << avg_absValue_zeta_old<<  endl;
 		//cout << "max |pi|                   = " << max_absValue_pi <<   endl;//",     max pi old   = " << max_absValue_pi_old << endl;
@@ -1569,20 +1577,21 @@ for (x.first(); x.test(); x.next())
 
 		
 		//cout << "avgValue pi = " << avg_pi << endl;
-		cout << " " << endl;
+		//cout << " " << endl;
 		//if (std::isnan(avgValue_pi)){
 		//	parallel.abortForce();
 		//}
 
 		//parallel.abortForce();
-	  }
+	  //}
 
       //if ( avg_zeta > 1.e-7 && abs(avg_zeta/avg_zeta_old)>1.0001 && snapcount_b< sim.num_snapshot_kess )
       //if ((abs(avg_zeta/previous_avg_zeta) > 1.005 && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){ //(max_absValue_pi/avg_absValue_pi < 1.005 && snapcount_b <= sim.num_snapshot_kess)) || (abs(avg_zeta) >  && snapcount_b <= sim.num_snapshot_kess))
-	  if ((largest_perturbation >= previous_largest_perturbation && 1./(a_kess) -1.0 < 20.) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){
-	  if (parallel.isRoot()&& !(sim.kess_inner_loop_check)) div_variables <<"### Blowup has happened. The above line is the first in the blowup." << endl;  
-
+	  if ((largest_perturbation >= previous_largest_perturbation && largest_perturbation < 1.) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){
+	  if (!(sim.kess_inner_loop_check)) div_variables <<"### Blowup has happened. The above line is the first in the blowup." << endl;  
+	  if (largest_perturbation > 1. ) div_variables <<"### New blowup criterion met..." <<"    i = " << i<<"     cycle = " <<cycle <<   endl; 
       // Aborting if we have all the snapshots...
+	  //COUT << "cs^2    = "<<gsl_spline_eval(cs2_spline, a_kess, acc) << endl;
 //	  if (!(snapcount_b <= sim.num_snapshot_kess)){
 //		COUT << "Aborting as we have all the kess_snapshots..." << endl;
 //	    parallel.abortForce();
@@ -1654,7 +1663,7 @@ for (x.first(); x.test(); x.next())
 		  COUT << "nKe_numsteps before inner loop = " << sim.nKe_numsteps << endl;
 		  /////////////////////////
 		  //loop_in_loop = 1;
-		  COUT << i << "    " << sim.new_nKe_numsteps << "      " << old_nKe_numsteps << "    " << sim.new_nKe_numsteps*(1-(i+1)/old_nKe_numsteps) << endl;
+		  //COUT << i << "    " << sim.new_nKe_numsteps << "      " << old_nKe_numsteps << "    " << sim.new_nKe_numsteps*(1-(i+1)/old_nKe_numsteps) << endl;
 		  sim.kess_inner_loop_check_func(true);
 		  COUT << "remaining steps = "<<remaining_steps_with_new_nKe_numsteps << endl;
 		  for (j=0;j<remaining_steps_with_new_nKe_numsteps;j++)
@@ -1665,6 +1674,8 @@ for (x.first(); x.test(); x.next())
 			//loop_in_loop = 1;
 		    
 			//previous_avg_zeta = average(  zetnna_half,1., numpts3d ) ;	
+			previous_avg_pi = average_func(pi_k,1.,numpts3d);
+			previous_largest_perturbation = abs_largest_perturbation_func(pi_k,1.,previous_avg_pi);
 			
 		    update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess, phi, phi_old, chi, chi_old, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 		    zeta_half.updateHalo();
@@ -1763,9 +1774,13 @@ for (x.first(); x.test(); x.next())
 			
 			avg_pi = average_func(pi_k,1.,numpts3d);
 	  		largest_perturbation = abs_largest_perturbation_func(pi_k,1.,avg_pi);
-            if (parallel.isRoot()){
-			  div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation <<"        " << avg_zeta<<endl;//"           "<< avg_pi <<"     avg_pi_check =  "<<avg_pi_check<<endl;
-              //out_div_variables << pi_k(0)
+			//perturbation_ratio =
+			div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation <<"        "<< largest_perturbation/previous_largest_perturbation  << endl;//"
+            if (largest_perturbation > 1. ) div_variables <<"### New blowup criterion met..." << endl;
+			if (parallel.isRoot()){ 
+			  //div_variables <<  1./(a_kess) -1. <<"          "<< largest_perturbation <<"        "<< largest_perturbation/previous_largest_perturbation  << endl;//"           "<< avg_pi <<"     avg_pi_check =  "<<avg_pi_check<<endl;
+              
+			  //out_div_variables << pi_k(0)
 			  cout << " " << endl;
               cout << "z                          = " << 1./(a_kess) -1.  << endl;
       		  cout << "i                          = " << i << endl;
@@ -1781,6 +1796,7 @@ for (x.first(); x.test(); x.next())
       		  //cout << "avg zeta                   = " << avg_zeta << endl;
       		  cout << "cycle                      = " << cycle << endl;
 			  cout << "snapcount_b                = " << sim.snapcount_b << endl;
+			  //COUT << "cs^2    = "<<gsl_spline_eval(cs2_spline, a_kess, acc) << endl;
               //cout << "DONE printing" << endl;
       		  //cout <<  "avg pi / avg pi old      = " << avg_absValue_pi/avg_absValue_pi_old << endl;
       		  //cout << "avgValue pi = " << avg_pi << endl;
