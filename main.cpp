@@ -1587,7 +1587,8 @@ for (x.first(); x.test(); x.next())
 
       //if ( avg_zeta > 1.e-7 && abs(avg_zeta/avg_zeta_old)>1.0001 && snapcount_b< sim.num_snapshot_kess )
       //if ((abs(avg_zeta/previous_avg_zeta) > 1.005 && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){ //(max_absValue_pi/avg_absValue_pi < 1.005 && snapcount_b <= sim.num_snapshot_kess)) || (abs(avg_zeta) >  && snapcount_b <= sim.num_snapshot_kess))
-	  if ((largest_perturbation >= previous_largest_perturbation && largest_perturbation < 1.) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){
+	  // change to maxvalue of field
+	  if ((largest_perturbation >= previous_largest_perturbation && largest_perturbation < 1.) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){	  
 	  if (!(sim.kess_inner_loop_check)) div_variables <<"### Blowup has happened. The above line is the first in the blowup." << endl;  
 	  if (largest_perturbation > 1. ) div_variables <<"### New blowup criterion met..." <<"    i = " << i<<"     cycle = " <<cycle <<   endl; 
       // Aborting if we have all the snapshots...
