@@ -15,43 +15,162 @@ import colorcet as cc
 H0 = 0.100069 # directly from k-evolution
 
 
-path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/L300_N256_cs2_1e_6/snapshots/'
+#path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data2/L300_N256_cs2_1e_11/'
+#path2 = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/'
+#path_not_source = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N512/kess_not_source_gravity/'
+#path_source = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data3/'
 
 
-with open(path + "kess_snapshots.txt", 'r') as file:
-    z = []
-    for line in file:
-        if line.startswith('#'):
+#with open(path + "kess_snapshots.txt", 'r') as file:
+#    z = []
+#    for line in file:
+#        if line.startswith('#'):
+#
+#            continue
+#    
+#        else:
+#           words = line.split()
+#           #for word in range(len(words)):
+#           #    words[word] = float(words[word])
+#               
+#           #if words[1] > 99:
+#           #   print("Blowup before z = 99")
+#           #   continue
+#           #else:
+#           z.append(float(words[1]))
 
-            continue
-    
-        else:
-           words = line.split()
-           #for word in range(len(words)):
-           #    words[word] = float(words[word])
-               
-           #if words[1] > 99:
-           #   print("Blowup before z = 99")
-           #   continue
-           #else:
-           z.append(float(words[1]))
+import os
+def blowup_redshifts(dir_path):
+    test_list = []
+    for path, dirnames, filenames in os.walk(dir_path):
+        test_list.append(dirnames)
+    subdirs = test_list[0]
+    for i in range(len(subdirs)):
+        subdirs[i] = dir_path + subdirs[i] + "/"
+    #print(subdirs)
+    #sys.exit(0)
 
-with open(path + "div_variables.txt", 'r') as file:
-    z_div_variables = []
-    delta_div_variables =[]
-    delta_ratio_div_variables = []
-    for line in file:
-        if line.startswith('#'):
-            continue
-    
-        else:
-            words = line.split()
-           #for word in range(len(words)):
-           #    #words[word] = float(words[word])
-           #    z.append(words[word])
-            z_div_variables.append(float(words[0]))
-            delta_div_variables.append(float(words[1]))
-            #delta_ratio_div_variables.append(float(words[2]))
+    blowup_redshift = []
+    cs2_kessence = []
+    for i in range(len(subdirs)):
+        #print(i)
+        if len(cs2_kessence) > len(blowup_redshift): # if no blowup, we do not want sound speed
+            cs2_kessence.pop()
+            #print(str(i)+ " cs2 popped")
+            #print("popped")
+        with open(subdirs[i] + "div_variables.txt", 'r') as file:
+            for line in file:
+                if line.startswith("#"):
+                    continue
+                elif line.startswith("cs2_kessence"):
+                    words = line.split()
+                    cs2_kessence.append(float(words[1]))
+                    #print(cs2_kessence[-1])
+                    #print(str(i)+ " cs2 added")
+                    continue
+                else:
+                    words = line.split()
+                    if "inf" in words[1] or "nan" in words[1] or abs(float(words[1])) > 1000:
+                        blowup_redshift.append(float(words[0]))
+                        #print(str(i) + " blowup")
+                        #print(cs2_kessence[-1])
+                        break
+                    #if abs(float(words[1])) > 1000:
+                    #    blowup_redshift.append(float(words[0]))
+                    #    break
+    if len(cs2_kessence) > len(blowup_redshift): # if no blowup, we do not want sound speed
+            cs2_kessence.pop()
+            #print(str(len(subdirs)-1)+ " cs2 popped")    
+    return blowup_redshift,cs2_kessence
+#print(blowup_redshift)
+#print(cs2_kessence)
+"""
+Blowup redshift with cs2. Kess sourcing and not sourcing gravity 
+"""
+path_L300_N256_kess_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N256/kess_source_gravity/"
+path_L300_N256_kess_not_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N256/kess_not_source_gravity/"
+
+br,cs2 = blowup_redshifts(path_L300_N256_kess_not_source_gravity)
+br_s,cs2_s = blowup_redshifts(path_L300_N256_kess_source_gravity)
+
+"""
+not source gravity blows up for cs^2 = 1.3e-5 and not for 1.4e-5. Same for source gravity.
+"""
+plt.scatter(br,cs2,label='Not sourcing gravity',marker = 'x',s=100)
+plt.scatter(br_s,cs2_s,label='Sourcing gravity')
+#plt.show()
+plt.legend()
+plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 256^3, L = 300 \mathrm{Mpc/h}, w = -0.9$")
+#plt.scatter(zb,cs2)
+plt.ylabel(r"$c_s^2$")
+plt.xlabel(r"$z_b$")
+plt.yscale('log')
+plt.show()
+#sys.exit(0)
+#print("96")
+path_L300_N128_kess_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N128/kess_source_gravity/"
+path_L300_N128_kess_not_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N128/kess_not_source_gravity/"
+
+br,cs2 = blowup_redshifts(path_L300_N128_kess_not_source_gravity)
+br_s,cs2_s = blowup_redshifts(path_L300_N128_kess_source_gravity)
+#print(cs2)
+#print(br)
+
+"""
+not source gravity 8e-6 does not blow up, 7e-6 blows up. Same for source gravity
+"""
+
+plt.scatter(br,cs2,label='Not sourcing gravity',marker = 'x',s=100)
+plt.scatter(br_s,cs2_s,label='Sourcing gravity')
+#plt.show()
+plt.legend()
+plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 128^3, L = 300 \mathrm{Mpc/h}, w = -0.9$")
+#plt.scatter(zb,cs2)
+plt.ylabel(r"$c_s^2$")
+plt.xlabel(r"$z_b$")
+plt.yscale('log')
+plt.show()
+#sys.exit(0)
+
+
+path_L300_N512_kess_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N512/kess_source_gravity/"
+path_L300_N512_kess_not_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N512/kess_not_source_gravity/"
+
+br,cs2 = blowup_redshifts(path_L300_N512_kess_not_source_gravity)
+br_s,cs2_s = blowup_redshifts(path_L300_N512_kess_source_gravity)
+
+plt.scatter(br,cs2,label='Not sourcing gravity',marker = 'x',s=100)
+plt.scatter(br_s,cs2_s,label='Sourcing gravity')
+#plt.show()
+plt.legend()
+plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 512^3, L = 300 \mathrm{Mpc/h}, w = -0.9$")
+#plt.scatter(zb,cs2)
+plt.ylabel(r"$c_s^2$")
+plt.xlabel(r"$z_b$")
+plt.yscale('log')
+plt.show()
+sys.exit(0)
+
+
+#with open(path + "div_variables.txt", 'r') as file:
+#    z_div_variables = []
+#    H0_pi_div_variables = []
+#    delta_div_variables =[]
+#    delta_ratio_div_variables = []
+#    for line in file:
+#        if line.startswith('#'):
+#            continue
+#    
+#        else:
+#            words = line.split()
+#           #for word in range(len(words)):
+#           #    #words[word] = float(words[word])
+#           #    z.append(words[word])
+#            if abs(float(words[1])) > 1000:
+#                
+#            z_div_variables.append(float(words[0]))
+#            #delta_div_variables.append(float(words[1]))
+#            #delta_ratio_div_variables.append(float(words[2]))
 
 
            #if words[1] > 99:
@@ -59,9 +178,36 @@ with open(path + "div_variables.txt", 'r') as file:
            #   continue
            #else:
            #   z.append(words[1])
-z_div_variables = np.array(z_div_variables)
-delta_div_variables = np.array(delta_div_variables)
-delta_ratio_div_variables = np.array(delta_ratio_div_variables)
+
+###with open(path + "div_variables.txt", 'r') as file:
+###    z_div_variables = []
+###    H0_pi_div_variables = []
+###    delta_div_variables =[]
+###    delta_ratio_div_variables = []
+###    for line in file:
+###        if line.startswith('#'):
+###            continue
+###    
+###        else:
+###            words = line.split()
+###           #for word in range(len(words)):
+###           #    #words[word] = float(words[word])
+###           #    z.append(words[word])
+###            if abs(float(words[1])) > 1000:
+###                
+###            z_div_variables.append(float(words[0]))
+###            #delta_div_variables.append(float(words[1]))
+###            #delta_ratio_div_variables.append(float(words[2]))
+###
+###
+###           #if words[1] > 99:
+###           #   print("Blowup before z = 99")
+###           #   continue
+###           #else:
+###           #   z.append(words[1])
+###z_div_variables = np.array(z_div_variables)
+###delta_div_variables = np.array(delta_div_variables)
+###delta_ratio_div_variables = np.array(delta_ratio_div_variables)
 #z_div_variables = abs(z_div_variables)
 #delta_div_variables = abs(delta_div_variables)
 ###plt.scatter(z_div_variables,delta_ratio_div_variables)
@@ -75,31 +221,31 @@ delta_ratio_div_variables = np.array(delta_ratio_div_variables)
 Plotting the largest perturbation vs. redshift
 """
 #plt.semilogy(z_div_variables,delta_div_variables)
-plt.scatter(z_div_variables[1:],delta_div_variables[1:],color='k')
-plt.plot(z_div_variables[1:],delta_div_variables[1:],color ='r')
-plt.plot(np.ones(2)*z[1],np.linspace(np.nanmin(delta_div_variables[1:])/100,np.nanmax(delta_div_variables[1:])*100,2))
-#plt.plot(z_div_variables[1:],delta_div_variables[1:])
-plt.yscale('log')
-plt.gca().invert_xaxis()
-plt.xlabel("z")
-plt.title('The largest |(pi - pi_avg)/pi_avg| at every redshift',size=15)
-#plt.title("Largest absolute value of the perturbations in field")
-plt.show()
+###plt.scatter(z_div_variables[1:],delta_div_variables[1:],color='k')
+###plt.plot(z_div_variables[1:],delta_div_variables[1:],color ='r')
+###plt.plot(np.ones(2)*z[1],np.linspace(np.nanmin(delta_div_variables[1:])/100,np.nanmax(delta_div_variables[1:])*100,2))
+####plt.plot(z_div_variables[1:],delta_div_variables[1:])
+###plt.yscale('log')
+###plt.gca().invert_xaxis()
+###plt.xlabel("z")
+###plt.title('The largest |(pi - pi_avg)/pi_avg| at every redshift',size=15)
+####plt.title("Largest absolute value of the perturbations in field")
+###plt.show()
 
 """
 Plotting the Figure 2...
 """
 #path_to_cs2_data = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/"
+#4.04238
+#cs2 = [1e-10,1e-11,1e-12,1e-5,1e-7,1e-9,1e-13,1e-8,1e-6,5e-6]
+#zb = [15.9305,33.3975,56.7875,0.524534,4.01823,6.97263,75.2454,4.2553,3.18422,1.32337]
 
-cs2 = [1e-10,1e-11,1e-12,1e-5,1e-7,1e-9,1e-13,1e-8,1e-6,5e-6]
-zb = [15.9305,33.3975,56.7875,0.524534,4.01823,6.97263,75.2454,4.2553,3.18422,1.32337]
-
-plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 256^3, L = 300 \mathrm{Mpc/h}, w = -0.9$")
-plt.scatter(zb,cs2)
-plt.ylabel(r"$c_s^2$")
-plt.xlabel(r"$z_b$")
-plt.yscale('log')
-plt.show()
+#plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 256^3, L = 300 \mathrm{Mpc/h}, w = -0.9$")
+##plt.scatter(zb,cs2)
+#plt.ylabel(r"$c_s^2$")
+#plt.xlabel(r"$z_b$")
+#plt.yscale('log')
+#plt.show()
 
 #for i in range(len(z)):
     #print(z[i])
@@ -296,7 +442,7 @@ images = []
 #vmax = max_list[15]
 min_list = []
 max_list = []
-for i in range(10,16):
+for i in range(50):
     min_list.append(np.nanmin(data[i]))
     max_list.append(np.nanmax(data[i][data[i] != np.inf]))
 
@@ -304,8 +450,8 @@ for i in range(10,16):
 #vmax = np.max(max_list)*H0
 argmin = np.argmin(min_list)
 argmax = np.argmax(max_list)
-min_perc = np.percentile(data[argmin+10],0)
-max_perc = np.percentile(data[argmax+10],100)
+min_perc = np.percentile(data[argmin],1)
+max_perc = np.percentile(data[argmax],100)
 vmin = min_perc*H0
 vmax = max_perc*H0
 
@@ -317,7 +463,7 @@ norm = colors.LogNorm(vmin=vmin, vmax=vmax,clip=False)
 #plt.colorbar()
 #plt.show()
 
-for i in range(10,16):
+for i in range(30,len(data)):
     ###title = plt.text(0.5, 1.01,"z = " +str(z[i]), horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
    
     print(i)
@@ -332,7 +478,7 @@ for i in range(10,16):
 
     #im = ax.imshow(data[i], aspect='auto', origin='lower',extent=[0, 300, 0, 300],norm=norm interpolation='bicubic',animated=True)
     plt.title(r"$|H_0\pi|$" " at " "z = " +str(z[i]))
-    plt.imshow(data[i]*H0,cmap=cc.cm.rainbow4, aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='none',norm=norm)# set interpolation to bicubic for smooth plots
+    plt.imshow(data[i]*H0,cmap=cc.cm.rainbow4, aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic',norm=norm)# set interpolation to bicubic for smooth plots
     #plt.imshow(data[i],cmap="seismic", aspect='auto', origin='lower',extent=[0, 300, 0, 300], interpolation='bicubic',norm=norm)#,
     plt.xlabel("[Mpc/h]")
     plt.ylabel("[Mpc/h]")
