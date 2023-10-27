@@ -70,7 +70,7 @@ def blowup_redshifts(dir_path):
                     continue
                 else:
                     words = line.split()
-                    if "inf" in words[1] or "nan" in words[1] or abs(float(words[1])) > 1000:
+                    if "inf" in words[1] or "nan" in words[1] or abs(float(words[1])) > 1:
                         blowup_redshift.append(float(words[0]))
                         #print(str(i) + " blowup")
                         #print(cs2_kessence[-1])
@@ -84,9 +84,81 @@ def blowup_redshifts(dir_path):
     return blowup_redshift,cs2_kessence
 #print(blowup_redshift)
 #print(cs2_kessence)
+
+""" plotting z vs. avg_T00_Kess """
+def z_vs_avg_T00_Kess(path):
+    with open(path,"r") as file:
+        z = []
+        avg_T00_Kess = []
+        avg_T00_Kess_plus_rho_smg = []
+        rho_smg = []
+        for line in file:
+            if line.startswith("#"):
+                continue
+            else:
+                words = line.split()
+                if float(words[1]) > 1e100 or float(words[1]) < 1e-13:
+                    continue
+                else:
+                    z.append(float(words[0]))
+                    avg_T00_Kess.append(float(words[1]))
+                    avg_T00_Kess_plus_rho_smg.append(float(words[2]))
+                    rho_smg.append(float(words[3]))
+    return np.array(z),np.array(avg_T00_Kess),np.array(avg_T00_Kess_plus_rho_smg),np.array(rho_smg)
+path_lin = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/energy_overdensity/linear/avg_T00_Kess.txt"
+path_nonlin = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/energy_overdensity/nonlinear/avg_T00_Kess.txt"
+z_lin,T00_lin,avg_tot_T00_Kess_lin,rho_smg_lin = z_vs_avg_T00_Kess(path_lin)
+z_nonlin,T00_nonlin,avg_tot_T00_Kess_nonlin,rho_smg_nonlin = z_vs_avg_T00_Kess(path_nonlin)
+fig,ax = plt.subplots(1,2)
+fig.suptitle("Average dark energy fluid energy-overdensity," r"$\frac{\delta \rho}{\rho_\mathrm{CLASS}}$" ", using background value from CLASS as average",size=(25))
+
+ax[0].semilogy(z_lin,T00_lin)
+ax[0].set_title('Linear dark energy')
+#plt.ylim(1e-10,np.max(np.array(T00_test)))
+#plt.plot(z_test,T00_test)
+
+ax[0].set_xlabel("z")
+ax[0].invert_xaxis()
+
+ax[1].semilogy(z_nonlin,T00_nonlin)
+ax[1].set_title('Non-linear dark energy')
+#plt.ylim(1e-10,np.max(np.array(T00_test)))
+#plt.plot(z_test,T00_test)
+#plt.gca().invert_xaxis()
+ax[1].set_xlabel("z")
+ax[1].invert_xaxis()
+plt.show()
+fig,ax1 = plt.subplots()
+ax1.plot(z_nonlin,(avg_tot_T00_Kess_nonlin-rho_smg_nonlin)/rho_smg_nonlin,label=  r'$\frac{<\rho_\mathrm{CLASS} + \delta \rho_\mathrm{non-linear} > - \rho_\mathrm{CLASS}}{\rho_\mathrm{CLASS}} $',color='k')
+ax1.set_yscale('log')
+ax1.set_ylabel("Non-linear",size=15)
+ax1.invert_xaxis()
+ax2 = ax1.twinx()
+ax2.set_ylabel('Linear',color='r',size=15)
+
+ax2.plot(z_lin,(avg_tot_T00_Kess_lin-rho_smg_lin)/rho_smg_lin,label=r'$\frac{<\rho_\mathrm{CLASS} + \delta \rho_\mathrm{linear} > - \rho_\mathrm{CLASS}}{\rho_\mathrm{CLASS}} $',color='r')
+ax2.set_yscale('linear')
+#ax2.invert_xaxis()
+#plt.plot(z_lin,rho_smg_lin,label='rho_smg Linear',marker='1')
+#plt.scatter(z_nonlin,rho_smg_nonlin,label='Background dark energy density CLASS',color='k')
+ax1.legend(bbox_to_anchor=(0, 1), loc='upper left',fontsize=25)
+ax2.legend(bbox_to_anchor=(0.9, 1), loc='upper right',fontsize=25)
+#plt.gca().invert_xaxis()
+ax1.set_xlabel("z")
+plt.show()
+sys.exit(0)
+
+                     
+
+
+
+
 """
-Blowup redshift with cs2. Kess sourcing and not sourcing gravity 
+
 """
+#Blowup redshift with cs2. Kess sourcing and not sourcing gravity 
+"""
+
 path_L300_N256_kess_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N256/kess_source_gravity/"
 path_L300_N256_kess_not_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N256/kess_not_source_gravity/"
 
@@ -94,7 +166,7 @@ br,cs2 = blowup_redshifts(path_L300_N256_kess_not_source_gravity)
 br_s,cs2_s = blowup_redshifts(path_L300_N256_kess_source_gravity)
 
 """
-not source gravity blows up for cs^2 = 1.3e-5 and not for 1.4e-5. Same for source gravity.
+#not source gravity blows up for cs^2 = 1.3e-5 and not for 1.4e-5. Same for source gravity.
 """
 plt.scatter(br,cs2,label='Not sourcing gravity',marker = 'x',s=100)
 plt.scatter(br_s,cs2_s,label='Sourcing gravity')
@@ -105,7 +177,7 @@ plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 256^3, L = 300 \mathrm
 plt.ylabel(r"$c_s^2$")
 plt.xlabel(r"$z_b$")
 plt.yscale('log')
-plt.show()
+####plt.show()
 #sys.exit(0)
 #print("96")
 path_L300_N128_kess_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/L300_N128/kess_source_gravity/"
@@ -115,9 +187,8 @@ br,cs2 = blowup_redshifts(path_L300_N128_kess_not_source_gravity)
 br_s,cs2_s = blowup_redshifts(path_L300_N128_kess_source_gravity)
 #print(cs2)
 #print(br)
-
 """
-not source gravity 8e-6 does not blow up, 7e-6 blows up. Same for source gravity
+#not source gravity 8e-6 does not blow up, 7e-6 blows up. Same for source gravity
 """
 
 plt.scatter(br,cs2,label='Not sourcing gravity',marker = 'x',s=100)
@@ -129,7 +200,7 @@ plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 128^3, L = 300 \mathrm
 plt.ylabel(r"$c_s^2$")
 plt.xlabel(r"$z_b$")
 plt.yscale('log')
-plt.show()
+###plt.show()
 #sys.exit(0)
 
 
@@ -138,6 +209,10 @@ path_L300_N512_kess_not_source_gravity = "/mn/stornext/d5/data/jorgeagl/kevoluti
 
 br,cs2 = blowup_redshifts(path_L300_N512_kess_not_source_gravity)
 br_s,cs2_s = blowup_redshifts(path_L300_N512_kess_source_gravity)
+
+"""
+#not source gravity blows up for cs^2 = 2e-5 and not for 2.5e-5. Same for source gravity.
+"""
 
 plt.scatter(br,cs2,label='Not sourcing gravity',marker = 'x',s=100)
 plt.scatter(br_s,cs2_s,label='Sourcing gravity')
@@ -148,8 +223,48 @@ plt.title(r"$N_{\mathrm{grid}} = N_{\mathrm{particles}} = 512^3, L = 300 \mathrm
 plt.ylabel(r"$c_s^2$")
 plt.xlabel(r"$z_b$")
 plt.yscale('log')
+###plt.show()
+#sys.exit(0)
+"""
+
+
+
+# density perturbation from k-evolution
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_rho/snap_000_T00_kess.h5", "r") as f:
+        # Print all root level object names (aka keys) 
+        # these can be group or dataset names 
+        #print("Keys: %s" % f.keys())
+        # get first object name/key; may or may NOT be a group
+        a_group_key = list(f.keys())[0]
+
+        # get the object type for a_group_key: usually group or dataset
+        #print(type(f[a_group_key])) 
+
+        # If a_group_key is a group name, 
+        # this gets the object names in the group and returns as a list
+        #data = list(f[a_group_key])
+
+        # If a_group_key is a dataset name, 
+        # this gets the dataset values and returns as a list
+        #data = list(f[a_group_key])
+        # preferred methods to get dataset values:
+        #ds_obj = f[a_group_key]      # returns as a h5py dataset object
+        ds_arr = f[a_group_key][()]  # returns as a numpy array
+ #   with open(filenames[i], "r") as f:
+
+
+grad_x, grad_y, grad_z = np.gradient(ds_arr)
+
+# Compute the second derivatives by applying the gradient function again
+second_derivative_x = np.gradient(grad_x)[0]
+second_derivative_y = np.gradient(grad_y)[1]
+second_derivative_z = np.gradient(grad_z)[2]
+index = np.argmax(np.ndarray.flatten(abs(second_derivative_y)))
+multi_indices = np.unravel_index(index, second_derivative_y.shape)
+#x = np.abs(ds_arr[:,multi_indices[1],:])
+plt.imshow(ds_arr[:,multi_indices[1],:])
 plt.show()
-sys.exit(0)
+
 
 
 #with open(path + "div_variables.txt", 'r') as file:

@@ -264,6 +264,8 @@ struct metadata
 	int Kess_source_gravity;
   int NL_kessence;
   int bg_hiclass;
+  // The functions below do not need to be functions, but they increase code readability
+
   void change_nKe_numsteps(int newValue){
 	nKe_numsteps = newValue;
   }

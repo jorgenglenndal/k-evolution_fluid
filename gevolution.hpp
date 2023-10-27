@@ -562,9 +562,9 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
     return abs(largest_pert * constant);
     }
 
-
+  // returns the largest absolute value
   template <class FieldType>
-    double max_abs_func(Field<FieldType> & field, double constant) // returns the largest absolute value
+    double max_abs_func(Field<FieldType> & field, double constant) 
     {
     Site x(field.lattice());
     double largest_value = 0., temp;

@@ -324,6 +324,12 @@ COUT << "running on " << n*m << " cores." << endl;
   Field<Cplx> scalarFT_zeta_half_old;
   
   //new
+
+  Field<Real> T00_Kess_test;
+  Field<Cplx> T00_KessFT_test;
+  T00_Kess_test.initialize(lat,1);
+  T00_KessFT_test.initialize(latFT,1);
+  PlanFFT<Cplx> plan_T00_Kess_test(&T00_Kess_test, &T00_KessFT_test);
   
   //Field<Real> Sij;
   //Field<Cplx> SijFT;
@@ -599,7 +605,7 @@ for (x.first(); x.test(); x.next())
 //   //****************************
 //   //****SAVE DATA To test Backreaction
 //   //****************************
-
+  std::ofstream avg_T00_Kess_file;	
   std::ofstream Result_avg;
   std::ofstream Result_real;
   std::ofstream Result_fourier;
@@ -608,6 +614,7 @@ for (x.first(); x.test(); x.next())
   std::ofstream kess_snapshots;
   std::ofstream div_variables;
   std::string output_path = sim.output_path;
+  std::string filename_avg_T00_Kess = output_path + "avg_T00_Kess.txt";
   std::string filename_avg = output_path + "Result_avg.txt";
   std::string filename_real = output_path + "Result_real.txt";
   std::string filename_fourier = output_path + "Result_fourier.txt";
@@ -615,6 +622,7 @@ for (x.first(); x.test(); x.next())
   std::string filename_redshift = output_path + "redshifts.txt";
   std::string filename_kess_snapshots = output_path + "kess_snapshots.txt";
   std::string filename_div_variables = output_path + "div_variables.txt";
+  avg_T00_Kess_file.open(filename_avg_T00_Kess, std::ios::out);
   Result_avg.open(filename_avg, std::ios::out);
   Result_real.open(filename_real, std::ios::out);
   Result_fourier.open(filename_fourier, std::ios::out);
@@ -623,9 +631,11 @@ for (x.first(); x.test(); x.next())
   kess_snapshots.open(filename_kess_snapshots, std::ios::out);
   div_variables.open(filename_div_variables, std::ios::out);
 
+  avg_T00_Kess_file << "### z,              avg (T00_Kess/rho_smg),        avg (rho_smg + T00_kess),         rho_smg" << endl;
+
   div_variables<<"### Here are the variables" << endl;
   div_variables<<"cs2_kessence         " << cosmo.cs2_kessence << endl;
-  div_variables<<"### (z),       H_conf*avg_pi,       max |H_conf*pi_k|,       avg_zeta,      max_abs_zeta"<<endl;
+  div_variables<<"### (z),       H_conf*avg_pi,       max |H_conf*pi_k|,       avg_zeta,      max_abs_zeta"  <<endl;
 
   Result_avg<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
   Result_avg<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
@@ -682,6 +692,17 @@ int norm_kFT_squared = 0.;
 string str_filename ;
 string str_filename2 ;
 string str_filename3 ;
+
+double previous_a_kess;
+//int numpts = sim.numpts;
+double previous_avg_pi;
+double previous_avg_zeta;
+double max_abs_pi;
+double max_abs_zeta;
+double previous_max_abs_zeta;
+double previous_max_abs_pi;
+double avg_T00_Kess;
+double avg_rho_smg_T00_Kess;
 #endif
 
 	//******************************************************************
@@ -1306,68 +1327,33 @@ for (x.first(); x.test(); x.next())
 //Kessence - LeapFrog:START
 //**********************
 #ifdef NONLINEAR_TEST
-
-  //double max_absValue_zeta = numeric_limits<double>::min();
-  //double max_absValue_pi = numeric_limits<double>::min();
-  //double largest_relative_difference;
-  //double relative_difference;
-  //double largest_perturbation;
-  //double previous_largest_perturbation;
-  double previous_a_kess;
-  double avg_pi_check;
-  double avg_zeta_check;
-  //double max_absValue_zeta_old = numeric_limits<double>::min();
-  //double max_absValue_pi_old = numeric_limits<double>::min();
-  double avg_absValue_zeta = 0.;
-  double avg_absValue_pi= 0.;
-  //double avg_absValue_zeta_old = 0.;
-  //double avg_absValue_pi_old= 0.;	
-  //double absValue_zeta_old;
-  //double absValue_pi_old;
-  double absValue_zeta;
-  double absValue_pi;
-  int numpts = sim.numpts; 
-  double previous_avg_pi;
-  double previous_avg_zeta;
-  double max_abs_pi;
-  double max_abs_zeta;
-  double previous_max_abs_zeta;
-  double previous_max_abs_pi;  
-  double testing_avg_pi;
-  double testing_previous_avg_pi;
-   
-  //double perturbation_ratio;
-  //double previous_perturbation_ratio;
-  // = average(  zeta_half,1., numpts3d ) ;
-  //double avg_zeta_old =average(  zeta_half,1., numpts3d ) ;
-
-
-//  for (int x_ind = 0; x_ind < numpts; x_ind++) {
-//         for (int y_ind = 0; y_ind < numpts; y_ind++) {
-//            for (int z_ind = 0; z_ind < numpts; z_ind++) {
-//	  	     //absValue_zeta = abs(zeta_half(x_ind,y_ind,z_ind));
-//			 //absValue_pi = abs(pi_k(x_ind,y_ind,z_ind));
-//			 absValue_zeta_old = abs(zeta_half_old(x_ind,y_ind,z_ind));
-//			 absValue_pi_old = abs(pi_k_old(x_ind,y_ind,z_ind));
-//			 //avg_absValue_zeta += absValue_zeta;
-//			 //avg_absValue_pi += absValue_pi;
-//			 avg_absValue_zeta_old += absValue_zeta_old;
-//             avg_absValue_pi_old += absValue_pi_old;
-//               if (absValue_zeta_old > max_absValue_zeta_old){
-//                  max_absValue_zeta_old = absValue_zeta_old;
-//               }
-//			   if (absValue_pi_old > max_absValue_pi_old){
-//                  max_absValue_pi_old = absValue_pi_old;
-//               }
-//            }
-//         }
-//      }
-	  //avg_absValue_zeta_old /= numpts3d;
-	  //avg_absValue_pi_old /= numpts3d;
-  //int loop_in_loop = 0;
-  double old_nKe_numsteps = sim.nKe_numsteps;
+  Field<Real> T00_Kess_test;
+  Field<Cplx> T00_KessFT_test;
+  T00_Kess_test.initialize(lat,1);
+  T00_KessFT_test.initialize(latFT,1);
+  PlanFFT<Cplx> plan_T00_Kess_test(&T00_Kess_test, &T00_KessFT_test);
+  double gsl_rho_spline = gsl_spline_eval(rho_smg_spline, a, acc);
+  for (x.first(); x.test(); x.next()){
+	T00_Kess_test(x) = T00_Kess(x) +  gsl_rho_spline;
+  }
+  double old_nKe_numsteps = sim.nKe_numsteps; // is double to avoid int/int round off
   int remaining_steps_with_new_nKe_numsteps;
+////  COUT << "rho_smg = " << gsl_spline_eval(rho_smg_spline, a, acc) << endl;
+  double avg_T00_plus_rho_smg = average_func(T00_Kess_test,1.,numpts3d);
+////  COUT << "T00_test = "<<  T00_avg_for_testing << endl;
+  //double max_abs_T00_test = max_abs_func(T00_Kess,1.);
+  //COUT << "|T00_Kess| = " << max_abs_T00_test << endl;
+  //double average_T00 = average_func(T00_Kess,1.,numpts3d) + gsl_spline_eval(rho_smg_spline, a, acc);
+  //COUT << "average T00 = " << average_T00 << endl;
+  avg_T00_Kess = average_func(T00_Kess,1.,numpts3d);
+  //avg_rho_smg_T00_Kess = gsl_spline_eval(rho_smg_spline, a, acc) + avg_T00_Kess;
+  avg_T00_Kess /= gsl_spline_eval(rho_smg_spline, a, acc);
+  
+
+  avg_T00_Kess_file <<1./(a) -1. <<"       "<<avg_T00_Kess << "            "<< avg_T00_plus_rho_smg <<"         "<< gsl_rho_spline <<endl;
+   
 #endif
+
   double a_kess=a;
   if(cycle==0)
   {
@@ -1415,7 +1401,7 @@ for (x.first(); x.test(); x.next())
 	  #endif
 	  ));
 	max_abs_zeta = max_abs_func(zeta_half,1.);
-	if (cycle==0) div_variables <<  1./(a_kess) -1. <<"          "<< avg_pi <<"        " << max_abs_pi<<"        "<< avg_zeta<<"       "<< max_abs_zeta << endl;
+	if (cycle==0) div_variables <<  1./(a_kess) -1. <<"          "<< avg_pi <<"        " << max_abs_pi<<"        "<< avg_zeta<<"       "<< max_abs_zeta << "         "<< "---" <<endl;
 	}
 	previous_max_abs_zeta = max_abs_zeta;
 	previous_max_abs_pi = max_abs_pi;
@@ -1482,8 +1468,9 @@ for (x.first(); x.test(); x.next())
 	div_variables <<  1./(a_kess) -1. <<"          "<< avg_pi <<"        " << max_abs_pi<<"        "<< avg_zeta<<"       "<< max_abs_zeta << endl;
 	
 
-
-
+    //COUT <<"rho_crit_0 = "<<gsl_spline_eval(rho_crit_spline, 1., acc)<< endl;;
+    //COUT << "rho_smg = " << gsl_spline_eval(rho_smg_spline, a, acc) << endl;
+	//COUT << " = "<<   << endl;
 	  //avg_absValue_pi /= numpts3d;
 	  //COUT << "LD          = "<<largest_relative_difference<<"         avg_pi         = " <<avg_pi_check <<"        LRD       = "  << largest_relative_difference/avg_pi_check <<endl;
 	  //COUT << "avg_zeta = " << avg_zeta << "       avg_zeta_check = " << avg_zeta_check << endl;
@@ -1529,8 +1516,11 @@ for (x.first(); x.test(); x.next())
       //if ( avg_zeta > 1.e-7 && abs(avg_zeta/avg_zeta_old)>1.0001 && snapcount_b< sim.num_snapshot_kess )
       //if ((abs(avg_zeta/previous_avg_zeta) > 1.005 && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){ //(max_absValue_pi/avg_absValue_pi < 1.005 && snapcount_b <= sim.num_snapshot_kess)) || (abs(avg_zeta) >  && snapcount_b <= sim.num_snapshot_kess))
 	  
-	  // change to maxvalue of field
-	  if ((max_abs_zeta > 1000.*avg_zeta && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){	  
+	  // change to maxvalue of field?
+
+	  // This if test checks if the dark energy field is blowing up. If true, the dark energy will from this time be solved inside the if test until the time step for the cycle
+	  // is complete. Then the code will continue as normal and in the next cycle the if test is always true.
+	  if ((max_abs_zeta > 1000.*avg_zeta && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time) || (abs(avg_pi) > 1.)){	  
 	  //div_variables <<"### original ###" << endl;
 	  //if ((max_abs_zeta > 1000.*avg_zeta && avg_zeta > 1e-7))
 	  //if (!(sim.kess_inner_loop_check)) div_variables <<"### Blowup has happened. The above line is the first in the blowup." << endl;  
@@ -1541,7 +1531,7 @@ for (x.first(); x.test(); x.next())
 //		COUT << "Aborting as we have all the kess_snapshots..." << endl;
 //	    parallel.abortForce();
 //	  }
-      //kess_inner_loop_check_func(true);
+      
 	  if (!(sim.kess_inner_loop_check)) COUT << "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";
 	  if (!(sim.kess_inner_loop_check)) div_variables << "### The blowup criteria are met"<<endl;
 	  //COUT << "loop_in_loop = " << loop_in_loop << endl;
@@ -2045,6 +2035,7 @@ for (x.first(); x.test(); x.next())
 	}
 	// closing the files
 #ifdef NONLINEAR_TEST
+    avg_T00_Kess_file.close();
 	Result_avg.close();
   	Result_real.close();
 	Result_fourier.close();
