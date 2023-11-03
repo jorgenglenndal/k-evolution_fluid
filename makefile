@@ -26,6 +26,7 @@ DLATFIELD2   := -DFFT3D -DHDF5
 DGEVOLUTION  := -DPHINONLINEAR
 DGEVOLUTION  += -DBENCHMARK
 DGEVOLUTION  += -DNONLINEAR_TEST # for the non-linear instability tests
+DGEVOLUTION  += -DFLUID_VARIABLES # to calculate and allow the fluid variables to be written to file. Contained in a flag to make bugs local to this flag. NONLINEAR_TEST flag must also be enabled! 
 DGEVOLUTION  += -DEXACT_OUTPUT_REDSHIFTS
 #DGEVOLUTION  += -DVELOCITY      # enables velocity field utilities
 DGEVOLUTION  += -DCOLORTERMINAL

@@ -76,6 +76,9 @@ void writeSnapshots(metadata & sim, cosmology & cosmo, const double fourpiG, con
 #ifdef VELOCITY
 , Field<Real> * vi
 #endif
+#ifdef FLUID_VARIABLES
+, Field<Real> * delta_rho_fluid, Field<Real> * delta_p_fluid,Field<Real> * v_x_fluid,Field<Real> * v_y_fluid,Field<Real> * v_z_fluid  
+#endif
 )
 {
 	char filename[2*PARAM_MAX_LENGTH+24];
@@ -110,6 +113,19 @@ void writeSnapshots(metadata & sim, cosmology & cosmo, const double fourpiG, con
 #ifdef VELOCITY
 	if (sim.out_snapshot & MASK_VEL)
 		vi->saveHDF5_server_open(h5filename + filename + "_v");
+#endif
+
+#ifdef FLUID_VARIABLES
+	if (sim.out_snapshot & MASK_DELTA_RHO_FLUID)
+		delta_rho_fluid->saveHDF5_server_open(h5filename + filename + "_delta_rho_fluid");
+		if (sim.out_snapshot & MASK_DELTA_P_FLUID)
+		delta_p_fluid->saveHDF5_server_open(h5filename + filename + "_delta_p_fluid");
+		if (sim.out_snapshot & MASK_V_X_FLUID)
+		v_x_fluid->saveHDF5_server_open(h5filename + filename + "_v_x_fluid");
+		if (sim.out_snapshot & MASK_V_Y_FLUID)
+		v_y_fluid->saveHDF5_server_open(h5filename + filename + "_v_y_fluid");
+		if (sim.out_snapshot & MASK_V_Z_FLUID)
+		v_z_fluid->saveHDF5_server_open(h5filename + filename + "_v_z_fluid");
 #endif
 
 	if (sim.out_snapshot & MASK_B)
@@ -264,6 +280,58 @@ void writeSnapshots(metadata & sim, cosmology & cosmo, const double fourpiG, con
 			phi->saveHDF5_coarseGrain3D(h5filename + filename + "_phi.h5", sim.downgrade_factor);
 		else
 			phi->saveHDF5(h5filename + filename + "_phi.h5");
+#endif
+
+#ifdef FLUID_VARIABLES
+if (sim.out_snapshot & MASK_DELTA_RHO_FLUID)
+#ifdef EXTERNAL_IO
+		delta_rho_fluid->saveHDF5_server_write(NUMBER_OF_IO_FILES);
+#else
+		if (sim.downgrade_factor > 1)
+			delta_rho_fluid->saveHDF5_coarseGrain3D(h5filename + filename + "_delta_rho_fluid.h5", sim.downgrade_factor);
+		else
+			delta_rho_fluid->saveHDF5(h5filename + filename + "_delta_rho_fluid.h5");
+#endif
+
+if (sim.out_snapshot & MASK_DELTA_P_FLUID)
+#ifdef EXTERNAL_IO
+		delta_p_fluid->saveHDF5_server_write(NUMBER_OF_IO_FILES);
+#else
+		if (sim.downgrade_factor > 1)
+			delta_p_fluid->saveHDF5_coarseGrain3D(h5filename + filename + "_delta_p_fluid.h5", sim.downgrade_factor);
+		else
+			delta_p_fluid->saveHDF5(h5filename + filename + "_delta_p_fluid.h5");
+#endif
+
+if (sim.out_snapshot & MASK_V_X_FLUID)
+#ifdef EXTERNAL_IO
+		v_x_fluid->saveHDF5_server_write(NUMBER_OF_IO_FILES);
+#else
+		if (sim.downgrade_factor > 1)
+			v_x_fluid->saveHDF5_coarseGrain3D(h5filename + filename + "_v_x_fluid.h5", sim.downgrade_factor);
+		else
+			v_x_fluid->saveHDF5(h5filename + filename + "_v_x_fluid.h5");
+#endif
+
+if (sim.out_snapshot & MASK_V_Y_FLUID)
+#ifdef EXTERNAL_IO
+		v_y_fluid->saveHDF5_server_write(NUMBER_OF_IO_FILES);
+#else
+		if (sim.downgrade_factor > 1)
+			v_y_fluid->saveHDF5_coarseGrain3D(h5filename + filename + "_v_y_fluid.h5", sim.downgrade_factor);
+		else
+			v_y_fluid->saveHDF5(h5filename + filename + "_v_y_fluid.h5");
+#endif
+
+if (sim.out_snapshot & MASK_V_Z_FLUID)
+#ifdef EXTERNAL_IO
+		v_z_fluid->saveHDF5_server_write(NUMBER_OF_IO_FILES);
+#else
+		if (sim.downgrade_factor > 1)
+			v_z_fluid->saveHDF5_coarseGrain3D(h5filename + filename + "_v_z_fluid.h5", sim.downgrade_factor);
+		else
+			v_z_fluid->saveHDF5(h5filename + filename + "_v_z_fluid.h5");
+#endif
 #endif
 
 

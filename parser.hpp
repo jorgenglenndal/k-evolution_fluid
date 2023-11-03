@@ -665,7 +665,18 @@ bool parseFieldSpecifiers(parameter * & params, const int numparam, const char *
 				else if (strcmp(item, "Zeta") == 0 || strcmp(item, "zeta") == 0)
 					pvalue |= MASK_ZETA;
 				
-				//new
+				#ifdef FLUID_VARIABLES
+				else if (strcmp(start, "delta_rho_fluid") == 0)
+					pvalue |= MASK_DELTA_RHO_FLUID;
+				else if (strcmp(start, "delta_p_fluid") == 0)
+					pvalue |= MASK_DELTA_P_FLUID;
+				else if (strcmp(start, "v_x_fluid") == 0)
+					pvalue |= MASK_V_X_FLUID;
+				else if (strcmp(start, "v_y_fluid") == 0)
+					pvalue |= MASK_V_Y_FLUID;
+				else if (strcmp(start, "v_z_fluid") == 0)
+					pvalue |= MASK_V_Z_FLUID;
+				#endif
 				
 				//else if (strcmp(item, "T0i_kess") == 0)// || strcmp(item, "zeta") == 0)
 				//	pvalue |= MASK_T0i_KESS;
@@ -727,6 +738,20 @@ bool parseFieldSpecifiers(parameter * & params, const int numparam, const char *
 			
 
         //Kessence end
+
+		    #ifdef FLUID_VARIABLES
+			else if (strcmp(start, "delta_rho_fluid") == 0)
+				pvalue |= MASK_DELTA_RHO_FLUID;
+			else if (strcmp(start, "delta_p_fluid") == 0)
+				pvalue |= MASK_DELTA_P_FLUID;
+			else if (strcmp(start, "v_x_fluid") == 0)
+				pvalue |= MASK_V_X_FLUID;
+			else if (strcmp(start, "v_y_fluid") == 0)
+				pvalue |= MASK_V_Y_FLUID;
+			else if (strcmp(start, "v_z_fluid") == 0)
+				pvalue |= MASK_V_Z_FLUID;
+			#endif
+
 			else if (strcmp(start, "Chi") == 0 || strcmp(start, "chi") == 0)
 				pvalue |= MASK_CHI;
 			else if (strcmp(start, "Pot") == 0 || strcmp(start, "pot") == 0 || strcmp(start, "Psi_N") == 0 || strcmp(start, "psi_N") == 0 || strcmp(start, "PsiN") == 0 || strcmp(start, "psiN") == 0)

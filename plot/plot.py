@@ -89,30 +89,55 @@ def blowup_redshifts(dir_path):
 def z_vs_avg_T00_Kess(path):
     with open(path,"r") as file:
         z = []
-        avg_T00_Kess = []
-        avg_T00_Kess_plus_rho_smg = []
-        rho_smg = []
+        var1 = [] #avg_T00_Kess = []
+        var2 = [] #avg_T00_Kess_plus_rho_smg = []
+        #var3 = [] #rho_smg = []
         for line in file:
             if line.startswith("#"):
                 continue
             else:
                 words = line.split()
-                if float(words[1]) > 1e100 or float(words[1]) < 1e-13:
-                    continue
-                else:
-                    z.append(float(words[0]))
-                    avg_T00_Kess.append(float(words[1]))
-                    avg_T00_Kess_plus_rho_smg.append(float(words[2]))
-                    rho_smg.append(float(words[3]))
-    return np.array(z),np.array(avg_T00_Kess),np.array(avg_T00_Kess_plus_rho_smg),np.array(rho_smg)
+                #if float(words[1]) > 1e100 or float(words[1]) < 1e-13:
+                #    continue
+                
+                z.append(float(words[0]))
+                var1.append(float(words[1]))
+                var2.append(float(words[2]))
+                #rho_smg.append(float(words[3]))
+    return np.array(z), np.array(var1), np.array(var2)
+
+
+"""plot with wrong T00 expression in gevolution"""
+###path_lin = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/energy_overdensity/old/linear/avg_T00_Kess.txt"
+###path_nonlin = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/energy_overdensity/old/nonlinear/avg_T00_Kess.txt"
+###z_lin,var1_lin,var2_lin = z_vs_avg_T00_Kess(path_lin)
+###z_nonlin,var1_nonlin,var2_nonlin = z_vs_avg_T00_Kess(path_nonlin)
+###
+###plt.plot(z_nonlin,abs(var1_nonlin),color="r")
+###plt.plot(z_nonlin,abs(var2_nonlin),"--",color='r')
+###plt.yscale('log')
+###plt.gca().invert_xaxis()
+####plt.show()
+####sys.exit(0)
+
+
+
 path_lin = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/energy_overdensity/linear/avg_T00_Kess.txt"
 path_nonlin = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/energy_overdensity/nonlinear/avg_T00_Kess.txt"
-z_lin,T00_lin,avg_tot_T00_Kess_lin,rho_smg_lin = z_vs_avg_T00_Kess(path_lin)
-z_nonlin,T00_nonlin,avg_tot_T00_Kess_nonlin,rho_smg_nonlin = z_vs_avg_T00_Kess(path_nonlin)
+z_lin,var1_lin,var2_lin = z_vs_avg_T00_Kess(path_lin)
+z_nonlin,var1_nonlin,var2_nonlin = z_vs_avg_T00_Kess(path_nonlin)
+#print(z_nonlin)
+#plt.plot(z_nonlin[:-1],abs(var1_nonlin[:-1]),color='k')
+plt.plot(z_nonlin[:-1],abs(var2_nonlin[:-1]),"--",color='k')
+plt.yscale('log')
+plt.gca().invert_xaxis()
+plt.show()
+sys.exit(0)
+"""
 fig,ax = plt.subplots(1,2)
 fig.suptitle("Average dark energy fluid energy-overdensity," r"$\frac{\delta \rho}{\rho_\mathrm{CLASS}}$" ", using background value from CLASS as average",size=(25))
 
-ax[0].semilogy(z_lin,T00_lin)
+ax[0].semilogy(z_lin,)
 ax[0].set_title('Linear dark energy')
 #plt.ylim(1e-10,np.max(np.array(T00_test)))
 #plt.plot(z_test,T00_test)
@@ -147,7 +172,7 @@ ax2.legend(bbox_to_anchor=(0.9, 1), loc='upper right',fontsize=25)
 ax1.set_xlabel("z")
 plt.show()
 sys.exit(0)
-
+"""
                      
 
 

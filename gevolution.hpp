@@ -388,28 +388,28 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
             //************************
             // 0-0-component: (Time,Time)
             T00(xField)       =  + coeff1 * ( -3. * cs2 * Hcon * pi_k(xField) + zeta_half(xField)
-                              /*Non-linear*/ +  non_linearity * (1. - 2. * cs2) * gradientpi_squared / 2.  );
+                              /*Non-linear*/ +  non_linearity * (2. * cs2 - 1.) * gradientpi_squared / 2.  ); // made change in the last term from (1. - 2. * cs2) to (2. * cs2 - 1.)
             //*************************************************************************************
             // 1-1-component: (X,X)
             Tij(xField, 0, 0) = + coeff2 * (-3.* ca2 * Hcon* pi_k(xField) + zeta_half(xField)
-                              /*Non-linear*/ - non_linearity * (gradientpi_squared / 2.  + Dx_pi_Dx_pi) );
+                              /*Non-linear*/ - non_linearity * (gradientpi_squared / 2.  + Dx_pi_Dx_pi) ); // looks correct
             //*************************************************************************************
             // 2-2-component: (Y,Y)
-            Tij(xField, 1, 1) = + coeff2 * (-3.* ca2 * Hcon* pi_k(xField) +   zeta_half(xField)
-                              /*Non-linear*/ -  non_linearity * (gradientpi_squared / 2.  + Dy_pi_Dy_pi) );
+            Tij(xField, 1, 1) = + coeff2 * (-3.* ca2 * Hcon* pi_k(xField) + zeta_half(xField)
+                              /*Non-linear*/ - non_linearity * (gradientpi_squared / 2.  + Dy_pi_Dy_pi) ); // looks correct
             //*************************************************************************************
             // 3-3-component: (Z,Z)
-            Tij(xField, 2, 2) = + coeff2 * (-3.* ca2 * Hcon* pi_k(xField) +   zeta_half(xField)
-                              /*Non-linear*/ -  non_linearity * (gradientpi_squared / 2.  + Dz_pi_Dz_pi) );
+            Tij(xField, 2, 2) = + coeff2 * (-3.* ca2 * Hcon* pi_k(xField) + zeta_half(xField)
+                              /*Non-linear*/ - non_linearity * (gradientpi_squared / 2.  + Dz_pi_Dz_pi) ); // looks correct
             //*************************************************************************************
             // 1-2-component: (X,Y)
-            Tij(xField, 0, 1) = + non_linearity *  coeff2 * (/*Non-linear*/ Dx_pi_Dy_pi);
+            Tij(xField, 0, 1) = + non_linearity *  coeff2 * (/*Non-linear*/ Dx_pi_Dy_pi);  // looks correct
             //*************************************************************************************
             // 1-3-component: (X,Z)
-            Tij(xField, 0, 2) = + non_linearity *  coeff2 * (/*Non-linear*/ Dx_pi_Dz_pi);
+            Tij(xField, 0, 2) = + non_linearity *  coeff2 * (/*Non-linear*/ Dx_pi_Dz_pi); // looks correct
             //*************************************************************************************
             // 2-3-component: (Y,Z)
-            Tij(xField, 1, 2) = + non_linearity *  coeff2 * (/*Non-linear*/ Dy_pi_Dz_pi);
+            Tij(xField, 1, 2) = + non_linearity *  coeff2 * (/*Non-linear*/ Dy_pi_Dz_pi); // looks correct
             //*************************************************************************************
 
             //*******************************
@@ -432,6 +432,52 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
             }
           }
         }
+
+
+
+#ifdef FLUID_VARIABLES
+// the fluid variables are calculated from the field values
+// the expansion is not factored out
+template <class FieldType>
+void calculate_fluid_properties(Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_x_fluid,Field<FieldType> & v_y_fluid
+  ,Field<FieldType> & v_z_fluid,Field<FieldType> pi_k,Field<FieldType> zeta_half,Field<FieldType> phi,Field<FieldType> chi,double rho_smg, double p_smg, double cs2, double Hcon
+  ,double dx, double a){
+  
+  double w = p_smg/rho_smg;
+  double delta_rho_pre_factor = -(rho_smg + p_smg)/cs2;
+  double delta_p_pre_factor = -(rho_smg + p_smg);
+
+  double velocity_common_factor;
+  double gradient_pi_squared;
+  double psi;
+  double partial_derivative_pi_x;
+  double partial_derivative_pi_y;
+  double partial_derivative_pi_z;
+  Site xField(pi_k.lattice());
+  for (xField.first(); xField.test(); xField.next()){
+    psi = phi(xField) - chi(xField); 
+
+    gradient_pi_squared = 0.25*(pi_k(xField+0) - pi_k(xField - 0))* (pi_k(xField + 0) - pi_k(xField-0))/(dx*dx);
+    gradient_pi_squared += 0.25*(pi_k(xField+1) - pi_k(xField - 1))* (pi_k(xField + 1) - pi_k(xField-1))/(dx*dx);
+    gradient_pi_squared += 0.25*(pi_k(xField+2) - pi_k(xField - 2))* (pi_k(xField + 2) - pi_k(xField-2))/(dx*dx); 
+
+    partial_derivative_pi_x = (pi_k(xField + 0) - pi_k(xField - 0))/(2. *dx);
+    partial_derivative_pi_y = (pi_k(xField + 1) - pi_k(xField - 1))/(2. *dx);
+    partial_derivative_pi_z = (pi_k(xField + 2) - pi_k(xField - 2))/(2. *dx);
+
+    delta_rho_fluid(xField) = delta_rho_pre_factor * (3. * cs2 * Hcon * pi_k(xField) - zeta_half(xField) - (2.*cs2 - 1.)/2. * gradient_pi_squared);
+    delta_p_fluid(xField) = delta_p_pre_factor * (3. * w * Hcon * pi_k(xField) - zeta_half(xField) + 1./6. * gradient_pi_squared);
+    velocity_common_factor = -exp(2. * (phi(xField) + psi)) * (1. - 1./cs2 * (3. * cs2 * (1. + w)* Hcon * pi_k(xField) - zeta_half(xField) + cs2 * psi)
+       + (cs2 - 1.)/(2. * cs2) *gradient_pi_squared);
+    v_x_fluid(xField) = velocity_common_factor * partial_derivative_pi_x;
+    v_y_fluid(xField) = velocity_common_factor * partial_derivative_pi_y;
+    v_z_fluid(xField) = velocity_common_factor * partial_derivative_pi_z;
+  }
+  COUT << "Calculated fluid variables" << endl;
+}
+#endif
+
+
 
 #ifdef NONLINEAR_TEST
   //Checking field
