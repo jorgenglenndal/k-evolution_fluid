@@ -14,6 +14,47 @@ import colorcet as cc
 
 H0 = 0.100069 # directly from k-evolution
 
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_delta_rho_fluid.h5", "r") as f:
+        a_group_key = list(f.keys())[0]
+        delta_rho_fluid = f[a_group_key][()] 
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_x_fluid.h5", "r") as f:
+        a_group_key = list(f.keys())[0]
+        v_x_fluid = f[a_group_key][()] 
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_y_fluid.h5", "r") as f:
+        a_group_key = list(f.keys())[0]
+        v_y_fluid = f[a_group_key][()] 
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_z_fluid.h5", "r") as f:
+        a_group_key = list(f.keys())[0]
+        v_z_fluid = f[a_group_key][()] 
+
+#print(np.unravel_index(np.argmax(ds_arr), ds_arr.shape)[1])
+#print(np.shape(ds_arr))
+#index = np.argmax(np.ndarray.flatten(abs()))
+#multi_indices = np.unravel_index(index, second_derivative_y.shape)
+#x = np.abs(ds_arr[:,multi_indices[1],:])
+#plt.imshow(ds_arr[:,np.unravel_index(np.argmax(ds_arr), ds_arr.shape)[1],:])
+#plt.show()
+from mayavi import mlab
+#print(np.min(delta_rho_fluid))
+#print(np.max(delta_rho_fluid))
+#sys.exit(0)
+#mlab.clf()
+#mlab.points3d(ds_arr)
+#mlab.show()
+
+#print(np.shape(ds_arr)[1])
+#sys.exit(0)
+###vmin = np.percentile(delta_rho_fluid,0.1)
+###vmax = np.percentile(delta_rho_fluid,99.9)
+###mlab.volume_slice(delta_rho_fluid,vmin=vmin,vmax=vmax)
+####mlab.contour3d(np.linspace(0,1,np.shape(ds_arr)[0]),np.linspace(0,1,np.shape(ds_arr)[0]),np.linspace(0,1,np.shape(ds_arr)[0]),ds_arr,vmin=vmin,vmax=vmax)
+###mlab.show()
+
+#mlab.clf()
+#mlab.quiver3d(v_x_fluid, v_y_fluid, v_z_fluid)
+#mlab.show()
+
+
 
 #path = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data2/L300_N256_cs2_1e_11/'
 #path2 = '/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_cs2/data/'

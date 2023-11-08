@@ -50,37 +50,37 @@
 #define CYCLE_INFO_INTERVAL 10
 #endif
 
-#define MASK_PHI    1
-#define MASK_CHI    2
-#define MASK_POT    4
-#define MASK_B      8
-#define MASK_T00    16
-#define MASK_TIJ    32
-#define MASK_RBARE  64
-#define MASK_HIJ    128
-#define MASK_P      256
-#define MASK_GADGET 512
-#define MASK_PCLS   1024
-#define MASK_XSPEC  2048
-#define MASK_DELTA  4096
-#define MASK_DBARE  8192
-#define MASK_PI_K    16384
-#define MASK_ZETA    32768
-#define MASK_MULTI  65536
-#define MASK_VEL    131072
-#define MASK_T_KESS 262144
-#define MASK_DELTA_KESS 524288
-#define MASK_PHI_PRIME 1048576
+#define MASK_PHI              1
+#define MASK_CHI              2
+#define MASK_POT              4
+#define MASK_B                8
+#define MASK_T00              16
+#define MASK_TIJ              32
+#define MASK_RBARE            64
+#define MASK_HIJ              128
+#define MASK_P                256
+#define MASK_GADGET           512
+#define MASK_PCLS             1024
+#define MASK_XSPEC            2048
+#define MASK_DELTA            4096
+#define MASK_DBARE            8192
+#define MASK_PI_K              16384
+#define MASK_ZETA              32768
+#define MASK_MULTI            65536
+#define MASK_VEL              131072
+#define MASK_T_KESS           262144
+#define MASK_DELTA_KESS       524288
+#define MASK_PHI_PRIME        1048576
 #define MASK_DELTAKESS_DELTA 2097152
 
 //new
 //#define MASK_T0i_KESS 4194304
-#ifdef FLUID_VARIABLES 
-#define MASK_DELTA_RHO_FLUID  8388608
-#define MASK_DELTA_P_FLUID 16777216
-#define MASK_V_X_FLUID  33554432
-#define MASK_V_Y_FLUID  67108864
-#define MASK_V_Z_FLUID 134217728
+#ifdef FLUID_VARIABLES
+#define MASK_V_Z_FLUID       4194304
+#define MASK_DELTA_RHO_FLUID 8388608
+#define MASK_DELTA_P_FLUID    16777216
+#define MASK_V_X_FLUID        33554432
+#define MASK_V_Y_FLUID       67108864
 #endif
 
 

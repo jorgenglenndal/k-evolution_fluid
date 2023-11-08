@@ -516,8 +516,9 @@ COUT << "running on " << n*m << " cores." << endl;
 	}
 	parallel.min(sim.movelimit);
 	fourpiG = 1.5 * sim.boxsize * sim.boxsize / C_SPEED_OF_LIGHT / C_SPEED_OF_LIGHT; // Just a definition to make Friedmann equation simplified! and working with normal numbers
-  // cout<<"Gevolution H0: "<<sqrt(2. * fourpiG / 3.)<<endl;
-  // cout<<"Box: "<<sim.boxsize<<endl;
+   COUT<<"Gevolution H0: "<<sqrt(2. * fourpiG / 3.)<<endl;
+   COUT<<"Box: "<<sim.boxsize<<endl;
+   COUT << "CLASS H0: " << gsl_spline_eval(H_spline, 1., acc) << endl;
 	a = 1. / (1. + sim.z_in);
   tau = particleHorizon(a, fourpiG,
     #ifdef HAVE_HICLASS_BG
@@ -628,7 +629,15 @@ COUT << "running on " << n*m << " cores." << endl;
 
 
 #ifdef NONLINEAR_TEST
-//#ifdef 	FLUID_VARIABLES
+#ifdef 	FLUID_VARIABLES
+//COUT << "H_spline = " << gsl_spline_eval(H_spline, 1., acc) << endl;
+//COUT << "H_conf = " << Hconf(1., fourpiG,
+//		  #ifdef HAVE_HICLASS_BG
+//	        H_spline, acc
+//	      #else
+//            cosmo
+//	      #endif 
+//		  ) << endl;
 // In case we want to initialize the IC ourselves
 // the fluid variables are completely determined by the fields
 for (x.first(); x.test(); x.next())
@@ -637,21 +646,21 @@ for (x.first(); x.test(); x.next())
     zeta_half_old(x)=1.0;
     pi_k(x)=0.0;
 
-	//delta_rho_fluid(x) = 0.0;
-	//delta_p_fluid(x) = 0.0;
-	//v_x_fluid(x) = 0.0;
-	//v_y_fluid(x) = 0.0;
-	//v_z_fluid(x) = 0.0;
+	delta_rho_fluid(x) = 0.0;
+	delta_p_fluid(x) = 0.0;
+	v_x_fluid(x) = 0.0;
+	v_y_fluid(x) = 0.0;
+	v_z_fluid(x) = 0.0;
   }
   zeta_half.updateHalo();  // communicate halo values
   pi_k.updateHalo();  // communicate halo values
   zeta_half_old.updateHalo();
-  //delta_rho_fluid.updateHalo();
-  //delta_p_fluid.updateHalo();
-  //v_x_fluid.updateHalo();
-  //v_y_fluid.updateHalo();
-  //v_z_fluid.updateHalo();
-//#endif
+  delta_rho_fluid.updateHalo();
+  delta_p_fluid.updateHalo();
+  v_x_fluid.updateHalo();
+  v_y_fluid.updateHalo();
+  v_z_fluid.updateHalo();
+#endif
 
 //   //****************************
 //   //****SAVE DATA To test Backreaction
@@ -777,7 +786,7 @@ double alternative_energy_overdensity_Kess;
 
 	while (true)    // main loop
 	{
-		COUT << "cycle = " << cycle << endl;
+		//COUT << "cycle = " << cycle << endl;
   	for (x.first(); x.test(); x.next())
   		{
   			phi_old(x) =phi(x);
@@ -788,8 +797,9 @@ double alternative_energy_overdensity_Kess;
 	phi_old.updateHalo();
 	chi_old.updateHalo();
 #endif 
-COUT << 791 << endl;
+//COUT << 791 << endl;
 #ifdef NONLINEAR_TEST
+//COUT <<"rho_crit = " << gsl_spline_eval(rho_crit_spline, 1., acc) << endl;
       //****************************
       //****PRINTING AVERAGE OVER TIME
       //****************************
@@ -854,7 +864,7 @@ COUT << 791 << endl;
       //END ADDED************
       //**********************
 #endif
-COUT << 857 << endl;
+//COUT << 857 << endl;
 #ifdef FLUID_VARIABLES
 Hc = Hconf(a, fourpiG,
   #ifdef HAVE_HICLASS_BG
@@ -862,7 +872,7 @@ Hc = Hconf(a, fourpiG,
   #else
     cosmo
   #endif
-    ); COUT << 865 << endl;
+    ); //COUT << 865 << endl;
 calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_x_fluid,v_y_fluid,v_z_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
 	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a);
 delta_rho_fluid.updateHalo();
@@ -872,7 +882,7 @@ v_y_fluid.updateHalo();
 v_z_fluid.updateHalo();
 //COUT << "Halo updated for fluid variables" << endl;
 #endif 
-COUT << 875 << endl;
+//COUT << 875 << endl;
 #ifdef BENCHMARK
 		cycle_start_time = MPI_Wtime();
 #endif
@@ -972,7 +982,7 @@ if (sim.Kess_source_gravity==1)
   #else
     cosmo
   #endif
-    ); COUT << 975 << endl;
+    ); //COUT << 975 << endl;
 // Kessence projection Tmunu
 // In the projection zeta_integer comes, since synched with particles..
 
@@ -1012,7 +1022,7 @@ else
       // cout<<"x"<<x<<"T00_Kess(x): "<<T00_Kess(x)<<endl;
       // }
 		}
-} COUT << 1015 << endl;
+} //COUT << 1015 << endl;
 #ifdef BENCHMARK
 		kessence_update_time += MPI_Wtime() - ref_time;
 		ref_time = MPI_Wtime();
@@ -1046,7 +1056,7 @@ else
         #else
         prepareFTsource<Real>(phi, chi, source, cosmo.Omega_cdm + cosmo.Omega_b + bg_ncdm(a, cosmo), source, 3. * Hc * dx * dx / dtau_old, fourpiG * dx * dx / a, 3. * Hc * Hc * dx * dx);  // prepare nonlinear source for phi update
         #endif
-COUT << 1049 << endl;
+//COUT << 1049 << endl;
 #ifdef BENCHMARK
 				ref2_time= MPI_Wtime();
 #endif
@@ -1137,7 +1147,7 @@ COUT << 1049 << endl;
 		// done recording background data
 
 		prepareFTsource<Real>(phi, Sij, Sij, 2. * fourpiG * dx * dx / a);  // prepare nonlinear source for additional equations
-COUT << 1140 << endl;
+//COUT << 1140 << endl;
 #ifdef BENCHMARK
 		ref2_time= MPI_Wtime();
 #endif
@@ -1146,7 +1156,7 @@ COUT << 1140 << endl;
 		fft_time += MPI_Wtime() - ref2_time;
 		fft_count += 6;
 #endif
-COUT << 1149 << endl;
+//COUT << 1149 << endl;
 #if defined(HAVE_CLASS) || defined(HAVE_HICLASS)
 		if (sim.radiation_flag > 0 && a < 1. / (sim.z_switch_linearchi + 1.))
 		{
@@ -1156,7 +1166,7 @@ COUT << 1149 << endl;
 		else
 #endif
 		projectFTscalar(SijFT, scalarFT);  // construct chi by scalar projection (k-space)
-COUT << 1159 << endl;
+//COUT << 1159 << endl;
 #ifdef BENCHMARK
 		ref2_time= MPI_Wtime();
 #endif
@@ -1166,7 +1176,7 @@ COUT << 1159 << endl;
 		fft_count++;
 #endif
 		chi.updateHalo();  // communicate halo values
-COUT << 1169 << endl;
+//COUT << 1169 << endl;
 		if (sim.vector_flag == VECTOR_ELLIPTIC)
 		{
 #ifdef BENCHMARK
@@ -1184,7 +1194,7 @@ COUT << 1169 << endl;
 		}
 		else
 			evolveFTvector(SijFT, BiFT, a * a * dtau_old);  // evolve B using vector projection (k-space)
-COUT << 1187 << endl;
+//COUT << 1187 << endl;
 		if (sim.gr_flag > 0)
 		{
 #ifdef BENCHMARK
@@ -1194,18 +1204,18 @@ COUT << 1187 << endl;
 #ifdef BENCHMARK
 			fft_time += MPI_Wtime() - ref2_time;
 			fft_count += 3;
-COUT << 1197 << endl;
+//COUT << 1197 << endl;
 #endif
-COUT << 1198 << endl;
+//COUT << 1198 << endl;
 			Bi.updateHalo();  // communicate halo values
-COUT << 1200 << endl;
+//COUT << 1200 << endl;
 		}
 
 #ifdef BENCHMARK
 		gravity_solver_time += MPI_Wtime() - ref_time;
 		ref_time = MPI_Wtime();
 #endif
-COUT << 1205 << endl;
+//COUT << 1205 << endl;
 
 // lightcone output
 if (sim.num_lightcone > 0)
@@ -1225,7 +1235,7 @@ for (x.first(); x.test(); x.next())
 {
   phi_prime(x) =(phi(x)-phi_old(x))/(dtau);
 }
-COUT << 1223 << endl;
+//COUT << 1223 << endl;
 		// snapshot output
 		if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 		{
@@ -1243,7 +1253,7 @@ COUT << 1223 << endl;
 				, &vi
 		    #endif
 	     	#ifdef FLUID_VARIABLES
-	            ,&delta_rho_fluid,&delta_p_fluid,&v_x_fluid,&v_y_fluid,&v_z_fluid
+	            ,&delta_rho_fluid, &delta_p_fluid, &v_x_fluid, &v_y_fluid, &v_z_fluid
 		    #endif
 			);
 
@@ -1555,7 +1565,7 @@ COUT << 1223 << endl;
 	
 	// here the previous variables are actually the previous ones
 
-    //COUT <<"rho_crit_0 = "<<gsl_spline_eval(rho_crit_spline, 1., acc)<< endl;;
+    //COUT <<"rho_crit_0 = "<<gsl_spline_eval(rho_crit_spline, 1., acc)<< endl;
     //COUT << "rho_smg = " << gsl_spline_eval(rho_smg_spline, a, acc) << endl;
 	//COUT << " = "<<   << endl;
 	  //avg_absValue_pi /= numpts3d;
