@@ -345,26 +345,29 @@ COUT << "running on " << n*m << " cores." << endl;
   delta_p_fluidFT.initialize(latFT,1);
   PlanFFT<Cplx> plan_delta_p_fluid(&delta_p_fluid, &delta_p_fluidFT);
 
-  Field<Real> v_x_fluid;
-  Field<Cplx> v_x_fluidFT;
-  v_x_fluid.initialize(lat,1);
-  v_x_fluidFT.initialize(latFT,1);
-  PlanFFT<Cplx> plan_v_x_fluid(&v_x_fluid, &v_x_fluidFT);
+  Field<Real> v_upper_i_fluid;
+  Field<Cplx> v_upper_i_fluidFT;
+  v_upper_i_fluid.initialize(lat,3);
+  v_upper_i_fluidFT.initialize(latFT,3);
+  PlanFFT<Cplx> plan_v_upper_i_fluid(&v_upper_i_fluid, &v_upper_i_fluidFT);
 
-  Field<Real> v_y_fluid;
-  Field<Cplx> v_y_fluidFT;
-  v_y_fluid.initialize(lat,1);
-  v_y_fluidFT.initialize(latFT,1);
-  PlanFFT<Cplx> plan_v_y_fluid(&v_y_fluid, &v_y_fluidFT);
-
-  Field<Real> v_z_fluid;
-  Field<Cplx> v_z_fluidFT;
-  v_z_fluid.initialize(lat,1);
-  v_z_fluidFT.initialize(latFT,1);
-  PlanFFT<Cplx> plan_v_z_fluid(&v_z_fluid, &v_z_fluidFT);
-
-
-  
+//  Field<Real> v_x_fluid;
+//  Field<Cplx> v_x_fluidFT;
+//  v_x_fluid.initialize(lat,1);
+//  v_x_fluidFT.initialize(latFT,1);
+//  PlanFFT<Cplx> plan_v_x_fluid(&v_x_fluid, &v_x_fluidFT);
+//
+//  Field<Real> v_y_fluid;
+//  Field<Cplx> v_y_fluidFT;
+//  v_y_fluid.initialize(lat,1);
+//  v_y_fluidFT.initialize(latFT,1);
+//  PlanFFT<Cplx> plan_v_y_fluid(&v_y_fluid, &v_y_fluidFT);
+//
+//  Field<Real> v_z_fluid;
+//  Field<Cplx> v_z_fluidFT;
+//  v_z_fluid.initialize(lat,1);
+//  v_z_fluidFT.initialize(latFT,1);
+//  PlanFFT<Cplx> plan_v_z_fluid(&v_z_fluid, &v_z_fluidFT);
   #endif
 
   
@@ -648,18 +651,22 @@ for (x.first(); x.test(); x.next())
 
 	delta_rho_fluid(x) = 0.0;
 	delta_p_fluid(x) = 0.0;
-	v_x_fluid(x) = 0.0;
-	v_y_fluid(x) = 0.0;
-	v_z_fluid(x) = 0.0;
+	v_upper_i_fluid(x,0) = 0.0;
+	v_upper_i_fluid(x,1) = 0.0;
+	v_upper_i_fluid(x,2) = 0.0;
+	//v_x_fluid(x) = 0.0;
+	//v_y_fluid(x) = 0.0;
+	//v_z_fluid(x) = 0.0;
   }
   zeta_half.updateHalo();  // communicate halo values
   pi_k.updateHalo();  // communicate halo values
   zeta_half_old.updateHalo();
   delta_rho_fluid.updateHalo();
   delta_p_fluid.updateHalo();
-  v_x_fluid.updateHalo();
-  v_y_fluid.updateHalo();
-  v_z_fluid.updateHalo();
+  v_upper_i_fluid.updateHalo();
+  //v_x_fluid.updateHalo();
+  //v_y_fluid.updateHalo();
+  //v_z_fluid.updateHalo();
 #endif
 
 //   //****************************
@@ -873,13 +880,14 @@ Hc = Hconf(a, fourpiG,
     cosmo
   #endif
     ); //COUT << 865 << endl;
-calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_x_fluid,v_y_fluid,v_z_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
+calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
 	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a);
 delta_rho_fluid.updateHalo();
 delta_p_fluid.updateHalo();
-v_x_fluid.updateHalo();
-v_y_fluid.updateHalo();
-v_z_fluid.updateHalo();
+v_upper_i_fluid.updateHalo();
+//v_x_fluid.updateHalo();
+//v_y_fluid.updateHalo();
+//v_z_fluid.updateHalo();
 //COUT << "Halo updated for fluid variables" << endl;
 #endif 
 //COUT << 875 << endl;
@@ -1253,7 +1261,7 @@ for (x.first(); x.test(); x.next())
 				, &vi
 		    #endif
 	     	#ifdef FLUID_VARIABLES
-	            ,&delta_rho_fluid, &delta_p_fluid, &v_x_fluid, &v_y_fluid, &v_z_fluid
+	            ,&delta_rho_fluid, &delta_p_fluid, &v_upper_i_fluid
 		    #endif
 			);
 
@@ -1659,24 +1667,27 @@ for (x.first(); x.test(); x.next())
 			    cosmo
 			  #endif
 			    );
-			calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_x_fluid,v_y_fluid,v_z_fluid,pi_k_old,zeta_half_old,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, previous_a_kess, acc)
+			calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k_old,zeta_half_old,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, previous_a_kess, acc)
 				,gsl_spline_eval(p_smg_spline, previous_a_kess, acc),gsl_spline_eval(cs2_spline, previous_a_kess, acc), Hc_previous,dx,previous_a_kess);
 			delta_rho_fluid.updateHalo();
 			delta_p_fluid.updateHalo();
-			v_x_fluid.updateHalo();
-			v_y_fluid.updateHalo();
-			v_z_fluid.updateHalo();
+			v_upper_i_fluid.updateHalo();
+			//v_x_fluid.updateHalo();
+			//v_y_fluid.updateHalo();
+			//v_z_fluid.updateHalo();
 
 			str_filename =  output_path_string + "delta_rho_fluid_" + to_string(sim.snapcount_b) + ".h5";
 			delta_rho_fluid.saveHDF5(str_filename);
 			str_filename =  output_path_string + "delta_p_fluid_" + to_string(sim.snapcount_b) + ".h5";
 			delta_p_fluid.saveHDF5(str_filename);
-			str_filename =  output_path_string + "v_x_fluid_" + to_string(sim.snapcount_b) + ".h5";
-			v_x_fluid.saveHDF5(str_filename);
-			str_filename =  output_path_string + "v_y_fluid_" + to_string(sim.snapcount_b) + ".h5";
-			v_y_fluid.saveHDF5(str_filename);
-			str_filename =  output_path_string + "v_z_fluid_" + to_string(sim.snapcount_b) + ".h5";
-			v_z_fluid.saveHDF5(str_filename);
+			str_filename =  output_path_string + "v_upper_i_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			v_upper_i_fluid.saveHDF5(str_filename);
+			//str_filename =  output_path_string + "v_x_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			//v_x_fluid.saveHDF5(str_filename);
+			//str_filename =  output_path_string + "v_y_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			//v_y_fluid.saveHDF5(str_filename);
+			//str_filename =  output_path_string + "v_z_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			//v_z_fluid.saveHDF5(str_filename);
 			#endif
 			
 			sim.snapcount_b_add_one();
@@ -1692,24 +1703,27 @@ for (x.first(); x.test(); x.next())
 			    cosmo
 			  #endif
 			    );
-			calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_x_fluid,v_y_fluid,v_z_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a_kess, acc)
+			calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a_kess, acc)
 				,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess);
 			delta_rho_fluid.updateHalo();
 			delta_p_fluid.updateHalo();
-			v_x_fluid.updateHalo();
-			v_y_fluid.updateHalo();
-			v_z_fluid.updateHalo();
+			v_upper_i_fluid.updateHalo();
+			//v_x_fluid.updateHalo();
+			//v_y_fluid.updateHalo();
+			//v_z_fluid.updateHalo();
 
 			str_filename =  output_path_string + "delta_rho_fluid_" + to_string(sim.snapcount_b) + ".h5";
 			delta_rho_fluid.saveHDF5(str_filename);
 			str_filename =  output_path_string + "delta_p_fluid_" + to_string(sim.snapcount_b) + ".h5";
 			delta_p_fluid.saveHDF5(str_filename);
-			str_filename =  output_path_string + "v_x_fluid_" + to_string(sim.snapcount_b) + ".h5";
-			v_x_fluid.saveHDF5(str_filename);
-			str_filename =  output_path_string + "v_y_fluid_" + to_string(sim.snapcount_b) + ".h5";
-			v_y_fluid.saveHDF5(str_filename);
-			str_filename =  output_path_string + "v_z_fluid_" + to_string(sim.snapcount_b) + ".h5";
-			v_z_fluid.saveHDF5(str_filename);
+			str_filename =  output_path_string + "v_upper_i_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			v_upper_i_fluid.saveHDF5(str_filename);
+			//str_filename =  output_path_string + "v_x_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			//v_x_fluid.saveHDF5(str_filename);
+			//str_filename =  output_path_string + "v_y_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			//v_y_fluid.saveHDF5(str_filename);
+			//str_filename =  output_path_string + "v_z_fluid_" + to_string(sim.snapcount_b) + ".h5";
+			//v_z_fluid.saveHDF5(str_filename);
 			#endif
 
 
@@ -1872,6 +1886,35 @@ for (x.first(); x.test(); x.next())
 		          //str_filename2 = output_path_string + "zeta_" + to_string(snapcount_b) + ".h5";
 		          //str_filename3 = output_path_string + "phi_" + to_string(snapcount_b) + ".h5";
 		      pi_k.saveHDF5(str_filename);
+			  #ifdef FLUID_VARIABLES
+			   Hc = Hconf(a_kess, fourpiG,
+			  #ifdef HAVE_HICLASS_BG
+			  H_spline, acc
+			  #else
+			  cosmo
+			  #endif
+			  );
+        	  calculate_fluid_properties(delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a_kess, acc)
+        			,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess);
+        	  delta_rho_fluid.updateHalo();
+        	  delta_p_fluid.updateHalo();
+        	  v_upper_i_fluid.updateHalo();
+        		//v_x_fluid.updateHalo();
+        		//v_y_fluid.updateHalo();
+        		//v_z_fluid.updateHalo();
+              str_filename =  output_path_string + "delta_rho_fluid_" + to_string(sim.snapcount_b) + ".h5";
+        	  delta_rho_fluid.saveHDF5(str_filename);
+        	  str_filename =  output_path_string + "delta_p_fluid_" + to_string(sim.snapcount_b) + ".h5";
+        	  delta_p_fluid.saveHDF5(str_filename);
+        	  str_filename =  output_path_string + "v_upper_i_fluid_" + to_string(sim.snapcount_b) + ".h5";
+        	  v_upper_i_fluid.saveHDF5(str_filename);
+        		//str_filename =  output_path_string + "v_x_fluid_" + to_string(sim.snapcount_b) + ".h5";
+        		//v_x_fluid.saveHDF5(str_filename);
+        		//str_filename =  output_path_string + "v_y_fluid_" + to_string(sim.snapcount_b) + ".h5";
+        		//v_y_fluid.saveHDF5(str_filename);
+        		//str_filename =  output_path_string + "v_z_fluid_" + to_string(sim.snapcount_b) + ".h5";
+        		//v_z_fluid.saveHDF5(str_filename);
+        	  #endif
 		          //zeta_half.saveHDF5(str_filename2);
 		          //phi.saveHDF5(str_filename3);
 		          // str_filename =  "./output/pi_k_" + to_string(snapcount_b-1) + ".h5";

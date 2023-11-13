@@ -76,11 +76,12 @@
 //new
 //#define MASK_T0i_KESS 4194304
 #ifdef FLUID_VARIABLES
-#define MASK_V_Z_FLUID       4194304
+#define MASK_V_UPPER_I_FLUID       4194304
+//#define MASK_V_Z_FLUID       4194304
 #define MASK_DELTA_RHO_FLUID 8388608
 #define MASK_DELTA_P_FLUID    16777216
-#define MASK_V_X_FLUID        33554432
-#define MASK_V_Y_FLUID       67108864
+//#define MASK_V_X_FLUID        33554432
+//#define MASK_V_Y_FLUID       67108864
 #endif
 
 

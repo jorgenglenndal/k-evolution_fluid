@@ -12,20 +12,31 @@ import colorcet as cc
 
 
 
-H0 = 0.100069 # directly from k-evolution
+H0 = 0.100069 # Gevolution units
 
 with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_delta_rho_fluid.h5", "r") as f:
         a_group_key = list(f.keys())[0]
         delta_rho_fluid = f[a_group_key][()] 
-with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_x_fluid.h5", "r") as f:
+
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/friday/snap_000_v_fluid.h5", "r") as f:
         a_group_key = list(f.keys())[0]
-        v_x_fluid = f[a_group_key][()] 
-with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_y_fluid.h5", "r") as f:
+        v_fluid = f[a_group_key][()]  # returns as a numpy array
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/friday/snap_000_delta_rho_fluid.h5", "r") as f:
         a_group_key = list(f.keys())[0]
-        v_y_fluid = f[a_group_key][()] 
-with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_z_fluid.h5", "r") as f:
-        a_group_key = list(f.keys())[0]
-        v_z_fluid = f[a_group_key][()] 
+        delta_rho_fluid = f[a_group_key][()]  
+    
+#print(np.shape(v_fluid[:,:,:,1]))
+#sys.exit(0)
+
+#with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_x_fluid.h5", "r") as f:
+#        a_group_key = list(f.keys())[0]
+#        v_x_fluid = f[a_group_key][()] 
+#with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_y_fluid.h5", "r") as f:
+#        a_group_key = list(f.keys())[0]
+#        v_y_fluid = f[a_group_key][()] 
+#with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_001_v_z_fluid.h5", "r") as f:
+#        a_group_key = list(f.keys())[0]
+#        v_z_fluid = f[a_group_key][()] 
 
 #print(np.unravel_index(np.argmax(ds_arr), ds_arr.shape)[1])
 #print(np.shape(ds_arr))
@@ -49,10 +60,56 @@ from mayavi import mlab
 ###mlab.volume_slice(delta_rho_fluid,vmin=vmin,vmax=vmax)
 ####mlab.contour3d(np.linspace(0,1,np.shape(ds_arr)[0]),np.linspace(0,1,np.shape(ds_arr)[0]),np.linspace(0,1,np.shape(ds_arr)[0]),ds_arr,vmin=vmin,vmax=vmax)
 ###mlab.show()
+v_speed_fluid = np.sqrt(v_fluid[:,:,:,0]**2+ v_fluid[:,:,:,1]**2 +v_fluid[:,:,:,2]**2)
+avg_v_fluid = np.average(v_speed_fluid)
 
+#sys.exit(0)
+#delta_v_fluid = v_speed_fluid - avg_v_fluid
+#over_velocity_v_fluid = delta_v_fluid/avg_v_fluid
+over_velocity_v_fluid = v_speed_fluid/avg_v_fluid - 1.
+#print(over_velocity_v_fluid)
+#sys.exit(0)
+#mlab.volume_slice(over_velocity_v_fluid)
+n_part = np.shape(v_fluid)[0]
+#print(n_part)
+#sys.exit(0)
+x = np.linspace(0,1,n_part)
+xx,xy,xz = np.meshgrid(x,x,x)
+
+"""
+Tried to implement my own mask_points function, but result was not improved compared to pre-existing method
+###import random as rd
+###import secrets
+###random = []
+###for i in range(n_part**3):
+###   random.append(secrets.randbelow(n_part**3))
+###random = np.array(random)
+###random_shape = np.zeros((n_part,n_part,n_part))
+###random = random.reshape(random_shape.shape)
+###percentage = 20 # percentage of total number of points to plot
+###condition = random > (n_part**3-1)*(100-percentage)/100
+###over_velocity_v_fluid_reduced = over_velocity_v_fluid[condition]
+###xx_reduced = xx[condition]
+###xy_reduced = xy[condition]
+###xz_reduced = xz[condition]
+"""
+
+obj = mlab.points3d(xx,xy,xz,delta_rho_fluid,mask_points = 20,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=0.5,scale_factor=1/n_part*1.5,colormap = 'coolwarm')
+#obj = mlab.points3d(xx_reduced,xy_reduced,xz_reduced,over_velocity_v_fluid_reduced,mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=0.5,colormap = 'coolwarm',scale_factor=1/128*1.5)
+mlab.colorbar(orientation='vertical')#,title= "overdensity for velocity")
+obj.glyph.glyph.clamping = True
+mlab.outline(obj)
+#mlab.xlabel('300 [Mpc/h]')
+#mlab.ylabel('300 [Mpc/h]')
+#mlab.zlabel('300 [Mpc/h]')
+
+
+
+
+mlab.show()
 #mlab.clf()
-#mlab.quiver3d(v_x_fluid, v_y_fluid, v_z_fluid)
-#mlab.show()
+mlab.quiver3d(v_fluid[:,:,:,0], v_fluid[:,:,:,1], v_fluid[:,:,:,2],mask_points = 10,opacity = 0.3,mode = "2darrow",line_width=0.8)
+mlab.show()
 
 
 
