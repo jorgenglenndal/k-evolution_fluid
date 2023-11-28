@@ -21,7 +21,7 @@ with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/snap_
 with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/friday/snap_000_v_fluid.h5", "r") as f:
         a_group_key = list(f.keys())[0]
         v_fluid = f[a_group_key][()]  # returns as a numpy array
-with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/friday/snap_000_delta_rho_fluid.h5", "r") as f:
+with h5py.File("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/snap_001_delta_rho_fluid.h5", "r") as f:
         a_group_key = list(f.keys())[0]
         delta_rho_fluid = f[a_group_key][()]  
     
@@ -70,35 +70,77 @@ over_velocity_v_fluid = v_speed_fluid/avg_v_fluid - 1.
 #print(over_velocity_v_fluid)
 #sys.exit(0)
 #mlab.volume_slice(over_velocity_v_fluid)
-n_part = np.shape(v_fluid)[0]
+n_part = np.shape(delta_rho_fluid)[0]
 #print(n_part)
 #sys.exit(0)
 x = np.linspace(0,1,n_part)
 xx,xy,xz = np.meshgrid(x,x,x)
 
-"""
-Tried to implement my own mask_points function, but result was not improved compared to pre-existing method
-###import random as rd
-###import secrets
-###random = []
-###for i in range(n_part**3):
-###   random.append(secrets.randbelow(n_part**3))
-###random = np.array(random)
-###random_shape = np.zeros((n_part,n_part,n_part))
-###random = random.reshape(random_shape.shape)
-###percentage = 20 # percentage of total number of points to plot
-###condition = random > (n_part**3-1)*(100-percentage)/100
-###over_velocity_v_fluid_reduced = over_velocity_v_fluid[condition]
-###xx_reduced = xx[condition]
-###xy_reduced = xy[condition]
-###xz_reduced = xz[condition]
-"""
+# Tried to implement my own mask_points function, but result was not improved compared to pre-existing method
+#import random as rd
+def mask_func(n_part, percentage): # takes 3d array
+    #n_part = 
+    #n_part = (len(array.flatten()))**(1/3)
+    import secrets
+    random = []
+    for i in range(n_part**3):
+       random.append(secrets.randbelow(n_part**3))
+    random = np.array(random)
+    random_shape = np.zeros((n_part,n_part,n_part))
+    random = random.reshape(random_shape.shape)
+    #percentage = 20 # percentage of total number of points to plot
+    condition = random >= (n_part**3)*(100-percentage)/100
+    #over_velocity_v_fluid_reduced = over_velocity_v_fluid[condition]
+    #xx_reduced = xx[condition]
+    #xy_reduced = xy[condition]
+    #xz_reduced = xz[condition]
+    return condition
 
-obj = mlab.points3d(xx,xy,xz,delta_rho_fluid,mask_points = 20,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=0.5,scale_factor=1/n_part*1.5,colormap = 'coolwarm')
+#print(np.min(delta_rho_fluid))
+#print(np.max(delta_rho_fluid))
+#vmin = np.min(delta_rho_fluid)
+#vmax = np.max(delta_rho_fluid)
+#print(len(delta_rho_fluid[delta_rho_fluid>=0]))
+#print(len(delta_rho_fluid[delta_rho_fluid<0]))
+#sys.exit(0)
+mask_cond = mask_func(n_part,percentage=2)
+#delta_rho_fluid = delta_rho_fluid[mask_cond]
+
+cond_upper = (delta_rho_fluid >= 0)  & mask_cond # & (delta_rho_fluid < 0.0010001)
+cond_lower = (delta_rho_fluid < 0)  & mask_cond  #   & (-delta_rho_fluid <0.0010001)
+vmax_lower = -np.min(delta_rho_fluid[cond_lower]) 
+vmax_upper = np.max(delta_rho_fluid[cond_upper]) 
+vmax = vmax_upper if vmax_upper > vmax_lower else vmax_lower
+
+
+#vmax_upper_cond = np.max(delta_rho_fluid[cond_upper])
+#vmax_lower_cond = np.max(-delta_rho_fluid[cond_lower])
+#vmax_cond = vmax_upper_cond if vmax_upper_cond > vmax_lower_cond else vmax_lower_cond
+
+print(len(cond_upper[cond_upper==True]))
+print(len(cond_lower[cond_lower==True]))
+#sys.exit(0)
+###obj_upper = mlab.points3d(xx[delta_rho_fluid>=0],xy[delta_rho_fluid>=0],xz[delta_rho_fluid>=0],delta_rho_fluid[delta_rho_fluid>=0],mask_points = 10,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Blues',scale_factor=1/n_part*5,vmin=0,vmax=vmax)
+###obj_lower = mlab.points3d(xx[delta_rho_fluid<0],xy[delta_rho_fluid<0],xz[delta_rho_fluid<0],-delta_rho_fluid[delta_rho_fluid<0],mask_points = 10,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Reds',scale_factor=1/n_part*5,vmin=0,vmax=vmax) 
 #obj = mlab.points3d(xx_reduced,xy_reduced,xz_reduced,over_velocity_v_fluid_reduced,mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=0.5,colormap = 'coolwarm',scale_factor=1/128*1.5)
-mlab.colorbar(orientation='vertical')#,title= "overdensity for velocity")
-obj.glyph.glyph.clamping = True
-mlab.outline(obj)
+scale_factor = 1/n_part*9
+
+#scale_factor_upper_cond = scale_factor if vmax_upper_cond > vmax_lower_cond else scale_factor*vmax_upper_cond/vmax_cond
+#scale_factor_lower_cond = scale_factor if vmax_lower_cond > vmax_upper_cond else scale_factor*vmax_lower_cond/vmax_cond
+
+scale_factor_upper = scale_factor if vmax_upper > vmax_lower else scale_factor*vmax_upper/vmax
+scale_factor_lower = scale_factor if vmax_lower > vmax_upper else scale_factor*vmax_lower/vmax
+obj_upper = mlab.points3d(xx[cond_upper],xy[cond_upper],xz[cond_upper],delta_rho_fluid[cond_upper],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Reds',scale_factor=scale_factor_upper,vmin=0,vmax=vmax)
+obj_lower = mlab.points3d(xx[cond_lower],xy[cond_lower],xz[cond_lower],-delta_rho_fluid[cond_lower],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Blues',scale_factor=scale_factor_lower,vmin=0,vmax=vmax)
+
+
+
+
+mlab.colorbar(object=obj_upper,orientation='vertical')#,title= "overdensity for velocity")
+mlab.colorbar(object=obj_lower,orientation='horizontal')#,title= "overdensity for velocity")
+obj_upper.glyph.glyph.clamping = True
+obj_lower.glyph.glyph.clamping = True
+mlab.outline(obj_upper)
 #mlab.xlabel('300 [Mpc/h]')
 #mlab.ylabel('300 [Mpc/h]')
 #mlab.zlabel('300 [Mpc/h]')

@@ -439,12 +439,13 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
 // the fluid properties are calculated from the field values
 // Units have been neglected
 template <class FieldType>
-void calculate_fluid_properties(Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_half,Field<FieldType> & phi,Field<FieldType> & chi,double rho_smg, double p_smg, double cs2, double Hcon
-  ,double dx, double a){
+void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_half,Field<FieldType> & phi,Field<FieldType> & chi,double rho_smg, double p_smg, double cs2, double Hcon
+  ,double dx, double a, double rho_crit_0){
   
   double w = p_smg/rho_smg;
   double delta_rho_pre_factor = -(rho_smg + p_smg)/cs2/rho_smg; // dividing by rho_smg to cancel CLASS units to get overdensity
   double delta_p_pre_factor = -(rho_smg + p_smg)/p_smg; // dividing by p_smg to cancel CLASS units to get overdensity for pressure
+  double Sigma_upper_ij_pre_factor = (rho_smg + p_smg)/rho_crit_0;   // shoud divide by rho_crit_0 to get rid of CLASS units
 
   double velocity_common_factor;
   double gradient_pi_squared;
@@ -478,6 +479,14 @@ void calculate_fluid_properties(Field<FieldType> & delta_rho_fluid,Field<FieldTy
     v_upper_i_fluid(xField,0)       = velocity_common_factor * partial_derivative_pi_x;
     v_upper_i_fluid(xField,1)       = velocity_common_factor * partial_derivative_pi_y;
     v_upper_i_fluid(xField,2)       = velocity_common_factor * partial_derivative_pi_z;
+
+    //Sigma_ij
+    Sigma_upper_ij_fluid(xField,0,0) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_x * partial_derivative_pi_x - 1./3. * gradient_pi_squared);
+    Sigma_upper_ij_fluid(xField,1,1) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_y * partial_derivative_pi_y - 1./3. * gradient_pi_squared);
+    Sigma_upper_ij_fluid(xField,2,2) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_z * partial_derivative_pi_z - 1./3. * gradient_pi_squared);
+    Sigma_upper_ij_fluid(xField,0,1) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_x * partial_derivative_pi_y);
+    Sigma_upper_ij_fluid(xField,0,2) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_x * partial_derivative_pi_z);
+    Sigma_upper_ij_fluid(xField,1,2) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_y * partial_derivative_pi_z);
   }
 }
 #endif

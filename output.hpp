@@ -77,7 +77,7 @@ void writeSnapshots(metadata & sim, cosmology & cosmo, const double fourpiG, con
 , Field<Real> * vi
 #endif
 #ifdef FLUID_VARIABLES
-, Field<Real> * delta_rho_fluid, Field<Real> * delta_p_fluid,Field<Real> * v_upper_i_fluid 
+, Field<Real> * delta_rho_fluid, Field<Real> * delta_p_fluid,Field<Real> * v_upper_i_fluid, Field<Real> * Sigma_upper_ij_fluid  
 #endif
 )
 {
@@ -122,6 +122,8 @@ void writeSnapshots(metadata & sim, cosmology & cosmo, const double fourpiG, con
 		delta_p_fluid->saveHDF5_server_open(h5filename + filename + "_delta_p_fluid");
 		if (sim.out_snapshot & MASK_V_UPPER_I_FLUID)
 		v_upper_i_fluid->saveHDF5_server_open(h5filename + filename + "_v_upper_i_fluid");
+		if (sim.out_snapshot & MASK_SIGMA_UPPER_IJ_FLUID)
+		Sigma_upper_ij_fluid->saveHDF5_server_open(h5filename + filename + "_Sigma_upper_ij_fluid");
 		//if (sim.out_snapshot & MASK_V_X_FLUID)
 		//v_x_fluid->saveHDF5_server_open(h5filename + filename + "_v_x_fluid");
 		//if (sim.out_snapshot & MASK_V_Y_FLUID)
@@ -313,6 +315,16 @@ if (sim.out_snapshot & MASK_V_UPPER_I_FLUID)
 			v_upper_i_fluid->saveHDF5_coarseGrain3D(h5filename + filename + "_v_upper_i_fluid.h5", sim.downgrade_factor);
 		else
 			v_upper_i_fluid->saveHDF5(h5filename + filename + "_v_upper_i_fluid.h5");
+#endif
+
+if (sim.out_snapshot & MASK_SIGMA_UPPER_IJ_FLUID)
+#ifdef EXTERNAL_IO
+		Sigma_upper_ij_fluid->saveHDF5_server_write(NUMBER_OF_IO_FILES);
+#else
+		if (sim.downgrade_factor > 1)
+			Sigma_upper_ij_fluid->saveHDF5_coarseGrain3D(h5filename + filename + "_Sigma_upper_ij_fluid.h5", sim.downgrade_factor);
+		else
+			Sigma_upper_ij_fluid->saveHDF5(h5filename + filename + "_Sigma_upper_ij_fluid.h5");
 #endif
 //if (sim.out_snapshot & MASK_V_X_FLUID)
 //#ifdef EXTERNAL_IO
