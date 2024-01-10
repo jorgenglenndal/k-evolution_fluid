@@ -7,46 +7,68 @@ from mayavi import mlab
 
 
 class plot_class:
-    def __init__(self, filename,indexing="xyz"): 
-        print("")
-        self.filename = filename
-        self.indexing = indexing
+    def __init__(self,filename,indices="all",data_indexing="xyz",verbose=True):
+        self.verbose_bool = verbose
+        if self.verbose_bool: print("")
+        if isinstance(filename, list) == False:
+            if self.verbose_bool: print("1 file in 'filename' is assumed. If incorrect, you must convert 'filename' to a list.")
+            self.filename = [filename]
+        else:
+            self.filename = filename
+            if self.verbose_bool: print(str(len(self.filename))+ " file(s) in 'filename'.")
+        if len(self.filename) > 1:
+            if self.verbose_bool: print("The shape of the data is assumed to be the same in all files. The shape is read from the first file.")
+
+        self.indexing = data_indexing
         
-        #self.indexing_help = print("Start indexing help: Standard numpy indexing is xyz. A numpy array, arr, of shape (nz, ny, nx) will have indices x, y and z such that arr[z,y,x] will return the value of the element located at index z in the z-direction, index y in the y-direction and index x in the x-direction. Mayavi uses ijk indexing, i.e., arr[i,j,k] returns the value of the element located at index i in the x-direction, index j in the y-direction and index k in the z-direction. If the data array, read from the input file, uses xyz indexing, the code will rearange the data correctly if and only if the parameter 'indexing' is set to its default value 'xyz'. Regarding gevolution: gevolution uses ijk indexing internally, but when the outputted HDF5 files are read in python, the data is in xyz indexing. End indexing help.")
-        print("")
-        #self.indexing_help = print(indexing_help)
-        self.data, self.shape = self.load_data()
-        self.n_part = self.shape[0]
-      
-        # assuming number of elements per dimension is in 0'th element
-        print("Number of elements in data = "+ str(len(self.data.flatten())))
-        print("n_part = " + str(self.n_part))
-        #self.x = np.linspace(0,1,self.n_part)
-        #self.yy,self.xx,self.zz = np.meshgrid(self.x,self.x,self.x)
-        #print(self.data)
-        #self.xx,self.yy,self.zz = np.transpose(self.xx),np.transpose(self.yy),self.zz
-        len_array = complex(0, self.n_part)
+        if isinstance(indices, list)==False:
+            if indices == "all":
+                self.indices = [indices]
+            else:
+                print("'indices' must be a list. Aborting...")
+                sys.exit(1)
+        else:
+            self.indices = indices
+        if self.verbose_bool: print("")
+        
+        self.data = self.load_hdf5_data(0)
+        self.shape = np.shape(self.data) # all datasets should have the same shape
+
+        if self.shape[0] == self.shape[1] == self.shape[2]:
+            self.n_grid = self.shape[0] # assuming number of elements per dimension is in 0'th element
+        else:
+            print("Number of grid points is not the same in each dimension. For vector data, shape must be (x,x,x,y), where y are the vectors belonging to the grid points. Aborting...")
+            sys.exit(1)
+        
+        len_array = complex(0, self.n_grid)
         self.xx, self.yy, self.zz = np.mgrid[0:1:len_array, 0:1:len_array, 0:1:len_array]
         self.ScalarData  = False
         self.VectorData = False
-        self.mask = False
-        self.split = False
-        self.plot = False
+        self.mask_bool = False
+        self.plot_bool = False
         self.log_scale_bool = False
-        #self.oneD = False
+        self.symmetric_colorbar_bool = False
+        self.scatter_bool = False
+        self.move_camera_bool = False
+        self.save_bool = False
+        self.offscreen_rendering_bool = False
+        self.show_bool = False
+        self.rng_generated_bool = False
+        #self.scatter_mode = "standard"
+        #self.verbose_bool = False
 
         if len(self.shape) == 3:
-            self.ScalarData = True
-            self.vmax = np.max(abs(self.data.flatten()))
-            print("")
-            print("Working with scalar data")
-            print("")           
+            self.ScalarData = True 
+            if self.verbose_bool: print("")
+            if self.verbose_bool: print("Working with scalar data.")
+            if self.verbose_bool: print("")           
         
         elif len(self.shape) == 4:
             self.VectorData = True
             print("")
             print("Working with vector data")
-            print("Indexing probably wrong...")
+            print("Indexing probably wrong...Aborting...")
+            sys.exit(1)
             self.data_x = self.data[:,:,:,0]
             self.data_y = self.data[:,:,:,1]
             self.data_z = self.data[:,:,:,2]
@@ -54,205 +76,176 @@ class plot_class:
         else:
             print("Data shape not accepted. Aborting...")
             sys.exit(1)
-
-        if indexing == "xyz" and self.ScalarData:
-            print("Transposing data...")
-            self.data = self.data.transpose((2, 1, 0))
-     
         
-
-    def load_data(self,print_shape=True,print_h5_data_info=False):
-        def myFunc(name, obj):
+    def load_hdf5_data(self,i,print_shape = True,print_h5_data_info=False):
+        with h5py.File(self.filename[i],'r') as file:
+            keys = list(file.keys())
             if print_h5_data_info:
-                print(name,obj)
-        with h5py.File(self.filename, "r") as file:
-            file.visititems(myFunc)
-            data = file["data"][:]
-            if print_shape:
-                print("Shape of " + self.filename +" = " +str(np.shape(data)))
-        return data,np.shape(data)
+                print(keys)
+                print(type(file[keys[0]]))
+            if len(keys) != 1:
+                print("Wrong format in HDF5 file. File must contain one dataset. Modyfy the 'load_hdf5_data' function. Aborting...")
+                sys.exit(1)
 
-    def mask_func(self,percentage=0.5,percentile=(0.25,99.75,"outside"),method = "rng",seed = 1234,save_random = False,use_default_random_name = False,filename="",load_random = False): # percentage of total number of points to plot
-        self.masking_method = method
-        ###default_random_name = "./" + self.filename_variable + "_random.npy"
-        if use_default_random_name: self.default_random_name = "./n_part_" + str(self.n_part) +  "_"+ self.masking_method + "_random.npy" 
-        #self.percentage = percentage
-        #self.n_part = n_part
-        self.mask = True
-        print("Masking...")
-        if self.split == True:
-            print("Warning: Masking must be done before splitting. Aborting...")
+            data = file[keys[0]][()]  # returns as a numpy array. See hdf5 documentation online
+
+            #print(type(file[keys[0]])) 
+        if self.verbose_bool and print_shape:
+            print("Shape of " + self.filename[i] +" = " +str(np.shape(data)))
+        return data
+    
+    def mask(self,method = "rng",percentage=0.5,percentile=(0.25,99.75,"outside"),seed = 1234):
+        self.mask_bool = True
+        self.mask_method = method
+        if method =="rng":
+            self.mask_seed = seed
+            self.mask_percentage = percentage
+        elif method == "limits":
+            self.mask_percentile = percentile
+        else:
+            print("Unknown 'method'. Aborting...")
             sys.exit(1)
-        if load_random:
-            print("Loading random")
+    
+    def symmetric_colorbar(self):
+        self.symmetric_colorbar_bool = True
+        if self.verbose_bool: print("Symmetric colorbar selected.")
+    def log_scale(self,method = "split"):
+        self.log_scale_method = method
+        if self.verbose_bool: print("Log scale selected with method '" + self.log_scale_method + "'.")
+        self.log_scale_bool = True
+    def scatter(self,rescale_factor=1):
+        self.scatter_bool = True
+        self.rescale_factor = rescale_factor
+        if self.verbose_bool: print("Scatter plot selected.")
+    def save(self):
+        self.save_bool = True
+        if self.verbose_bool: print("File(s) will be saved.")
+    def offscreen_rendering(self):
+        self.offscreen_rendering_bool = True
+        if self.verbose_bool: print("")
+        if self.verbose_bool: print("Off-screen rendering enabled. May be much slower than on-screen rendering.")
+        if self.verbose_bool: print("")
+    def show(self):
+        self.show_bool = True
+        #print("Will show.")
+    def move_camera(self):
+        self.move_camera_bool = True
 
+
+    def mask_func(self):
+        if self.verbose_bool: print("Masking...")
         
-        if self.masking_method == "secrets":
-            print("Using 'secrets' for random sampling. Don't...")
-            if seed != False: print("Friendly Warning: Seed is never used in the 'secrets' method. You can instead save the matrix containg the random numbers")
-            import secrets
-            random = []
-            for i in range(self.n_part**3):
-               random.append(secrets.randbelow(self.n_part**3))
-            random = np.array(random)
-            random = random.reshape(self.shape)
-            condition  = (random >= (self.n_part**3)*(100-percentage)/100)
-        
-        elif self.masking_method == "rng":
-            print("Keeping "+ str(percentage)+"% " "of the data")
-            if seed == False:
-                print("Using 'numpy.random.default_rng()' for uniform random sampling")
+        if self.mask_method == "rng":
+            if self.verbose_bool: print("Keeping "+ str(self.mask_percentage)+"% " "of the data")
+            if self.mask_seed == False:
+                if self.verbose_bool: print("Using 'numpy.random.default_rng()' for uniform random sampling")
                 rng = np.random.default_rng()
             else:
-                print("Using 'numpy.random.default_rng(seed)' for uniform random sampling, where seed = " +str(seed))
-                rng = np.random.default_rng(seed)
+                if self.verbose_bool: print("Using 'numpy.random.default_rng(seed)' for uniform random sampling, where seed = " +str(self.mask_seed))
+                rng = np.random.default_rng(self.mask_seed)
                 
-            random = rng.random(size=self.n_part**3)   
+            random = rng.random(size=self.n_grid**3)   
             random = random.reshape(self.shape)
-            self.condition = (random >= (100-percentage)/100)
-            actual_percentage = len((self.condition[self.condition]).flatten())/self.n_part**3*100
-            print(f"Actual percentage of data kept: {actual_percentage:.3f}")
+            self.condition = random >= (100-self.mask_percentage)/100
+            actual_percentage = len((self.condition[self.condition]).flatten())/self.n_grid**3*100
+            if self.verbose_bool: print(f"Actual percentage of data kept: {actual_percentage:.3f}")
+            self.rng_generated_bool = True
         
-        elif self.masking_method== "limits":
+        elif self.mask_method== "limits":
             if self.VectorData: print("method: 'limits' does not work on vector data. Aborting..."); sys.exit(1)
-            if seed != False: print("Friendly Warning: Seed is never used in the 'limits' method")
+            #if self.mask_seed != False: print("Friendly Warning: Seed is never used in the 'limits' method")
 
-            percentile_bottom = float(percentile[0])
-            percentile_top    = float(percentile[1])
-            area = percentile[2]
-            print("Keeping values '" + area + "' the range. Limits of range are exclusive.")
+            percentile_bottom = float(self.mask_percentile[0])
+            percentile_top    = float(self.mask_percentile[1])
+            area              = str(self.mask_percentile[2])
+            if self.verbose_bool: print("Keeping values '" + area + "' the range. The limits of the range are exclusive for 'outside' and inclusive for 'inside'.")
             percentile_bottom_value = np.percentile(self.data.flatten(),percentile_bottom)
             percentile_top_value = np.percentile(self.data.flatten(),percentile_top)
             if area == "outside":
                 self.condition = (self.data < percentile_bottom_value) | (self.data > percentile_top_value) #np.where((self.data <= percentile_bottom_value) | (self.data >= percentile_top_value),True,False)
                
             elif area == "inside":
-                self.condition = (self.data > percentile_bottom_value) & (self.data < percentile_top_value)
+                self.condition = (self.data >= percentile_bottom_value) & (self.data <= percentile_top_value)
                 
             else:
                 print("Third element in 'percentile' must be 'outside' or 'inside'. Aborting...")
                 sys.exit(1) 
-            actual_percentage = len((self.condition[self.condition]).flatten())/self.n_part**3*100
-            print(f"Percentage of data kept: {actual_percentage:.3f}")           
+            actual_percentage = len((self.condition[self.condition]).flatten())/self.n_grid**3*100
+            if self.verbose_bool: print(f"Percentage of data kept: {actual_percentage:.3f}")           
 
         else:
-            print(str(self.masking_method) + " is not a method in mask_func. Aborting...")
+            print(str(self.mask_method) + " is not a method in mask_func. Aborting...")
             sys.exit(1)
         
-        if save_random:
-            np.save(self.default_random_name if use_default_random_name else filename,self.condition)
-            data_shape = self.shape if self.ScalarData else str(np.shape(self.data_x))
-            print("Saving matrix with shape " + str(data_shape) +  ", containing True or False, to file: " + self.default_random_name)
-        
-        #check shape here!!! what if True goes to the wrong index
-        #print(self.condition)
-        #sys.exit(0)
-        #print(self.xx[self.condition])
-
-        self.xx = self.xx[self.condition]
-        self.yy = self.yy[self.condition]
-        self.zz = self.zz[self.condition]
+        """
+        self.xx_current = self.xx[self.condition]
+        self.yy_current = self.yy[self.condition]
+        self.zz_current = self.zz[self.condition]
 
         #self.xx = np.where(self.condition,self.xx,np.nan)
         #self.yy = np.where(self.condition,self.yy,np.nan)
         #self.zz = np.where(self.condition,self.zz,np.nan)
         
-        if self.ScalarData:
-            self.data = self.data[self.condition]
+        if self.ScalarData:    
+            for i in range(len(self.filename)):
+                self.data[i] = self.data[i][self.condition]
+
             #self.data = np.where(self.condition,self.data,np.nan)
             #print(np.shape(self.data))
-            #sys.exit()
+            #sys.exit(0)
         
         if self.VectorData:
             self.data_x       = self.data_x[self.condition]
             self.data_y       = self.data_y[self.condition]
             self.data_z       = self.data_z[self.condition]
-
+        """
         print("")
-    """
-    def mask_func_loaded_random(self,percentage,use_default_random_name = True,filename = ""):
-        
-        if use_default_random_name: self.default_random_name = "./n_part_" + str(self.n_part) +  "_"+ self.random_method + "_random.npy"
-        #default_random_name = "./" + self.filename_variable + "_random.npy"
-        #self.percentage = percentage
-        #self.n_part = n_part
-        self.mask = True
-        print("Masking...")
-        if self.split == True:
-            print("Warning: Masking must be done before splitting. Aborting...")
-            sys.exit(1)
-        print("Keeping "+ str(percentage)+"% " "of the data")
-        
-        if use_default_random_name:
-            print("Loading " + self.default_random_name)
-            condition = np.load(self.default_random_name)
-        else:
-            print("Loading "+filename)
-            condition = np.load(filename)
-            
-        if self.ScalarData and np.shape(condition) != self.shape:
-            print("Loaded random has wrong shape. Aborting...")
-            sys.exit(1)
-        if self.VectorData and np.shape(condition) != np.shape(self.data_x):
-            print("Loaded random has wrong shape. Aborting...")
-            sys.exit(1)
-        #Keepi
-
-        #condition  = (random >= (self.n_part**3)*(100-percentage)/100) if self.random_method=="secrets" else ((random >= (100-percentage)/100) if self.random_method=="rng" else 1)
-        self.data     = self.data[condition]
-        self.xx       = self.xx[condition]
-        self.yy       = self.yy[condition]
-        self.zz       = self.zz[condition]
-        if self.VectorData:
-            self.data_x       = self.data_x[condition]
-            self.data_y       = self.data_y[condition]
-            self.data_z       = self.data_z[condition]
-        print("")
-    """        
-    def log_scale(self):
-        print("Log scale")
-        self.log_scale_bool = True
     
-    def split_data(self):
-        print("Splitting...")
-        if self.mask == False:
-            print("Friendly Warning: You have not masked. Continuing...")
-        
+    #if self.verbose_bool: print("Symmetric colorbar has been auto-deselected.")
+    def symmetric_colorbar_func(self):
         if self.log_scale_bool:
-            self.cond_upper = self.data > 0
+            if self.log_scale_method == "abs":
+                if self.verbose_bool: print("Symmetric colorbar has been auto-deselected.")
+                return
+            if self.scatter_mode == "only positive":
+                if self.verbose_bool: print("Symmetric colorbar has been auto-deselected for this file.")
+                return
+            if self.scatter_mode == "only negative":
+                if self.verbose_bool: print("Symmetric colorbar has been auto-deselected for this file.")
+                return
+            if self.scatter_mode == "split":
+                ###self.max_positive = np.nanmax(self.positive_data.flatten())
+                ###self.max_negative = np.nanmax(self.negative_data.flatten())
+                ###self.min_positive = np.nanmin(self.positive_data.flatten())
+                ###self.min_negative = np.nanmin(self.negative_data.flatten())
+                
+                if self.max_positive >= self.max_negative:
+                    self.max_log = self.max_positive
+                    #self.max_log_positive = max_positive
+                else:
+                    self.max_log = self.max_negative
+                    #self.max_log_upper = max_positive
+                
+                if self.min_positive <= self.min_negative:
+                    self.min_log = self.min_positive
+                else:
+                    self.min_log = self.min_negative
+                
         else:
-            self.cond_upper = self.data >= 0  # & (delta_rho_fluid < 0.0010001)
-        self.cond_lower = self.data < 0   #   & (-delta_rho_fluid <0.0010001)
-        if len(self.cond_lower[self.cond_lower]) == 0:
-            print("No strictly negative data. Aborting...")
-            sys.exit(1)
-        if len(self.cond_upper[self.cond_upper]) == 0:
-            print("No positive data. Aborting...")
-            sys.exit(1)
-        self.vmax_lower = -np.min(self.data[self.cond_lower]) # largest absolute value of the negative numbers
-        self.vmax_upper = np.max(self.data[self.cond_upper])
-        self.vmin_lower = -np.max(self.data[self.cond_lower])
-        self.vmin_upper = np.min(self.data[self.cond_upper]) 
-        #print(self.vmax_lower)
-        self.vmax = self.vmax_upper if self.vmax_upper >= self.vmax_lower else self.vmax_lower
-        self.vmin = self.vmin_upper if self.vmin_upper <= self.vmin_lower else self.vmin_lower
-        self.data_upper = self.data[self.cond_upper]
-        self.data_lower = -self.data[self.cond_lower]
-        self.xx_upper = self.xx[self.cond_upper]
-        self.xx_lower = self.xx[self.cond_lower]
-        self.yy_upper = self.yy[self.cond_upper]
-        self.yy_lower = self.yy[self.cond_lower]
-        self.zz_upper = self.zz[self.cond_upper]
-        self.zz_lower = self.zz[self.cond_lower]
-        
-        print("Number of elements in upper = "+str(len(self.cond_upper[self.cond_upper])))
-        print("Number of elements in lower = "+str(len(self.cond_lower[self.cond_lower])))
-        self.split = True      
-        print("")
-    
+            min = np.nanmin(self.data.flatten())
+            max = np.nanmax(self.data.flatten())
+            if abs(max) >= abs(min):
+                self.symmetric_limit = abs(max)
+            else:
+                self.symmetric_limit = abs(min)
+
+            self.vmin = -self.symmetric_limit
+            self.vmax = self.symmetric_limit
+            self.abs_max = self.symmetric_limit
+         
     def plot_threeD_quiver(self,upscale_factor):
         #mlab.clf()
-        obj = mlab.quiver3d(self.xx, self.yy, self.zz, self.data_x, self.data_y, self.data_z,scale_mode="vector",scale_factor = 1/self.n_part*upscale_factor,mode = "arrow")#,colormap = "inferno")
+        obj = mlab.quiver3d(self.xx, self.yy, self.zz, self.data_x, self.data_y, self.data_z,scale_mode="vector",scale_factor = 1/self.n_grid*upscale_factor,mode = "arrow")#,colormap = "inferno")
         #mlab.vectorbar(object=obj,orientation='vertical')
         mlab.colorbar(orientation='vertical')
 
@@ -261,18 +254,98 @@ class plot_class:
         mlab.outline(obj)
         self.plot = True
         
+    def scatter_func(self):
+        if self.log_scale_bool == False: scale_factor = self.rescale_factor/(self.abs_max*(self.n_grid - 1))
+        else:
+            scale_factor = self.rescale_factor/(self.n_grid - 1)
 
-    def plot_threeD_scatter(self,upscale_factor=1):
+        if self.symmetric_colorbar_bool:
+            colormap = 'seismic'
+            
+            "I was not able to implement 'colorcet' in 'mayavi'."
+            #import colorcet as cc
+            #from matplotlib.cm import get_cmap
+
+            #colormap = str(get_cmap("cet_fire"))
+            #colormap = cc.m_rainbow4
+
+        else:
+            colormap = 'jet'
+
+        if self.log_scale_bool:
+            if self.verbose_bool: print("Clamping the glyphs. From the mayavi documentation: 'the smallest value of the scalar data is represented as a null diameter, and the largest is proportional to inter-point distance.' The documentation: https://docs.enthought.com/mayavi/mayavi/mlab.html")
+            if self.log_scale_method == "abs":
+                colormap = 'jet'
+                self.obj = mlab.points3d(self.xx_current,self.yy_current,self.zz_current,self.data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
+                self.obj.glyph.glyph.clamping = True
+                self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
+                mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+                mlab.outline(self.obj)
+            elif self.log_scale_method == "split":
+                if self.scatter_mode == "only positive":
+                    colormap = "Reds"
+                    self.obj = mlab.points3d(self.xx_positive,self.yy_positive,self.zz_positive,self.positive_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
+                    self.obj.glyph.glyph.clamping = True
+                    self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
+                    mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+                    mlab.outline(self.obj)
+
+                elif self.scatter_mode == "only negative":
+                    colormap = "Blues"
+                    self.obj = mlab.points3d(self.xx_negative,self.yy_negative,self.zz_negative,self.negative_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
+                    self.obj.glyph.glyph.clamping = True
+                    self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
+                    mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+                    mlab.outline(self.obj)
+                elif self.scatter_mode == "split":
+                    #if self.positive_data.flatten().all() >=1:
+                    colormap = "Reds"
+                    self.obj_positive = mlab.points3d(self.xx_positive,self.yy_positive,self.zz_positive,self.positive_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor if self.max_positive >= self.max_negative else scale_factor*self.max_positive/self.max_negative,vmin = self.min_log if self.symmetric_colorbar_bool else None, vmax = self.max_log if self.symmetric_colorbar_bool else None)#,extent=[0, 1, 0, 2, 0, 3])
+                    self.obj_positive.glyph.glyph.clamping = True
+                    self.obj_positive.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
+                    mlab.colorbar(object=self.obj_positive,orientation='vertical')#,title= "overdensity for velocity")
+                    mlab.outline(self.obj_positive)
+
+                    colormap = "Blues"
+                    self.obj_negative = mlab.points3d(self.xx_negative,self.yy_negative,self.zz_negative,self.negative_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor if self.max_negative >= self.max_positive else scale_factor*self.max_negative/self.max_positive,vmin = self.min_log if self.symmetric_colorbar_bool else None, vmax = self.max_log if self.symmetric_colorbar_bool else None)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
+                    self.obj_negative.glyph.glyph.clamping = True
+                    self.obj_negative.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
+                    mlab.colorbar(object=self.obj_negative,orientation='vertical')#,title= "overdensity for velocity")
+                    #mlab.outline(self.obj_negative)
+
+                    self.obj_positive.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([0.01,  0.1])
+                    self.obj_negative.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([0.89,  0.1])
+
+                else:
+                    print("Error in scatter mode. Aborting...")
+                    sys.exit(1)
+
+            else:
+                print("Unknown log scale method. Aborting...")
+                sys.exit(1)
+
+        else:
+            self.obj = mlab.points3d(self.xx_current,self.yy_current,self.zz_current,self.data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor,vmin = self.vmin if self.symmetric_colorbar_bool else None, vmax = self.vmax if self.symmetric_colorbar_bool else None)
+            self.obj.glyph.glyph.clamping = False 
+            self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
+            mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+            mlab.outline(self.obj)
+        self.plot_bool = True
+        
+        
+
+    """
+    #def scatter_func_test(self,i = 0,upscale_factor=1):
         print("Plotting...")
         #fig = mlab.figure()
-        scale_factor = upscale_factor/(self.vmax*(self.n_part - 1))#1/self.n_part*upscale_factor
+        scale_factor = upscale_factor/(self.vmax[i]*(self.n_part - 1))#1/self.n_part*upscale_factor
         if self.mask == False:
             print("Friendly Warning: You have not masked the data. Continuing...")
         if self.split:
-            scale_factor_upper = scale_factor #if self.vmax_upper >= self.vmax_lower else scale_factor*self.vmax_upper/self.vmax
-            scale_factor_lower = scale_factor #if self.vmax_lower > self.vmax_upper else scale_factor*self.vmax_lower/self.vmax
-            self.obj_upper = mlab.points3d(self.xx_upper,self.yy_upper,self.zz_upper,self.data_upper,mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Reds',scale_factor=scale_factor_upper,vmin = self.vmin if self.log_scale_bool else 0, vmax=self.vmax )#,extent=[0, 1, 0, 2, 0, 3])
-            self.obj_lower = mlab.points3d(self.xx_lower,self.yy_lower,self.zz_lower,self.data_lower,mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Blues',scale_factor=scale_factor_lower,vmin = self.vmin if self.log_scale_bool else 0,vmax=self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
+            #scale_factor_upper = scale_factor #if self.vmax_upper >= self.vmax_lower else scale_factor*self.vmax_upper/self.vmax
+            #scale_factor_lower = scale_factor #if self.vmax_lower > self.vmax_upper else scale_factor*self.vmax_lower/self.vmax
+            self.obj_upper = mlab.points3d(self.xx_upper[i],self.yy_upper[i],self.zz_upper[i],self.data_upper[i],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Reds',scale_factor=scale_factor,vmin = self.vmin[i] if self.log_scale_bool else 0, vmax=self.vmax[i] )#,extent=[0, 1, 0, 2, 0, 3])
+            self.obj_lower = mlab.points3d(self.xx_lower[i],self.yy_lower[i],self.zz_lower[i],self.data_lower[i],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Blues',scale_factor=scale_factor,vmin = self.vmin[i] if self.log_scale_bool else 0,vmax=self.vmax[i])#,extent=[0, 1, 0, 2, 0, 3])
             mlab.colorbar(object=self.obj_upper,orientation='vertical')#,title= "overdensity for velocity")
             mlab.colorbar(object=self.obj_lower,orientation='vertical')#,title= "overdensity for velocity")
             self.obj_upper.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([0.01,  0.1])
@@ -290,15 +363,11 @@ class plot_class:
             #mlab.view(distance='auto', focalpoint=[0, 0, 0])
             #mlab.view(azimuth=270)
             #mlab.view(azimuth=0, elevation=90)
-
             #v = mlab.view()
             #print(v)
-
-
-            
             #mlab.show()
         else:
-            self.obj = mlab.points3d(self.xx,self.yy,self.zz,self.data,mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,scale_factor=scale_factor)
+            self.obj = mlab.points3d(self.xx,self.yy,self.zz,self.data[i],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,scale_factor=scale_factor)
             mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
             self.obj.glyph.glyph.clamping = False
             mlab.outline(self.obj)
@@ -306,23 +375,203 @@ class plot_class:
             #mlab.ylabel('300 [Mpc/h]')
             #mlab.zlabel('300 [Mpc/h]')
             #mlab.show()
-        self.plot = True
-    def show(self):
-        if self.plot: mlab.show()
-        print("Nothing to show")
-    
-    def help(self,Q):
-        if Q == "indexing":
-            print("")
-            print("Help: Standard numpy indexing is xyz. A numpy array, arr, of shape (nz, ny, nx) will have indices x, y and z such that arr[z,y,x] will return the value of the element located at index z in the z-direction, index y in the y-direction and index x in the x-direction. Mayavi uses ijk indexing, i.e., arr[i,j,k] returns the value of the element located at index i in the x-direction, index j in the y-direction and index k in the z-direction. If the data array, read from the input file, uses xyz indexing, the code will rearange the data correctly if and only if the parameter 'indexing' is set to its default value 'xyz'. Regarding gevolution: gevolution uses ijk indexing internally, but when the outputted HDF5 files are read in python, the data is in xyz indexing. End help.")
-            print("")
-        elif Q == "method":
-            print("")
-            print("Help: Possible options for 'method' is 'rng' and 'limits'. 'rng' needs the parameter 'percentage' to determine how many percent of the data to keep. 'limits' needs a parameter 'percentile' on the form [a,b,c], where a is the bottom percentile, of interest, of the data and b is the top percentile, of interest, of the data. c must be either 'outside' or 'inside' the limits. Limits are excluded from the resulting dataset. End help. ")
-            print("")
+        self.plot_bool = True
+    """
+    def plotting_loop_func(self):
+        def inside_loop_func(i):
+            mlab.figure(size=(800, 800))
+            self.data = self.load_hdf5_data(i,print_shape=False) # reading all the data
+            
+            if self.indexing == "xyz":
+                self.data = self.data.transpose((2, 1, 0)) # transposing to get ijk indexing   
+            
+            if self.mask_bool:
+                if self.mask_method == "limits":
+                    self.mask_func()
+                    self.data = self.data[self.condition]
+                    self.xx_current, self.yy_current, self.zz_current = self.xx[self.condition], self.yy[self.condition], self.zz[self.condition]
+                elif self.mask_method == "rng":
+                    if self.rng_generated_bool == False:
+                        self.mask_func()
+                        self.data = self.data[self.condition]
+                        self.xx_current, self.yy_current, self.zz_current = self.xx[self.condition], self.yy[self.condition], self.zz[self.condition]
+                    else:
+                        self.data = self.data[self.condition]
+                else:
+                    print("Unknown mask method. Aborting...")
+                    sys.exit(1)
+                
+            # data and coords have been masked
+            if self.log_scale_bool:
+                if self.log_scale_method == "abs":
+                    self.data = np.log10(np.abs(self.data))
+                    if self.symmetric_colorbar_bool:
+                        if self.verbose_bool: print("Warning: you are trying to use a symmetric colorbar on an absolute value plot. Symmetric colorbar is disabled...")
+                elif self.log_scale_method == "split":        
+                    positive_booleans = self.data > 0
+                    negative_booleans = self.data < 0
+                
+                    self.positive_data = self.data[positive_booleans]
+                    self.negative_data = - self.data[negative_booleans]
+                    
+                    # avoiding empty matrices
+                    if len(self.positive_data) + len(self.negative_data) == 0:
+                        print("File with index, " + str(i) + ", is either empty or has no non-zero values. Skipping this file...")
+                        return
+                    elif len(self.positive_data) == 0:
+                        self.scatter_mode = "only negative"
+                        print("no positive")
+                        self.xx_negative = self.xx_current[negative_booleans]
+                        self.yy_negative = self.yy_current[negative_booleans]
+                        self.zz_negative = self.zz_current[negative_booleans]
+                        self.negative_data = np.log10(self.negative_data)
+                    elif len(self.negative_data) == 0:
+                        self.scatter_mode = "only positive"
+                        print("no negative")
+                        self.xx_positive = self.xx_current[positive_booleans]
+                        self.yy_positive = self.yy_current[positive_booleans]
+                        self.zz_positive = self.zz_current[positive_booleans]
+                        self.positive_data = np.log10(self.positive_data)
+                    else:
+                        self.scatter_mode = "split"
+
+                        self.xx_positive = self.xx_current[positive_booleans]
+                        self.yy_positive = self.yy_current[positive_booleans]
+                        self.zz_positive = self.zz_current[positive_booleans]
+                        self.xx_negative = self.xx_current[negative_booleans]
+                        self.yy_negative = self.yy_current[negative_booleans]
+                        self.zz_negative = self.zz_current[negative_booleans]
+
+                        self.positive_data = np.log10(self.positive_data)
+                        self.negative_data = np.log10(self.negative_data)
+                        self.max_positive = np.nanmax(self.positive_data.flatten())
+                        self.max_negative = np.nanmax(self.negative_data.flatten())
+                        self.min_positive = np.nanmin(self.positive_data.flatten())
+                        self.min_negative = np.nanmin(self.negative_data.flatten())
+                        if self.symmetric_colorbar_bool == False:
+                            if self.verbose_bool: print("")
+                            if self.verbose_bool: print("Symmetric colorbar is recommended to get more consistent colors. Scaling will be consistent.")
+                            if self.verbose_bool: print("")
+                    
+                else:
+                    print("Unknown log_scale method. Available methods are: 'abs', 'split'. Aborting...")
+                    sys.exit(1)
+
+            if self.symmetric_colorbar_bool:
+                self.symmetric_colorbar_func()
+            else:
+                if self.log_scale_bool == False:
+                    self.vmin = np.nanmin(self.data.flatten())
+                    self.vmax = np.nanmax(self.data.flatten())
+                    self.abs_max = abs(self.vmax) if abs(self.vmax) >= abs(self.vmin) else abs(self.vmin)
+            
+            if self.scatter_bool:
+                self.scatter_func()
+                #mlab.view(azimuth=None, elevation=None, distance=None, focalpoint=None,roll=None, reset_roll=True, figure=None)
+                #mlab.view(146.2499999999997, 48.48561031724544, 3.9999999999999947, np.array([0.50011478, 0.50011478, 0.50011774]))
+                if self.move_camera_bool == False: mlab.view(-119.00051786825493, 69.04300699344203, 2.5, np.array([0.50011478, 0.50011478, 0.50011774]))
+
+            if self.plot_bool:
+                #print(i)
+                if self.mask_bool == False and self.verbose_bool: print("Plotting without masking... May be very slow.")
+                if self.save_bool:
+                    if int(len(self.filename)) > 10001:
+                        print("Too many files. The mlab.savefig() line must be changed from 04d to e.g. 05d. Aborting...")
+                        sys.exit(1)
+                    if self.verbose_bool: print("Saving files in ./tmp_.png")
+                    mlab.savefig("tmp_%04d.png" % i)
+                if self.move_camera_bool:
+                    self.move_camera_func()
+                if self.show_bool: 
+                    mlab.show()
+                else:
+                    mlab.close()
+            else:
+                if self.verbose_bool: print("Nothing has been plotted.")
+            
+        import copy 
+        # defining coordinate matrices independent of self.xx, ...    
+        self.xx_current, self.yy_current, self.zz_current =  copy.deepcopy(self.xx),copy.deepcopy(self.yy),copy.deepcopy(self.zz)   
+        
+        #new_object = copy.deepcopy(self.data)
+
+        #self.xx_current[0,0,0] = 100
+        #print(self.xx_current[0,0,0] == self.xx[0,0,0])  
+        #sys.exit(1)
+        #if self.mask_bool:
+        #    if self.mask_method== "rng":
+        #        self.mask_func() 
+        #self.xx_current, self.yy_current, self.zz_current = self.xx, self.yy, self.zz
+        
+        if self.offscreen_rendering_bool:
+            mlab.options.offscreen = True
         else:
-            print("...")
-    def animate(self):
+            mlab.options.offscreen = False
+        
+        if self.indices[0] == "all" or self.indices[0] == "range":
+            plot_last = False
+            for i in range(self.start,self.stop,self.step):
+                inside_loop_func(i)
+                if i == self.stop-1:
+                    plot_last = True
+            if plot_last == False and self.indices[0] == "range":
+                if self.verbose_bool: print("Plotting the last file in range --> index "+ str(self.stop-1))
+                inside_loop_func(self.stop-1)
+
+            
+        elif self.indices[0] == "singles":
+            for i in self.indices[1:]:
+                inside_loop_func(i)
+        else:
+            import inspect
+
+            line_number = inspect.currentframe().f_back.f_lineno
+            print("'indices' invalid. Aborting...")
+            print("Line number:", line_number)
+            sys.exit(1)
+
+    
+    def execute(self):
+        # checking booleans and doing tasks in correct order inside plotting_loop_func()...
+        if self.verbose_bool: print("")
+        if self.indices[0] == "all":
+            if self.verbose_bool: print("'indices' set to 'all'.")
+            self.start = 0
+            self.stop  = len(self.filename)
+            self.step  = 1
+            self.plotting_loop_func()
+
+        
+        elif self.indices[0] == "singles":
+            if self.verbose_bool: print("'indices' set to 'singles'.")
+            self.plotting_loop_func()
+
+
+        elif self.indices[0] == "range":
+            if self.verbose_bool: print("'indices' set to 'range'.")
+            self.start = int(self.indices[1])
+            self.stop = int(self.indices[2])
+            self.step = int(self.indices[3]) if len(self.indices) == 4 else 1
+            self.plotting_loop_func()
+
+        else:
+            print("'indices' set incorrectly. Aborting...")
+            sys.exit(1)    
+        print("")                    
+    
+    def help_indexing(self):
+        print("")
+        print("Help: Standard numpy indexing is called 'xyz'. A numpy array, arr, of shape (n_z, n_y, n_x) will have indices x, y and z such that arr[z,y,x] will return the value of the element located at index z in the z-direction, index y in the y-direction and index x in the x-direction. Mayavi uses 'ijk' indexing, i.e., arr[i,j,k] returns the value of the element located at index i in the x-direction, index j in the y-direction and index k in the z-direction. If the data array, read from the input file, uses 'xyz' indexing, the code will rearange the data correctly if, and only if, the parameter 'indexing' is set to its default value: 'xyz'. Regarding gevolution: gevolution uses 'ijk' indexing internally, but when the outputted HDF5 files are read in python, the data is in 'xyz' indexing. End help.")
+        print("")
+        
+    def help_method(self):
+        print("")
+        print("Help: Possible options for 'method' is 'rng' and 'limits'. 'rng' needs the parameter 'percentage' to determine how many percent of the data to keep. 'limits' needs a parameter 'percentile' on the form [a,b,c], where a is the bottom percentile, of interest, of the data and b is the top percentile, of interest, of the data. c must be either 'outside' or 'inside' the limits. Limits are excluded from the resulting dataset. End help. ")
+        print("")
+
+    #def move_camera(self):
+    #    self.move_camera_bool = True
+    def move_camera_func(self):
         def elevation(direction = "positive"):
             if direction == "positive":
                 return 0.25
@@ -331,209 +580,64 @@ class plot_class:
 
 
         #@mlab.show
-        @mlab.animate(delay=10)
+        @mlab.animate(delay=200,ui = False if self.offscreen_rendering_bool else True)
         def anim():
             #f = mlab.gcf()
-            mlab.view(113.24999999999946, 15.485610317245463, 5, np.array([0.50011478, 0.50011478, 0.50011774]))
+            ###mlab.view(113.24999999999946, 15.485610317245463, 4, np.array([0.50011478, 0.50011478, 0.50011774]))
+            #mlab.view(-85.5924006618464, 60.53116127610586, 4.000000000000003, np.array([0.50011478, 0.50011478, 0.50011774]))
+            #mlab.view(-119.00051786825493, 69.04300699344203, 3, np.array([0.50011478, 0.50011478, 0.50011774]))
+            mlab.view(-120.52364487631695, 66.68905768142035, 3, np.array([0.50011478, 0.50011478, 0.50011774]))
+
+
+            #mlab.view(azimuth = 90,elevation=90)
 
             elevation_turn_bool = True
-            while 1:
-                self.obj.scene.camera.azimuth(0.25)
-                self.obj.scene.camera.elevation(elevation(direction = "positive" if elevation_turn_bool == False else "negative"))
-                
-                self.obj.scene.camera.zoom(1.005 if elevation_turn_bool==True else 0.995)
-                self.obj.scene.render()
-                if mlab.view()[1] <=1: elevation_turn_bool = True
-                if mlab.view()[1] >=179: elevation_turn_bool = False
+            while True:
+                #obj.scene.camera.azimuth(0.25)
+                #obj.scene.camera.elevation(elevation(direction = "positive" if elevation_turn_bool == False else "negative"))
+                if self.log_scale_bool:
+                    if self.log_scale_method == "split":
+                        if self.scatter_mode == "split":
+                    #if self.scatter_mode == "split":
+                        #self.obj_positive.scene.camera.zoom(1.005)# if elevation_turn_bool==True else 0.995)
+                        #self.obj_negative.scene.camera.zoom(1.005)# if elevation_turn_bool==True else 0.995)
+                            self.obj_positive.scene.render()
+                        #self.obj_negative.scene.render()
+                else:
+                    #self.obj.scene.camera.zoom(1.005)# if elevation_turn_bool==True else 0.995)
+                    self.obj.scene.render()
 
-                #print(mlab.view()[:])
+
+
+                ###if mlab.view()[1] <=1: elevation_turn_bool = True
+                ###if mlab.view()[1] >=179: elevation_turn_bool = False
+
+                print(mlab.view()) 
                 yield
         anim()
 
 
+file = []
+root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/"
+for i in range(1,51):
+    #("tmp_%04d.png" % i)
+    #file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)
+    file.append(root + "delta_rho_fluid_" + str(i) +  ".h5")
+#print(file)
+#sys.exit(0)
 
+test = plot_class(file,indices=["singles",48,49],verbose = True)
+test.symmetric_colorbar()
 
-#s = np.zeros((16,16,16)) # zyx
-##B = np.zeros((16,16,16))
-#for k in range(16):
-#       for j in range(16):
-#              for i in range(16):
-#                     #s[i,j,0] = 10
-#                     s[i,j,k] = 100000*np.sqrt(i**2+k**2+j**2)  #str(i) +"_" + str(j) + "_"+str(k)
-test = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid1.h5")
-test.plot_threeD_scatter(1)
-test.animate()
+test.scatter(rescale_factor=1)
+test.log_scale(method="split")
+#test.save()
+#test.move_camera()
+#test.help_indexing()
+test.mask(percentile=(5,95,"outside"),method="limits") # does this work with log_scale
+#test.mask(percentage=20,method="rng")
+#test.offscreen_rendering()
 test.show()
-
-#test = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/snap_001_delta_rho_fluid.h5")
-#test1 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_1.h5")
-#test2 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_5.h5")
-#test3 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_10.h5")
-#test4 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_15.h5")
-#test5 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_20.h5")
-#test6 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_25.h5")
-#test7 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_30.h5")
-#test8 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_35.h5")
-#test9 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid_40.h5")
-
-
-#test = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid2.h5")
-#test = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid1.h5")
-#test.indexing_help
-#sys.exit(0)
-#print(test.data[8,3,2]) # z,y,x
-#sys.exit(0)
-#test.mask_func(method="limits",percentile=[1,99,"outside"],percentage=1,seed = 12345)
-#test.mask_func(percentage=5)
-#test = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/snap_001_v_upper_i_fluid.h5")
-#test.split_data()
-#test.plot_threeD_scatter(upscale_factor=1)#800)
-#print(test.data)
-#test.show()
-#test.help("indexing")
-#test.help("method")
-#test.log_scale()
-#test.plot_threeD_scatter(upscale_factor=1)#800)
-#data1 = test1.data
-#data2 = test2.data
-#data3 = test3.data
-#data4 = test4.data
-#data5 = test5.data
-#data6 = test6.data
-#data7 = test7.data
-#data8 = test8.data
-#data9 = test9.data
-#datas = np.array([data1,data2,data3,data4,data5,data6,data7,data8,data9])
-
-#x,y,z = test1.xx,test1.yy,test1.zz
-#
-#test1.plot_threeD_scatter(1)
-#test1.animate()
-#test1.show()
-sys.exit(0)
-
-#plot = mlab.points3d(x,y,z,data1)
-#ms = l.mlab_source
-"""
-@mlab.animate
-def anim():
-    for i in range(9):
-        plot.mlab_source.scalars = datas[i]
-        yield
-anim()
-mlab.show()
-"""
-@mlab.show
-@mlab.animate
-def anim():
-    #f = mlab.gcf()
-    while 1:
-        f.scene.camera.azimuth(10)
-        f.scene.render()
-        yield
-
-anim()
-"""
-from tvtk.tools import visual
-from vtk.util import colors as color
-
-# Create a figure
-f = mlab.figure()#size=(200,200))
-# Tell visual to use this as the viewer.
-visual.set_viewer(f)
-
-@mlab.show
-@mlab.animate(delay=500)
-def anim():
-    while 1:
-        for i in range(9):
-            #b1.x = b1.x + b1.v*0.01
-            #if b1.x > 3 or b1.x < -3:
-            #    b1.v = -b1.v
-            plot.mlab_source.scalars = datas[i]
-            yield
-
-
-anim()
-"""
-#test.help("indexing")
-#sys.exit(0)
-#test = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/snap_001_v_upper_i_fluid.h5")
-#test = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid.h5")
-#test1 = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid1.h5")
-
-#test.plot_threeD_scatter(9)
-#test.show()
-#cond = (test.data == test1.data)
-#if (test1.data == 1.0).any(): print("true")
-#print(test1.data)
-sys.exit(0)
-
-
-#gevolutino used xyz. Numpy uses zyx. Converting to ijk
-data_xyz = np.zeros((test1.n_part,test1.n_part,test1.n_part))
-data_ijk = np.zeros((test1.n_part,test1.n_part,test1.n_part))
-for z in range(test1.n_part):
-    for y in range(test1.n_part):
-        for x in range(test1.n_part):
-            # converting from zyx to xyz
-            data_xyz[x,y,z] = test1.data[z,y,x]
-
-for k in range(test1.n_part):
-    for j in range(test1.n_part):
-        for i in range(test1.n_part):
-            
-            data_ijk[i,j,k] = test1.data[j,i,k]
-            # converting from xyz to ijk
-            #copy_ijk[i,j,k] = copy_xyz[j,i,k]
-#np.savetxt("./rho_test.h5",data_ijk)
-print(data_ijk)
-
-
-
-#print(test1.data[0])
-
-#print(test.data_z)
-#test.mask_func(percentage=0.5,percentile = (1,99,"outside"),method = "rng",seed = False)
-#for i in range(len(test.data.flatten())):
-#    print(test.data.flatten()[i])
-#print(test.data)
-#np.savetxt("./lol.txt",test.data.flatten())
-#print(test.data)
-
-#test.maskfunc_loaded_random(percentage=0.5,method="rng",filename = "example.npy",use_default_random_name = True)
-#test.split_data()
-#test.plot_threeD_scatter(upscale_factor=9)
-##test.plot_threeD_quiver(upscale_factor=9)
-#test.show()
-
-
-
-
-
-#test = plot_class("lol.h5")
-
-
-#test_inst = plot_class("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/snap_001_delta_rho_fluid.h5")
-#test_inst.mask_func(10)
-##test_inst.mask_func_loaded_random(1,"./random.npy")
-#test_inst.split_data()
-#test_inst.plot_threeD_scatter(9)
-#test_inst.show()
-
-
-
-#print(np.shape(v_fluid))
-#ex = plot_class(delta_rho_fluid)
-##print(len(ex.data.flatten()))
-##ex.mask_func(1)
-##print(len(ex.data.flatten()))
-#ex.mask_func_loaded_random(1,"./")
-##ex.threeD_quiver()
-#ex.split_data()
-#ex.threeD_scatter(9)
-#ex.show()
-#sys.exit(0)
-
-
-
+#test.move_camera()
+test.execute()
+print("Done")

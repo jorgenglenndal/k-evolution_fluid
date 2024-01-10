@@ -437,7 +437,6 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
 
 #ifdef FLUID_VARIABLES
 // the fluid properties are calculated from the field values
-// Units have been neglected
 template <class FieldType>
 void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_half,Field<FieldType> & phi,Field<FieldType> & chi,double rho_smg, double p_smg, double cs2, double Hcon
   ,double dx, double a, double rho_crit_0){

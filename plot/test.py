@@ -1,24 +1,73 @@
 import sys
 import numpy as np
 
-from mayavi import mlab
-"""
-x = [1, 2, 3, 4, 5, 6]
-y = [0, 0, 0, 0, 0, 0]
-z = y
-z2 =np.array(y) +1
+#a = np.linspace(0,1,11)
+#cond = a > 0.5
+#b = a[cond]
+#b[0] = 100
+##print(b[0] == a[0]) 
+#print(a)      
+#
+#[[True,True,True],[True,True,True],[True,True,True]]
+#a = np.array([[[1,2,3],[1,2,3],[1,2,3]],[[1,2,3],[1,2,3],[1,2,3]],[[1,2,3],[1,2,3],[1,2,3]]])
+#b = np.array([[[True,True,True],[True,True,True],[True,True,True]],[[True,True,True],[True,True,True],[True,True,True]],[[True,True,True],[True,True,True],[True,True,True]]])
+##print(np.shape(b))
+#c = a[b]
+#c = c.reshape((3,3,3))
+#c[0,0,0] = 100
+##print(c)
+#print(c[0,0,0] == a[0,0,0])
+##print(c)
+##print(c[0,0,0] == a[0,0,0])
+##print(np.shape(c))
+#sys.exit(0)
 
-s = [0.5, .6, .7, .8, .9, 1]
-s2 = np.array(s)/2
+from mayavi import mlab
+
+#x = [1, 2, 3, 4, 5, 6,7,8,9]
+n = 4
+x = np.linspace(0,1,n)
+#x = np.array([-1,-0.5,0,0.5,1,2,4,8,16,32])
+y = np.zeros(n)
+z = y
+#y = [0, 0, 0, 0, 0, 0,0,0,0]
+#z = y
+#z2 =np.array(y) +1
+
+#s = [1,-3,-2,-1,0,1,2,3,4]
+#s = [-25,-12.5,-6.25,0,6.25,12.5,25,50,200]
+a = 1
+b = 2
+s = np.array([a,2*a,3*a,4*a])
+s2 = np.array([b,2*b,3*b,4*b])
+#print(x)
+#s2 = s*2
+# first nd second element should have same size
+#x = []
+#y = x
+#z = x
+#s = []
+#s2 = np.array(s)/2
 #pts = mlab.points3d(x, y, z, s)
 
-pts2 = mlab.points3d(x, y, z2, s2, scale_factor=2)
-pts = mlab.points3d(x, y, z, s, scale_factor=2)
+#pts2 = mlab.points3d(x, y, z2, s2, scale_factor=2)
+#scale_factor_upper = scale_factor if vmax_upper >= vmax_lower else scale_factor*self.vmax_upper/self.vmax
+#scale_factor_lower = scale_factor if vmax_lower > vmax_upper else scale_factor*self.vmax_lower/self.vmax
+scale_factor = 1/(n-1)/8
+scale_factor1 = scale_factor #if np.nanmax(s) >= np.nanmax(s2) else scale_factor*np.nanmax(s)/np.nanmax(s2)
+scale_factor2 = scale_factor #if np.nanmax(s2) >= np.nanmax(s) else scale_factor*np.nanmax(s2)/np.nanmax(s)
+pts = mlab.points3d(x, y, z, s,scale_factor=scale_factor1)#*1/1)#,vmin = -0.5,vmax = 1)#scale_factor1)
+pts2 = mlab.points3d(x, y, z +0.5, s2, scale_factor=scale_factor2)
 pts.glyph.glyph.clamping = False
 pts2.glyph.glyph.clamping = False
+pts.actor.property.representation = "wireframe"
+pts2.actor.property.representation = "wireframe"
+#mlab.outline(pts)
+mlab.colorbar(object=pts)
+#pts2.glyph.glyph.clamping = False
 mlab.show()
 sys.exit(0)
-"""
+
 #lol = True
 #if lol: print('lol'); sys.exit(0)
 #print('lol')
@@ -82,25 +131,25 @@ sys.exit(0)
 xx,yy,zz = np.mgrid[0:1:16j,0:1:16j,0:1:16j]
 
 s = np.zeros((16,16,16)) # zyx
-B = np.zeros((16,16,16))
+#B = np.zeros((16,16,16))
 for k in range(16):
        for j in range(16):
               for i in range(16):
                      #s[i,j,0] = 10
-                     s[i,j,k] = 100000*np.sqrt(i**2+k**2+j**2)  #str(i) +"_" + str(j) + "_"+str(k)
-s2 = np.zeros((16,16,16))
-for k in range(16):
-       for j in range(16):
-              for i in range(16):
-                     s2[i,j,k] = 5
-                     s2[i,j,0] = 0
-
-
-for z in range(16):
-       for y in range(16):
-              for x in range(16):
-                     B[z,y,0] = 10
-B = B.transpose((2,1,0)) 
+                     s[i,j,k] = np.sqrt(i**2+k**2+j**2)  #str(i) +"_" + str(j) + "_"+str(k)
+#s2 = np.zeros((16,16,16))
+#for k in range(16):
+#       for j in range(16):
+#              for i in range(16):
+#                     s2[i,j,k] = 5
+#                     s2[i,j,0] = 0
+#
+#
+#for z in range(16):
+#       for y in range(16):
+#              for x in range(16):
+#                     B[z,y,0] = 10
+#B = B.transpose((2,1,0)) 
 
 #scopy = np.zeros(6,6,6)
 #for k in range(6):

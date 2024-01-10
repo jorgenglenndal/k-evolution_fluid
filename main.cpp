@@ -650,16 +650,16 @@ COUT << "running on " << n*m << " cores." << endl;
 // the fluid variables are completely determined by the fields
 for (x.first(); x.test(); x.next())
   {
-    zeta_half(x)=0.0;
-    zeta_half_old(x)=1.0;
-    pi_k(x)=0.0;
+    zeta_half(x)                = 0.0;
+    zeta_half_old(x)            = 1.0;
+    pi_k(x)                     = 0.0;
 	
 	// setting everything to zero just to be sure that there is a numer associated with every lattice point at all times
-	delta_rho_fluid(x)    = 0.0;
-	delta_p_fluid(x)      = 0.0;
-	v_upper_i_fluid(x,0)  = 0.0;
-	v_upper_i_fluid(x,1)  = 0.0;
-	v_upper_i_fluid(x,2)  = 0.0;
+	delta_rho_fluid(x)          = 0.0;
+	delta_p_fluid(x)            = 0.0;
+	v_upper_i_fluid(x,0)        = 0.0;
+	v_upper_i_fluid(x,1)        = 0.0;
+	v_upper_i_fluid(x,2)        = 0.0;
 	Sigma_upper_ij_fluid(x,0,0) = 0.0;
 	Sigma_upper_ij_fluid(x,1,1) = 0.0;
 	Sigma_upper_ij_fluid(x,2,2) = 0.0;
@@ -677,52 +677,32 @@ for (x.first(); x.test(); x.next())
   delta_p_fluid.updateHalo();
   v_upper_i_fluid.updateHalo();
   Sigma_upper_ij_fluid.updateHalo();
-  //v_upper_i_fluid.saveHDF5("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/v_fluid.h5");
-////for (x.first(); x.test(); x.next())
-////  {
-////	//COUT <<  << endl;
-////	delta_rho_fluid(x) = 1.0;
+ 
+////  Site mySite(lat);
+////  std::string output_path_test = sim.output_path;
+////  double i_d, j_d, k_d;
+////  for (int i=0;i<sim.numpts; i++){
+////  	for (int j=0;j<sim.numpts; j++){
+////  		for (int k=0;k<sim.numpts; k++){
+////			i_d = static_cast<double>(i);
+////			j_d = static_cast<double>(j);
+////			k_d = static_cast<double>(k);
+////			if(mySite.setCoord(i,j,0)) delta_rho_fluid(mySite) = i_d*i_d + 1.;   //pow(i_d*i_d + j_d*j_d + k_d*k_d,1./2.);
+////		}
+////	}
 ////  }
 ////  delta_rho_fluid.updateHalo();
-////  delta_rho_fluid.saveHDF5("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid.h5");
+////  delta_rho_fluid.saveHDF5(output_path_test + "delta_rho_fluid1.h5");
 ////  for (x.first(); x.test(); x.next())
 ////  {
 ////	//COUT <<  << endl;
-////	delta_rho_fluid(x) = 0.0;
+////	//delta_rho_fluid(x) = 0.0;
+////	delta_p_fluid(x) = (delta_rho_fluid(x + 0) - delta_rho_fluid(x - 0))/(2. * dx);
+////
 ////  }
 ////  delta_rho_fluid.updateHalo();
-  Site mySite(lat);
-////  
-  //for (x.first(); x.test(); x.next()){
-  //mySite.setCoord(0,0,0);
-  double i_d, j_d, k_d;
-  for (int i=0;i<sim.numpts; i++){
-  	for (int j=0;j<sim.numpts; j++){
-  		for (int k=0;k<sim.numpts; k++){
-			i_d = static_cast<double>(i);
-			j_d = static_cast<double>(j);
-			k_d = static_cast<double>(k);
-			if(mySite.setCoord(i,j,k)) delta_rho_fluid(mySite)= pow(i_d*i_d + j_d*j_d + k_d*k_d,1./2.);
-		}
-	}
-  }
-////
-  delta_rho_fluid.updateHalo();
-  delta_rho_fluid.saveHDF5("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid1.h5");
-  for (x.first(); x.test(); x.next())
-  {
-	//COUT <<  << endl;
-	delta_rho_fluid(x) = 0.0;
-  }
-  delta_rho_fluid.updateHalo();
-////  delta_rho_fluid.saveHDF5("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/delta_rho_fluid2.h5");
-    //zeta_half(x)=0.0;
-    //zeta_half_old(x)=1.0;
-    //pi_k(x)=0.0;
-
-  //v_x_fluid.updateHalo();
-  //v_y_fluid.updateHalo();
-  //v_z_fluid.updateHalo();
+////  delta_p_fluid.updateHalo();
+////  delta_p_fluid.saveHDF5(output_path_test + "derivative_x.h5");
 #endif
 
 //   //****************************
