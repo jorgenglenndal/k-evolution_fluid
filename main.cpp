@@ -325,11 +325,11 @@ COUT << "running on " << n*m << " cores." << endl;
   
   //new
 
-  Field<Real> T00_Kess_test;
-  Field<Cplx> T00_KessFT_test;
-  T00_Kess_test.initialize(lat,1);
-  T00_KessFT_test.initialize(latFT,1);
-  PlanFFT<Cplx> plan_T00_Kess_test(&T00_Kess_test, &T00_KessFT_test);
+  //Field<Real> T00_Kess_test;
+  //Field<Cplx> T00_KessFT_test;
+  //T00_Kess_test.initialize(lat,1);
+  //T00_KessFT_test.initialize(latFT,1);
+  //PlanFFT<Cplx> plan_T00_Kess_test(&T00_Kess_test, &T00_KessFT_test);
   
 
   #ifdef FLUID_VARIABLES
@@ -344,6 +344,12 @@ COUT << "running on " << n*m << " cores." << endl;
   delta_p_fluid.initialize(lat,1);
   delta_p_fluidFT.initialize(latFT,1);
   PlanFFT<Cplx> plan_delta_p_fluid(&delta_p_fluid, &delta_p_fluidFT);
+
+  Field<Real> div_v_upper_fluid;
+  Field<Cplx> div_v_upper_fluidFT;
+  div_v_upper_fluid.initialize(lat,1);
+  div_v_upper_fluidFT.initialize(latFT,1);
+  PlanFFT<Cplx> plan_div_v_upper_fluid(&div_v_upper_fluid, &div_v_upper_fluidFT);
 
   Field<Real> v_upper_i_fluid;
   Field<Cplx> v_upper_i_fluidFT;
@@ -834,6 +840,7 @@ double alternative_energy_overdensity_Kess;
   		{
   			phi_old(x) =phi(x);
   			chi_old(x) =chi(x);
+			
          // if(x.coord(0)==32 && x.coord(1)==12 && x.coord(2)==32) cout<<"zeta_half: "<<zeta_half(x)<<endl;
   		}
 #ifdef FLUID_VARIABLES
@@ -1463,7 +1470,7 @@ for (x.first(); x.test(); x.next())
 //Kessence - LeapFrog:START
 //**********************
 #ifdef NONLINEAR_TEST
-  double old_nKe_numsteps = sim.nKe_numsteps; // is double to avoid int/int round off
+  double old_nKe_numsteps = sim.nKe_numsteps; // double to avoid int/int round off
   int remaining_steps_with_new_nKe_numsteps;
   
 //#ifdef FLUID_VARIABLES

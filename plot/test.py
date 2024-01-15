@@ -7,10 +7,23 @@ import numpy as np
 #b[0] = 100
 ##print(b[0] == a[0]) 
 #print(a)      
+##[[0,0,0],[0,0,0],[0,0,0]]
+#test = np.array([[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]],[[2,2,2],[2,2,2],[2,2,2]]])
+#np.save("./test_indexing",test)
+test = np.load("./test_indexing.npy")
+print(test)
+sys.exit(0)
 #
 #[[True,True,True],[True,True,True],[True,True,True]]
-#a = np.array([[[1,2,3],[1,2,3],[1,2,3]],[[1,2,3],[1,2,3],[1,2,3]],[[1,2,3],[1,2,3],[1,2,3]]])
-#b = np.array([[[True,True,True],[True,True,True],[True,True,True]],[[True,True,True],[True,True,True],[True,True,True]],[[True,True,True],[True,True,True],[True,True,True]]])
+a = np.array([[[1,2,3],[1,2,3],[1,2,3]],[[1,2,3],[1,2,3],[1,2,3]],[[1,2,3],[1,2,3],[1,2,3]]])
+a[2,2,2] = 100
+#a_ = a[]
+#a *=-1
+#print(np.nanmax(a))
+b = np.array([[[False,True,True],[False,True,True],[True,True,True]],[[True,False,True],[True,True,True],[True,True,True]],[[True,True,True],[True,True,True],[True,True,True]]])
+c = a[b]
+print(np.shape(c))
+print(np.nanmax(c))
 ##print(np.shape(b))
 #c = a[b]
 #c = c.reshape((3,3,3))
@@ -20,12 +33,12 @@ import numpy as np
 ##print(c)
 ##print(c[0,0,0] == a[0,0,0])
 ##print(np.shape(c))
-#sys.exit(0)
+sys.exit(0)
 
 from mayavi import mlab
 
 #x = [1, 2, 3, 4, 5, 6,7,8,9]
-n = 4
+n = 5
 x = np.linspace(0,1,n)
 #x = np.array([-1,-0.5,0,0.5,1,2,4,8,16,32])
 y = np.zeros(n)
@@ -38,8 +51,17 @@ z = y
 #s = [-25,-12.5,-6.25,0,6.25,12.5,25,50,200]
 a = 1
 b = 2
-s = np.array([a,2*a,3*a,4*a])
-s2 = np.array([b,2*b,3*b,4*b])
+s = np.array([0.01,0.1,1,2,4])
+#print(s)
+#zzz = s.flatten()
+#print(zzz)
+#sys.exit(0)
+#min_ = np.nanmin(s)
+#factor = 1/min_
+#s2 = np.log10(s*factor)
+#print(s2)
+s2 = s*2
+#sys.exit(0)
 #print(x)
 #s2 = s*2
 # first nd second element should have same size
@@ -54,16 +76,16 @@ s2 = np.array([b,2*b,3*b,4*b])
 #scale_factor_upper = scale_factor if vmax_upper >= vmax_lower else scale_factor*self.vmax_upper/self.vmax
 #scale_factor_lower = scale_factor if vmax_lower > vmax_upper else scale_factor*self.vmax_lower/self.vmax
 scale_factor = 1/(n-1)/8
-scale_factor1 = scale_factor #if np.nanmax(s) >= np.nanmax(s2) else scale_factor*np.nanmax(s)/np.nanmax(s2)
-scale_factor2 = scale_factor #if np.nanmax(s2) >= np.nanmax(s) else scale_factor*np.nanmax(s2)/np.nanmax(s)
+scale_factor1 = scale_factor#/np.nanmax(abs(s)) #if np.nanmax(s) >= np.nanmax(s2) else scale_factor*np.nanmax(s)/np.nanmax(s2)
+scale_factor2 = scale_factor#/np.nanmax(abs(s2)) #if np.nanmax(s2) >= np.nanmax(s) else scale_factor*np.nanmax(s2)/np.nanmax(s)
 pts = mlab.points3d(x, y, z, s,scale_factor=scale_factor1)#*1/1)#,vmin = -0.5,vmax = 1)#scale_factor1)
-pts2 = mlab.points3d(x, y, z +0.5, s2, scale_factor=scale_factor2)
+pts2 = mlab.points3d(x, y, z+0.25, s2, scale_factor=scale_factor2)
 pts.glyph.glyph.clamping = False
 pts2.glyph.glyph.clamping = False
 pts.actor.property.representation = "wireframe"
 pts2.actor.property.representation = "wireframe"
 #mlab.outline(pts)
-mlab.colorbar(object=pts)
+mlab.colorbar(object=pts2)
 #pts2.glyph.glyph.clamping = False
 mlab.show()
 sys.exit(0)

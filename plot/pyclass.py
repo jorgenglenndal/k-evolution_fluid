@@ -1,14 +1,18 @@
+"Modified (day/month/year): 11/01/24"
 import numpy as np
 import sys
 import h5py
+import copy
 from mayavi import mlab
 
 
 
 
 class plot_class:
-    def __init__(self,filename,indices="all",data_indexing="xyz",verbose=True):
+    def __init__(self,filename,filetype = "hdf5",indices="all",data_indexing="numpy",verbose=True):
+        self.filetype = filetype
         self.verbose_bool = verbose
+        if self.verbose_bool: print("Filetype is " + self.filetype + ".")
         if self.verbose_bool: print("")
         if isinstance(filename, list) == False:
             if self.verbose_bool: print("1 file in 'filename' is assumed. If incorrect, you must convert 'filename' to a list.")
@@ -31,11 +35,17 @@ class plot_class:
             self.indices = indices
         if self.verbose_bool: print("")
         
-        self.data = self.load_hdf5_data(0)
+        if self.filetype == "hdf5" or self.filetype == "HDF5" or self.filetype == "h5":
+            self.data = self.load_hdf5_data(0)
+        elif self.filetype == "npy" or self.filetype == "numpy":
+            self.data = self.load_npy_data(0)
+        else:
+            print("Unknown filetype. Aborting...")
+            sys.exit(1)
         self.shape = np.shape(self.data) # all datasets should have the same shape
-
+        
         if self.shape[0] == self.shape[1] == self.shape[2]:
-            self.n_grid = self.shape[0] # assuming number of elements per dimension is in 0'th element
+            self.n_grid = self.shape[0] 
         else:
             print("Number of grid points is not the same in each dimension. For vector data, shape must be (x,x,x,y), where y are the vectors belonging to the grid points. Aborting...")
             sys.exit(1)
@@ -61,8 +71,8 @@ class plot_class:
             self.ScalarData = True 
             if self.verbose_bool: print("")
             if self.verbose_bool: print("Working with scalar data.")
-            if self.verbose_bool: print("")           
-        
+            if self.verbose_bool: print("")
+            
         elif len(self.shape) == 4:
             self.VectorData = True
             print("")
@@ -76,6 +86,12 @@ class plot_class:
         else:
             print("Data shape not accepted. Aborting...")
             sys.exit(1)
+
+    def load_npy_data(self,i,print_shape = True):
+        data = np.load(self.filename[i])
+        if print_shape and self.verbose_bool:
+            print("Shape of " + self.filename[i] +" = " + str(np.shape(data)))
+        return data
         
     def load_hdf5_data(self,i,print_shape = True,print_h5_data_info=False):
         with h5py.File(self.filename[i],'r') as file:
@@ -141,7 +157,7 @@ class plot_class:
                 if self.verbose_bool: print("Using 'numpy.random.default_rng()' for uniform random sampling")
                 rng = np.random.default_rng()
             else:
-                if self.verbose_bool: print("Using 'numpy.random.default_rng(seed)' for uniform random sampling, where seed = " +str(self.mask_seed))
+                if self.verbose_bool: print("Using 'numpy.random.default_rng(seed = "+ str(self.mask_seed) +")' for uniform random sampling.")
                 rng = np.random.default_rng(self.mask_seed)
                 
             random = rng.random(size=self.n_grid**3)   
@@ -200,8 +216,8 @@ class plot_class:
             self.data_z       = self.data_z[self.condition]
         """
         print("")
-    
-    #if self.verbose_bool: print("Symmetric colorbar has been auto-deselected.")
+        
+    # defines vmin and vmax
     def symmetric_colorbar_func(self):
         if self.log_scale_bool:
             if self.log_scale_method == "abs":
@@ -214,34 +230,20 @@ class plot_class:
                 if self.verbose_bool: print("Symmetric colorbar has been auto-deselected for this file.")
                 return
             if self.scatter_mode == "split":
-                ###self.max_positive = np.nanmax(self.positive_data.flatten())
-                ###self.max_negative = np.nanmax(self.negative_data.flatten())
-                ###self.min_positive = np.nanmin(self.positive_data.flatten())
-                ###self.min_negative = np.nanmin(self.negative_data.flatten())
-                
                 if self.max_positive >= self.max_negative:
-                    self.max_log = self.max_positive
-                    #self.max_log_positive = max_positive
+                    self.vmax = self.max_positive
+                    
                 else:
-                    self.max_log = self.max_negative
-                    #self.max_log_upper = max_positive
+                    self.vmax = self.max_negative
                 
                 if self.min_positive <= self.min_negative:
-                    self.min_log = self.min_positive
+                    self.vmin = self.min_positive
                 else:
-                    self.min_log = self.min_negative
-                
-        else:
-            min = np.nanmin(self.data.flatten())
-            max = np.nanmax(self.data.flatten())
-            if abs(max) >= abs(min):
-                self.symmetric_limit = abs(max)
-            else:
-                self.symmetric_limit = abs(min)
+                    self.vmin = self.min_negative
 
-            self.vmin = -self.symmetric_limit
-            self.vmax = self.symmetric_limit
-            self.abs_max = self.symmetric_limit
+        else:
+            self.vmin = - self.abs_max
+            self.vmax = self.abs_max
          
     def plot_threeD_quiver(self,upscale_factor):
         #mlab.clf()
@@ -255,66 +257,88 @@ class plot_class:
         self.plot = True
         
     def scatter_func(self):
-        if self.log_scale_bool == False: scale_factor = self.rescale_factor/(self.abs_max*(self.n_grid - 1))
-        else:
-            scale_factor = self.rescale_factor/(self.n_grid - 1)
+        if self.verbose_bool:
+            print("")
+            print("Plotting scatter...")
+            print("")
 
-        if self.symmetric_colorbar_bool:
-            colormap = 'seismic'
+        scale_factor = self.rescale_factor/(self.abs_max*(self.n_grid - 1))
+        #else:
+        #    scale_factor = self.rescale_factor/(self.n_grid - 1)
+
+        #if self.symmetric_colorbar_bool:
+        #    colormap = 'seismic'
             
-            "I was not able to implement 'colorcet' in 'mayavi'."
+        "I was not able to implement 'colorcet' in 'mayavi'."
             #import colorcet as cc
             #from matplotlib.cm import get_cmap
 
             #colormap = str(get_cmap("cet_fire"))
             #colormap = cc.m_rainbow4
+        #elif self.log_scale_bool:
+        #    if self.log_scale_method == "abs":
+        #        colormap = 'YlOrBr'
 
-        else:
-            colormap = 'jet'
+        #else:
+        #    colormap = 'jet'
 
         if self.log_scale_bool:
-            if self.verbose_bool: print("Clamping the glyphs. From the mayavi documentation: 'the smallest value of the scalar data is represented as a null diameter, and the largest is proportional to inter-point distance.' The documentation: https://docs.enthought.com/mayavi/mayavi/mlab.html")
             if self.log_scale_method == "abs":
-                colormap = 'jet'
+                colormap = 'hot'
                 self.obj = mlab.points3d(self.xx_current,self.yy_current,self.zz_current,self.data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
-                self.obj.glyph.glyph.clamping = True
+                self.obj.glyph.glyph.clamping = False
                 self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
-                mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+                mlab.scalarbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+                self.obj.module_manager.scalar_lut_manager.reverse_lut = True
+
                 mlab.outline(self.obj)
             elif self.log_scale_method == "split":
                 if self.scatter_mode == "only positive":
                     colormap = "Reds"
                     self.obj = mlab.points3d(self.xx_positive,self.yy_positive,self.zz_positive,self.positive_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
-                    self.obj.glyph.glyph.clamping = True
+                    self.obj.glyph.glyph.clamping = False
                     self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
-                    mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+                    mlab.scalarbar(object=self.obj,orientation='vertical',title= "+")
+                    self.obj.module_manager.scalar_lut_manager.title_text_property.bold = False
+                    self.obj.module_manager.scalar_lut_manager.title_text_property.italic = False
+                    self.obj.module_manager.scalar_lut_manager.title_text_property.use_tight_bounding_box = True
                     mlab.outline(self.obj)
 
                 elif self.scatter_mode == "only negative":
                     colormap = "Blues"
-                    self.obj = mlab.points3d(self.xx_negative,self.yy_negative,self.zz_negative,self.negative_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
-                    self.obj.glyph.glyph.clamping = True
+                    self.obj = mlab.points3d(self.xx_negative,self.yy_negative,self.zz_negative,self.negative_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor)#,extent=[0, 1, 0, 1, 0, 1])
+                    self.obj.glyph.glyph.clamping = False
                     self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
-                    mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+                    mlab.scalarbar(object=self.obj,orientation='vertical',title= "-")
+                    self.obj.module_manager.scalar_lut_manager.title_text_property.bold = False
+                    self.obj.module_manager.scalar_lut_manager.title_text_property.italic = False
+                    self.obj.module_manager.scalar_lut_manager.title_text_property.use_tight_bounding_box = True
                     mlab.outline(self.obj)
                 elif self.scatter_mode == "split":
-                    #if self.positive_data.flatten().all() >=1:
                     colormap = "Reds"
-                    self.obj_positive = mlab.points3d(self.xx_positive,self.yy_positive,self.zz_positive,self.positive_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor if self.max_positive >= self.max_negative else scale_factor*self.max_positive/self.max_negative,vmin = self.min_log if self.symmetric_colorbar_bool else None, vmax = self.max_log if self.symmetric_colorbar_bool else None)#,extent=[0, 1, 0, 2, 0, 3])
-                    self.obj_positive.glyph.glyph.clamping = True
+                    self.obj_positive = mlab.points3d(self.xx_positive,self.yy_positive,self.zz_positive,self.positive_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor,vmin = self.vmin if self.symmetric_colorbar_bool else None, vmax = self.vmax if self.symmetric_colorbar_bool else None)#,extent=[0, 1, 0, 1, 0, 1])
+                    self.obj_positive.glyph.glyph.clamping = False
                     self.obj_positive.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
-                    mlab.colorbar(object=self.obj_positive,orientation='vertical')#,title= "overdensity for velocity")
+                    mlab.scalarbar(object=self.obj_positive,orientation='vertical',title = "+")
                     mlab.outline(self.obj_positive)
 
                     colormap = "Blues"
-                    self.obj_negative = mlab.points3d(self.xx_negative,self.yy_negative,self.zz_negative,self.negative_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor if self.max_negative >= self.max_positive else scale_factor*self.max_negative/self.max_positive,vmin = self.min_log if self.symmetric_colorbar_bool else None, vmax = self.max_log if self.symmetric_colorbar_bool else None)#,vmin = self.vmin, vmax = self.vmax)#,extent=[0, 1, 0, 2, 0, 3])
-                    self.obj_negative.glyph.glyph.clamping = True
+                    self.obj_negative = mlab.points3d(self.xx_negative,self.yy_negative,self.zz_negative,self.negative_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor,vmin = self.vmin if self.symmetric_colorbar_bool else None, vmax = self.vmax if self.symmetric_colorbar_bool else None)#,extent=[0, 1, 0, 1, 0, 1])
+                    self.obj_negative.glyph.glyph.clamping = False
                     self.obj_negative.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
-                    mlab.colorbar(object=self.obj_negative,orientation='vertical')#,title= "overdensity for velocity")
+                    mlab.scalarbar(object=self.obj_negative,orientation='vertical',title = "-")
                     #mlab.outline(self.obj_negative)
 
                     self.obj_positive.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([0.01,  0.1])
                     self.obj_negative.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([0.89,  0.1])
+                    
+                    self.obj_positive.module_manager.scalar_lut_manager.title_text_property.bold = False
+                    self.obj_positive.module_manager.scalar_lut_manager.title_text_property.italic = False
+                    self.obj_positive.module_manager.scalar_lut_manager.title_text_property.use_tight_bounding_box = True
+
+                    self.obj_negative.module_manager.scalar_lut_manager.title_text_property.bold = False
+                    self.obj_negative.module_manager.scalar_lut_manager.title_text_property.italic = False
+                    self.obj_negative.module_manager.scalar_lut_manager.title_text_property.use_tight_bounding_box = True
 
                 else:
                     print("Error in scatter mode. Aborting...")
@@ -325,65 +349,40 @@ class plot_class:
                 sys.exit(1)
 
         else:
+            colormap = 'RdBu' if self.symmetric_colorbar_bool else 'jet'
             self.obj = mlab.points3d(self.xx_current,self.yy_current,self.zz_current,self.data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor,vmin = self.vmin if self.symmetric_colorbar_bool else None, vmax = self.vmax if self.symmetric_colorbar_bool else None)
             self.obj.glyph.glyph.clamping = False 
             self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
             mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
+            self.obj.module_manager.scalar_lut_manager.reverse_lut = True if self.symmetric_colorbar_bool else False
             mlab.outline(self.obj)
-        self.plot_bool = True
         
-        
-
-    """
-    #def scatter_func_test(self,i = 0,upscale_factor=1):
-        print("Plotting...")
-        #fig = mlab.figure()
-        scale_factor = upscale_factor/(self.vmax[i]*(self.n_part - 1))#1/self.n_part*upscale_factor
-        if self.mask == False:
-            print("Friendly Warning: You have not masked the data. Continuing...")
-        if self.split:
-            #scale_factor_upper = scale_factor #if self.vmax_upper >= self.vmax_lower else scale_factor*self.vmax_upper/self.vmax
-            #scale_factor_lower = scale_factor #if self.vmax_lower > self.vmax_upper else scale_factor*self.vmax_lower/self.vmax
-            self.obj_upper = mlab.points3d(self.xx_upper[i],self.yy_upper[i],self.zz_upper[i],self.data_upper[i],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Reds',scale_factor=scale_factor,vmin = self.vmin[i] if self.log_scale_bool else 0, vmax=self.vmax[i] )#,extent=[0, 1, 0, 2, 0, 3])
-            self.obj_lower = mlab.points3d(self.xx_lower[i],self.yy_lower[i],self.zz_lower[i],self.data_lower[i],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = 'Blues',scale_factor=scale_factor,vmin = self.vmin[i] if self.log_scale_bool else 0,vmax=self.vmax[i])#,extent=[0, 1, 0, 2, 0, 3])
-            mlab.colorbar(object=self.obj_upper,orientation='vertical')#,title= "overdensity for velocity")
-            mlab.colorbar(object=self.obj_lower,orientation='vertical')#,title= "overdensity for velocity")
-            self.obj_upper.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([0.01,  0.1])
-            self.obj_lower.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([0.89,  0.1])
-            #obj_lower.module_manager.scalar_lut_manager.scalar_bar_actor.position = "precede" 
-
-            self.obj_upper.glyph.glyph.clamping = False
-            self.obj_lower.glyph.glyph.clamping = False
-            mlab.outline(self.obj_upper)
-            #mlab.xlabel('1')# [Mpc/h]')
-            #mlab.ylabel('2')# [Mpc/h]')
-            #mlab.zlabel('3')# [Mpc/h]')
-            #ax = mlab.gcf()
-            #ax.view_init()
-            #mlab.view(distance='auto', focalpoint=[0, 0, 0])
-            #mlab.view(azimuth=270)
-            #mlab.view(azimuth=0, elevation=90)
-            #v = mlab.view()
-            #print(v)
-            #mlab.show()
-        else:
-            self.obj = mlab.points3d(self.xx,self.yy,self.zz,self.data[i],mask_points = 1,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,scale_factor=scale_factor)
-            mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
-            self.obj.glyph.glyph.clamping = False
-            mlab.outline(self.obj)
-            #mlab.xlabel('300 [Mpc/h]')
-            #mlab.ylabel('300 [Mpc/h]')
-            #mlab.zlabel('300 [Mpc/h]')
-            #mlab.show()
+        #mlab.xlabel('X=Y=Z [300 Mpc/h]')
+        #mlab.ylabel('y [300 Mpc/h]')
+        #mlab.zlabel('z [300 Mpc/h]')
+        #mlab.view(distance='auto', focalpoint=[0, 0, 0])
+        #mlab.view(azimuth=270)
+        #mlab.view(azimuth=0, elevation=90)
         self.plot_bool = True
-    """
+    
     def plotting_loop_func(self):
         def inside_loop_func(i):
             mlab.figure(size=(800, 800))
-            self.data = self.load_hdf5_data(i,print_shape=False) # reading all the data
+            if self.filetype == "hdf5" or self.filetype == "HDF5" or self.filetype == "h5":
+                self.data = self.load_hdf5_data(i,print_shape=False) # reading all the data
+            elif self.filetype == "npy" or self.filetype == "numpy":
+                self.data = self.load_npy_data(i,print_shape=False) # reading all the data
+            else:
+                print("Bad filetype. Aborting...")
+                sys.exit(1)
+
             
-            if self.indexing == "xyz":
-                self.data = self.data.transpose((2, 1, 0)) # transposing to get ijk indexing   
+            if self.indexing == "xyz" or self.indexing == "npy" or self.indexing == "numpy":
+                self.data = self.data.transpose((2, 1, 0)) # transposing to get ijk indexing
+            else:
+                if self.indexing != "ijk":
+                    print("Invalid 'data_indexing'. Aborting...")
+                    sys.exit(1) 
             
             if self.mask_bool:
                 if self.mask_method == "limits":
@@ -397,14 +396,32 @@ class plot_class:
                         self.xx_current, self.yy_current, self.zz_current = self.xx[self.condition], self.yy[self.condition], self.zz[self.condition]
                     else:
                         self.data = self.data[self.condition]
+                        self.xx_current, self.yy_current, self.zz_current = self.xx[self.condition], self.yy[self.condition], self.zz[self.condition]
                 else:
                     print("Unknown mask method. Aborting...")
                     sys.exit(1)
+            else:
+                self.xx_current, self.yy_current, self.zz_current =  copy.deepcopy(self.xx),copy.deepcopy(self.yy),copy.deepcopy(self.zz) 
                 
             # data and coords have been masked
             if self.log_scale_bool:
+                self.rescale_data_factor = 1
+                self.rescale_data_factor_positive = 1
+                self.rescale_data_factor_negative = 1
                 if self.log_scale_method == "abs":
-                    self.data = np.log10(np.abs(self.data))
+                    self.data = np.abs(self.data)
+                    if np.nanmin(self.data) == 0:
+                        condition = self.data > 0
+                        self.data = self.data[condition] # to avoid log zero
+                        self.xx_current, self.yy_current, self.zz_current = self.xx_current[condition], self.yy_current[condition], self.zz_current[condition]
+                    data_test = self.data[self.data < 1.1]  
+                    if len(data_test.flatten()) > 0:
+                        data_min = np.nanmin(data_test)
+                        self.rescale_data_factor = 1.1/data_min 
+                        self.data *= self.rescale_data_factor
+                        if self.verbose_bool: print("Data has been rescaled by a factor " + str(self.rescale_data_factor))
+                    self.data = np.log10(self.data)
+                    self.abs_max = np.nanmax(self.data)
                     if self.symmetric_colorbar_bool:
                         if self.verbose_bool: print("Warning: you are trying to use a symmetric colorbar on an absolute value plot. Symmetric colorbar is disabled...")
                 elif self.log_scale_method == "split":        
@@ -424,14 +441,29 @@ class plot_class:
                         self.xx_negative = self.xx_current[negative_booleans]
                         self.yy_negative = self.yy_current[negative_booleans]
                         self.zz_negative = self.zz_current[negative_booleans]
+                        # checking if data is smaller than one. Avoiding negative values after taking logarithm to ensure correct scaling.
+                        data_test = self.negative_data[self.negative_data < 1.1]
+                        if len(data_test.flatten()) > 0:
+                            data_min = np.nanmin(data_test)
+                            self.rescale_data_factor_negative = 1.1/data_min
+                            self.negative_data *= self.rescale_data_factor_negative
+                            if self.verbose_bool: print("Data has been rescaled by a factor " + str(self.rescale_data_factor_negative))
                         self.negative_data = np.log10(self.negative_data)
+                        self.abs_max = np.nanmax(self.negative_data)
                     elif len(self.negative_data) == 0:
                         self.scatter_mode = "only positive"
                         print("no negative")
                         self.xx_positive = self.xx_current[positive_booleans]
                         self.yy_positive = self.yy_current[positive_booleans]
                         self.zz_positive = self.zz_current[positive_booleans]
+                        data_test = self.positive_data[self.positive_data < 1.1]
+                        if len(data_test.flatten()) > 0:
+                            data_min = np.nanmin(data_test)
+                            self.rescale_data_factor_positive = 1.1/data_min
+                            self.positive_data *= self.rescale_data_factor_positive
+                            if self.verbose_bool: print("Data has been rescaled by a factor " + str(self.rescale_data_factor_positive))
                         self.positive_data = np.log10(self.positive_data)
+                        self.abs_max = np.nanmax(self.positive_data)
                     else:
                         self.scatter_mode = "split"
 
@@ -442,43 +474,61 @@ class plot_class:
                         self.yy_negative = self.yy_current[negative_booleans]
                         self.zz_negative = self.zz_current[negative_booleans]
 
+
+                        data_test = self.positive_data[self.positive_data < 1.1] 
+                        if len(data_test.flatten()) > 0:
+                            data_min = np.nanmin(data_test)
+                            self.rescale_data_factor_positive = 1.1/data_min 
+                            
+
+                        data_test = self.negative_data[self.negative_data < 1.1] 
+                        if len(data_test.flatten()) > 0:
+                            data_min = np.nanmin(data_test)
+                            self.rescale_data_factor_negative = 1.1/data_min 
+                        
+                        if self.rescale_data_factor_positive > 1 or self.rescale_data_factor_negative > 1:
+                            self.rescale_data_factor = np.nanmax([self.rescale_data_factor_positive,self.rescale_data_factor_negative])    
+                            self.positive_data *= self.rescale_data_factor
+                            self.negative_data *= self.rescale_data_factor
+                            if self.verbose_bool: print("Data has been rescaled by a factor " + str(self.rescale_data_factor))
+                        
                         self.positive_data = np.log10(self.positive_data)
                         self.negative_data = np.log10(self.negative_data)
-                        self.max_positive = np.nanmax(self.positive_data.flatten())
-                        self.max_negative = np.nanmax(self.negative_data.flatten())
-                        self.min_positive = np.nanmin(self.positive_data.flatten())
-                        self.min_negative = np.nanmin(self.negative_data.flatten())
+
+                        self.max_positive = np.nanmax(self.positive_data)
+                        self.max_negative = np.nanmax(self.negative_data)
+                        self.min_positive = np.nanmin(self.positive_data)
+                        self.min_negative = np.nanmin(self.negative_data)
+
+                        self.abs_max = self.max_positive if self.max_positive >= self.max_negative else self.max_negative
                         if self.symmetric_colorbar_bool == False:
                             if self.verbose_bool: print("")
-                            if self.verbose_bool: print("Symmetric colorbar is recommended to get more consistent colors. Scaling will be consistent.")
+                            if self.verbose_bool: print("Symmetric colorbar is recommended to get more consistent colors. Scaling is always consistent.")
                             if self.verbose_bool: print("")
                     
                 else:
                     print("Unknown log_scale method. Available methods are: 'abs', 'split'. Aborting...")
                     sys.exit(1)
+            else:
+                self.abs_max = np.nanmax(np.abs(self.data))
 
             if self.symmetric_colorbar_bool:
                 self.symmetric_colorbar_func()
-            else:
-                if self.log_scale_bool == False:
-                    self.vmin = np.nanmin(self.data.flatten())
-                    self.vmax = np.nanmax(self.data.flatten())
-                    self.abs_max = abs(self.vmax) if abs(self.vmax) >= abs(self.vmin) else abs(self.vmin)
             
             if self.scatter_bool:
+                if self.mask_bool == False and self.verbose_bool: print("Plotting without masking... May be very slow.")
                 self.scatter_func()
                 #mlab.view(azimuth=None, elevation=None, distance=None, focalpoint=None,roll=None, reset_roll=True, figure=None)
                 #mlab.view(146.2499999999997, 48.48561031724544, 3.9999999999999947, np.array([0.50011478, 0.50011478, 0.50011774]))
-                if self.move_camera_bool == False: mlab.view(-119.00051786825493, 69.04300699344203, 2.5, np.array([0.50011478, 0.50011478, 0.50011774]))
+                if self.move_camera_bool == False: mlab.view(-119.00051786825493, 69.04300699344203, 3, np.array([0.5,0.5,0.5]))#[0.50011478, 0.50011478, 0.50011774]))
 
             if self.plot_bool:
-                #print(i)
-                if self.mask_bool == False and self.verbose_bool: print("Plotting without masking... May be very slow.")
+                #if self.mask_bool == False and self.verbose_bool: print("Plotting without masking... May be very slow.")
                 if self.save_bool:
                     if int(len(self.filename)) > 10001:
                         print("Too many files. The mlab.savefig() line must be changed from 04d to e.g. 05d. Aborting...")
                         sys.exit(1)
-                    if self.verbose_bool: print("Saving files in ./tmp_.png")
+                    if self.verbose_bool: print("Saving files as ./tmp_i.png")
                     mlab.savefig("tmp_%04d.png" % i)
                 if self.move_camera_bool:
                     self.move_camera_func()
@@ -489,19 +539,9 @@ class plot_class:
             else:
                 if self.verbose_bool: print("Nothing has been plotted.")
             
-        import copy 
+        #import copy 
         # defining coordinate matrices independent of self.xx, ...    
-        self.xx_current, self.yy_current, self.zz_current =  copy.deepcopy(self.xx),copy.deepcopy(self.yy),copy.deepcopy(self.zz)   
-        
-        #new_object = copy.deepcopy(self.data)
-
-        #self.xx_current[0,0,0] = 100
-        #print(self.xx_current[0,0,0] == self.xx[0,0,0])  
-        #sys.exit(1)
-        #if self.mask_bool:
-        #    if self.mask_method== "rng":
-        #        self.mask_func() 
-        #self.xx_current, self.yy_current, self.zz_current = self.xx, self.yy, self.zz
+        #self.xx_current, self.yy_current, self.zz_current =  copy.deepcopy(self.xx),copy.deepcopy(self.yy),copy.deepcopy(self.zz)
         
         if self.offscreen_rendering_bool:
             mlab.options.offscreen = True
@@ -523,11 +563,11 @@ class plot_class:
             for i in self.indices[1:]:
                 inside_loop_func(i)
         else:
-            import inspect
+            #import inspect
 
-            line_number = inspect.currentframe().f_back.f_lineno
+            #line_number = inspect.currentframe().f_back.f_lineno
             print("'indices' invalid. Aborting...")
-            print("Line number:", line_number)
+            #print("Line number:", line_number)
             sys.exit(1)
 
     
@@ -551,7 +591,7 @@ class plot_class:
             if self.verbose_bool: print("'indices' set to 'range'.")
             self.start = int(self.indices[1])
             self.stop = int(self.indices[2])
-            self.step = int(self.indices[3]) if len(self.indices) == 4 else 1
+            self.step = int(self.indices[3]) if len(self.indices) >= 4 else 1
             self.plotting_loop_func()
 
         else:
@@ -561,7 +601,13 @@ class plot_class:
     
     def help_indexing(self):
         print("")
-        print("Help: Standard numpy indexing is called 'xyz'. A numpy array, arr, of shape (n_z, n_y, n_x) will have indices x, y and z such that arr[z,y,x] will return the value of the element located at index z in the z-direction, index y in the y-direction and index x in the x-direction. Mayavi uses 'ijk' indexing, i.e., arr[i,j,k] returns the value of the element located at index i in the x-direction, index j in the y-direction and index k in the z-direction. If the data array, read from the input file, uses 'xyz' indexing, the code will rearange the data correctly if, and only if, the parameter 'indexing' is set to its default value: 'xyz'. Regarding gevolution: gevolution uses 'ijk' indexing internally, but when the outputted HDF5 files are read in python, the data is in 'xyz' indexing. End help.")
+        #print("Help: Standard numpy indexing is called 'xyz'. A numpy array, arr, of shape (n_z, n_y, n_x) will have indices x, y and z such that arr[z,y,x] will return the value of the element located at index z in the z-direction, index y in the y-direction and index x in the x-direction. Mayavi uses 'ijk' indexing, i.e., arr[i,j,k] returns the value of the element located at index i in the x-direction, index j in the y-direction and index k in the z-direction. If the data array, read from the input file, uses 'xyz' indexing, the code will rearange the data correctly if, and only if, the parameter 'indexing' is set to its default value: 'xyz'. Regarding gevolution: gevolution uses 'ijk' indexing internally, but when the outputted HDF5 files are read in python, the data is in 'xyz' indexing. End help.")
+        print("Help: For both hdf5 files and npy files the 'indexing' should be set to 'numpy'. This is because the hdf5 files are loaded as numpy arrays. However, if your hdf5 files were not produced by the gevolution code, you might want to check that the mayavi plots look correct in the x and z direction (probably not necessary). This can be done by making a test hdf5 file with zero everywhere except in the x-y plane at z=0 (so you must know the internal indexing in the code you are using). If you get the correct mayavi plot the indexing is correct. If the plane lies in the z-y plane at x=0 you just have to set the 'indexing' variable to 'ijk'. End help.")
+              
+              
+              #If you implement some other filetype, you must check if the indexing is as in numpy or if it is 'ijk'.")
+              
+              #This applies at least to the hdf5 files from gevolution (I've checked), even though gevolution does not use numpy indexing internally. If your hdf5 file was not produced by gevolution you should, probably, still use numpy indexing, because I have only used the standardloading method for the hdf5 files.")
         print("")
         
     def help_method(self):
@@ -569,8 +615,6 @@ class plot_class:
         print("Help: Possible options for 'method' is 'rng' and 'limits'. 'rng' needs the parameter 'percentage' to determine how many percent of the data to keep. 'limits' needs a parameter 'percentile' on the form [a,b,c], where a is the bottom percentile, of interest, of the data and b is the top percentile, of interest, of the data. c must be either 'outside' or 'inside' the limits. Limits are excluded from the resulting dataset. End help. ")
         print("")
 
-    #def move_camera(self):
-    #    self.move_camera_bool = True
     def move_camera_func(self):
         def elevation(direction = "positive"):
             if direction == "positive":
@@ -607,8 +651,6 @@ class plot_class:
                     #self.obj.scene.camera.zoom(1.005)# if elevation_turn_bool==True else 0.995)
                     self.obj.scene.render()
 
-
-
                 ###if mlab.view()[1] <=1: elevation_turn_bool = True
                 ###if mlab.view()[1] >=179: elevation_turn_bool = False
 
@@ -618,7 +660,7 @@ class plot_class:
 
 
 file = []
-root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/"
+root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test3/"
 for i in range(1,51):
     #("tmp_%04d.png" % i)
     #file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)
@@ -626,18 +668,20 @@ for i in range(1,51):
 #print(file)
 #sys.exit(0)
 
-test = plot_class(file,indices=["singles",48,49],verbose = True)
-test.symmetric_colorbar()
+
+test = plot_class(root + "chi_old_test.h5" ,indices=["singles",0])
+#test.symmetric_colorbar()
 
 test.scatter(rescale_factor=1)
-test.log_scale(method="split")
+#test.log_scale(method="split")
 #test.save()
 #test.move_camera()
 #test.help_indexing()
-test.mask(percentile=(5,95,"outside"),method="limits") # does this work with log_scale
-#test.mask(percentage=20,method="rng")
+#test.mask(percentile=(5,95,"outside"),method="limits") 
+#test.mask(percentage=0.75,method="rng")
 #test.offscreen_rendering()
 test.show()
 #test.move_camera()
 test.execute()
+#print(test.rescale_data_factor_positive)
 print("Done")

@@ -472,14 +472,16 @@ void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<F
 
     // delta rho
     delta_rho_fluid(xField) = delta_rho_pre_factor * (3. * cs2 * Hcon * pi_k(xField) - zeta_half(xField) - (2. * cs2 - 1.) / 2. * gradient_pi_squared);
+    
     // delta p
     delta_p_fluid(xField)   = delta_p_pre_factor * (3. * w * Hcon * pi_k(xField) - zeta_half(xField) + 1. / 6. * gradient_pi_squared);
+    
     // v^i
     v_upper_i_fluid(xField,0)       = velocity_common_factor * partial_derivative_pi_x;
     v_upper_i_fluid(xField,1)       = velocity_common_factor * partial_derivative_pi_y;
     v_upper_i_fluid(xField,2)       = velocity_common_factor * partial_derivative_pi_z;
 
-    //Sigma_ij
+    //Sigma^ij
     Sigma_upper_ij_fluid(xField,0,0) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_x * partial_derivative_pi_x - 1./3. * gradient_pi_squared);
     Sigma_upper_ij_fluid(xField,1,1) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_y * partial_derivative_pi_y - 1./3. * gradient_pi_squared);
     Sigma_upper_ij_fluid(xField,2,2) = Sigma_upper_ij_pre_factor * (partial_derivative_pi_z * partial_derivative_pi_z - 1./3. * gradient_pi_squared);
