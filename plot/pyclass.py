@@ -262,7 +262,7 @@ class plot_class:
             print("Plotting scatter...")
             print("")
 
-        scale_factor = self.rescale_factor/(self.abs_max*(self.n_grid - 1))
+        scale_factor = self.rescale_factor/(self.abs_max*self.n_grid) # normalizing such that the largest glyph size is independent of the corresponding scalar value and the grid size
         #else:
         #    scale_factor = self.rescale_factor/(self.n_grid - 1)
 
@@ -291,7 +291,7 @@ class plot_class:
                 mlab.scalarbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
                 self.obj.module_manager.scalar_lut_manager.reverse_lut = True
 
-                mlab.outline(self.obj)
+                mlab.outline(self.obj,extent = [0,1,0,1,0,1])
             elif self.log_scale_method == "split":
                 if self.scatter_mode == "only positive":
                     colormap = "Reds"
@@ -302,7 +302,7 @@ class plot_class:
                     self.obj.module_manager.scalar_lut_manager.title_text_property.bold = False
                     self.obj.module_manager.scalar_lut_manager.title_text_property.italic = False
                     self.obj.module_manager.scalar_lut_manager.title_text_property.use_tight_bounding_box = True
-                    mlab.outline(self.obj)
+                    mlab.outline(self.obj,extent = [0,1,0,1,0,1])
 
                 elif self.scatter_mode == "only negative":
                     colormap = "Blues"
@@ -313,14 +313,14 @@ class plot_class:
                     self.obj.module_manager.scalar_lut_manager.title_text_property.bold = False
                     self.obj.module_manager.scalar_lut_manager.title_text_property.italic = False
                     self.obj.module_manager.scalar_lut_manager.title_text_property.use_tight_bounding_box = True
-                    mlab.outline(self.obj)
+                    mlab.outline(self.obj,extent = [0,1,0,1,0,1])
                 elif self.scatter_mode == "split":
                     colormap = "Reds"
                     self.obj_positive = mlab.points3d(self.xx_positive,self.yy_positive,self.zz_positive,self.positive_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor,vmin = self.vmin if self.symmetric_colorbar_bool else None, vmax = self.vmax if self.symmetric_colorbar_bool else None)#,extent=[0, 1, 0, 1, 0, 1])
                     self.obj_positive.glyph.glyph.clamping = False
                     self.obj_positive.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
                     mlab.scalarbar(object=self.obj_positive,orientation='vertical',title = "+")
-                    mlab.outline(self.obj_positive)
+                    mlab.outline(self.obj_positive,extent = [0,1,0,1,0,1])
 
                     colormap = "Blues"
                     self.obj_negative = mlab.points3d(self.xx_negative,self.yy_negative,self.zz_negative,self.negative_data,mode = 'sphere',transparent = False,resolution=8,scale_mode='scalar',opacity=1,colormap = colormap,scale_factor=scale_factor,vmin = self.vmin if self.symmetric_colorbar_bool else None, vmax = self.vmax if self.symmetric_colorbar_bool else None)#,extent=[0, 1, 0, 1, 0, 1])
@@ -355,7 +355,7 @@ class plot_class:
             self.obj.actor.property.representation = "wireframe" # colorbug occurs for option: "surface"
             mlab.colorbar(object=self.obj,orientation='vertical')#,title= "overdensity for velocity")
             self.obj.module_manager.scalar_lut_manager.reverse_lut = True if self.symmetric_colorbar_bool else False
-            mlab.outline(self.obj)
+            mlab.outline(self.obj,extent = [0,1,0,1,0,1])
         
         #mlab.xlabel('X=Y=Z [300 Mpc/h]')
         #mlab.ylabel('y [300 Mpc/h]')
@@ -660,7 +660,7 @@ class plot_class:
 
 
 file = []
-root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test3/"
+root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/"
 for i in range(1,51):
     #("tmp_%04d.png" % i)
     #file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)
@@ -669,15 +669,21 @@ for i in range(1,51):
 #sys.exit(0)
 
 
-test = plot_class(root + "chi_old_test.h5" ,indices=["singles",0])
-#test.symmetric_colorbar()
+divergence ="/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test4/" +"snap_000_div_v_upper_fluid.h5"
+overdensity ="/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test4/"+ "snap_000_delta_rho_fluid.h5"
+
+
+#test = plot_class(filename=overdensity)# 
+#test = plot_class(filename=divergence)# ,indices=["singles",0])
+test = plot_class(file,indices=["singles",49])
+test.symmetric_colorbar()
 
 test.scatter(rescale_factor=1)
-#test.log_scale(method="split")
+test.log_scale(method="split")
 #test.save()
 #test.move_camera()
 #test.help_indexing()
-#test.mask(percentile=(5,95,"outside"),method="limits") 
+test.mask(percentile=(10,90,"outside"),method="limits") 
 #test.mask(percentage=0.75,method="rng")
 #test.offscreen_rendering()
 test.show()

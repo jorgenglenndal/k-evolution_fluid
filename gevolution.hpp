@@ -438,7 +438,7 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
 #ifdef FLUID_VARIABLES
 // the fluid properties are calculated from the field values
 template <class FieldType>
-void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_half,Field<FieldType> & phi,Field<FieldType> & chi,double rho_smg, double p_smg, double cs2, double Hcon
+void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldType> & Sigma_upper_ij_fluid, Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_half,Field<FieldType> & phi,Field<FieldType> & chi,double rho_smg, double p_smg, double cs2, double Hcon
   ,double dx, double a, double rho_crit_0){
   
   double w = p_smg/rho_smg;
@@ -449,26 +449,158 @@ void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<F
   double velocity_common_factor;
   double gradient_pi_squared;
   double psi;
+  double psi_x_plus_1;
+  double psi_x_minus_1;
+  double psi_y_plus_1;
+  double psi_y_minus_1;
+  double psi_z_plus_1;
+  double psi_z_minus_1;
   double partial_derivative_pi_x;
   double partial_derivative_pi_y;
   double partial_derivative_pi_z;
+  double double_partial_derivative_pi_xx;
+  double double_partial_derivative_pi_yy;
+  double double_partial_derivative_pi_zz;
+  double double_partial_derivative_pi_xy;
+  double double_partial_derivative_pi_xz;
+  double double_partial_derivative_pi_yz;
+  double partial_derivative_gradient_pi_squared_x;
+  double partial_derivative_gradient_pi_squared_y;
+  double partial_derivative_gradient_pi_squared_z;
+  double div_v_upper_1;
+  double div_v_upper_2;
+  double div_v_upper_3;
+  
+  double alpha_1;
+  double beta;
+  double derivative_alpha_1;
+  double derivative_beta_1;
+
+  double alpha_2;
+  //double beta_2;
+  double derivative_alpha_2;
+  double derivative_beta_2;
+
+  double alpha_3;
+  //double beta_3;
+  double derivative_alpha_3;
+  double derivative_beta_3;
+
+  double exp_2_phi_plus_psi;
+
+  double partial_derivative_phi_x;
+  double partial_derivative_phi_y;
+  double partial_derivative_phi_z;
+
+  double partial_derivative_psi_x;
+  double partial_derivative_psi_y;
+  double partial_derivative_psi_z;
+
+  double partial_derivative_zeta_x;
+  double partial_derivative_zeta_y;
+  double partial_derivative_zeta_z;
 
   Site xField(pi_k.lattice());
   for (xField.first(); xField.test(); xField.next()){
-    psi = phi(xField) - chi(xField); 
+    psi           = phi(xField) - chi(xField); 
+    psi_x_plus_1  = phi(xField + 0) - chi(xField + 0);
+    psi_x_minus_1 = phi(xField - 0) - chi(xField - 0);
+    psi_y_plus_1  = phi(xField + 1) - chi(xField + 1);
+    psi_y_minus_1 = phi(xField - 1) - chi(xField - 1);
+    psi_z_plus_1  = phi(xField + 2) - chi(xField + 2);
+    psi_z_minus_1 = phi(xField - 2) - chi(xField - 2);
 
-    gradient_pi_squared  = 0.25*(pi_k(xField+0) - pi_k(xField - 0))* (pi_k(xField + 0) - pi_k(xField-0))/(dx*dx);
-    gradient_pi_squared += 0.25*(pi_k(xField+1) - pi_k(xField - 1))* (pi_k(xField + 1) - pi_k(xField-1))/(dx*dx);
-    gradient_pi_squared += 0.25*(pi_k(xField+2) - pi_k(xField - 2))* (pi_k(xField + 2) - pi_k(xField-2))/(dx*dx); 
+    partial_derivative_phi_x = (phi(xField + 0) - phi(xField - 0))/(2. * dx);
+    partial_derivative_phi_y = (phi(xField + 1) - phi(xField - 1))/(2. * dx);
+    partial_derivative_phi_z = (phi(xField + 2) - phi(xField - 2))/(2. * dx);
+
+    partial_derivative_psi_x = (psi_x_plus_1 - psi_x_minus_1)/(2. * dx);
+    partial_derivative_psi_y = (psi_y_plus_1 - psi_y_minus_1)/(2. * dx);
+    partial_derivative_psi_z = (psi_z_plus_1 - psi_z_minus_1)/(2. * dx);
+
+    partial_derivative_zeta_x = (zeta_half(xField + 0) - zeta_half(xField - 0))/(2. * dx);
+    partial_derivative_zeta_y = (zeta_half(xField + 1) - zeta_half(xField - 1))/(2. * dx);
+    partial_derivative_zeta_z = (zeta_half(xField + 2) - zeta_half(xField - 2))/(2. * dx);
+
+
+    //gradient_pi_squared  = 0.25*(pi_k(xField+0) - pi_k(xField - 0))* (pi_k(xField + 0) - pi_k(xField-0))/(dx*dx);
+    //gradient_pi_squared += 0.25*(pi_k(xField+1) - pi_k(xField - 1))* (pi_k(xField + 1) - pi_k(xField-1))/(dx*dx);
+    //gradient_pi_squared += 0.25*(pi_k(xField+2) - pi_k(xField - 2))* (pi_k(xField + 2) - pi_k(xField-2))/(dx*dx); 
 
     partial_derivative_pi_x = (pi_k(xField + 0) - pi_k(xField - 0))/(2. * dx);
     partial_derivative_pi_y = (pi_k(xField + 1) - pi_k(xField - 1))/(2. * dx);
     partial_derivative_pi_z = (pi_k(xField + 2) - pi_k(xField - 2))/(2. * dx);
+
+    gradient_pi_squared = partial_derivative_pi_x*partial_derivative_pi_x + partial_derivative_pi_y*partial_derivative_pi_y + partial_derivative_pi_z*partial_derivative_pi_z;
     
-    velocity_common_factor = - exp(2. * (phi(xField) + psi)) * (1. - 1./cs2 * (3. * cs2 * (1. + w) * Hcon * pi_k(xField) - zeta_half(xField) + cs2 * psi)
+    double_partial_derivative_pi_xx = (pi_k(xField + 0) - 2.*pi_k(xField) + pi_k(xField - 0))/(dx*dx);
+    double_partial_derivative_pi_yy = (pi_k(xField + 1) - 2.*pi_k(xField) + pi_k(xField - 1))/(dx*dx);
+    double_partial_derivative_pi_xx = (pi_k(xField + 2) - 2.*pi_k(xField) + pi_k(xField - 2))/(dx*dx);
+    
+    // source for mixed derivatives: https://www.uio.no/studier/emner/matnat/math/MAT-INF1100/h07/undervisningsmateriale/kap7.pdf     (proposition 7.12, page 122)
+    // partial derivatives commute
+    double_partial_derivative_pi_xy = (pi_k(xField + 0 + 1) - pi_k(xField + 0 - 1) - pi_k(xField - 0 + 1) + pi_k(xField - 0 - 1))/(4.*dx*dx);
+    double_partial_derivative_pi_xz = (pi_k(xField + 0 + 2) - pi_k(xField + 0 - 2) - pi_k(xField - 0 + 2) + pi_k(xField - 0 - 2))/(4.*dx*dx);
+    double_partial_derivative_pi_yz = (pi_k(xField + 1 + 2) - pi_k(xField + 1 - 2) - pi_k(xField - 1 + 2) + pi_k(xField - 1 - 2))/(4.*dx*dx);
+    
+    partial_derivative_gradient_pi_squared_x = 
+      2.*(partial_derivative_pi_x*double_partial_derivative_pi_xx
+      + partial_derivative_pi_y*double_partial_derivative_pi_xy
+      + partial_derivative_pi_z*double_partial_derivative_pi_xz);
+
+    partial_derivative_gradient_pi_squared_y = 
+      2.*(partial_derivative_pi_x*double_partial_derivative_pi_xy
+      + partial_derivative_pi_y*double_partial_derivative_pi_yy
+      + partial_derivative_pi_z*double_partial_derivative_pi_yz);
+
+    partial_derivative_gradient_pi_squared_z = 
+      2.*(partial_derivative_pi_x*double_partial_derivative_pi_xz
+      + partial_derivative_pi_y*double_partial_derivative_pi_yz
+      + partial_derivative_pi_z*double_partial_derivative_pi_zz);                                        
+
+    exp_2_phi_plus_psi = exp(2. * (phi(xField) + psi));
+    
+    alpha_1 = -exp_2_phi_plus_psi*partial_derivative_pi_x;
+    alpha_2 = -exp_2_phi_plus_psi*partial_derivative_pi_y;
+    alpha_3 = -exp_2_phi_plus_psi*partial_derivative_pi_z;
+    
+    beta = (1. - 1./cs2 * (3. * cs2 * (1. + w) * Hcon * pi_k(xField) - zeta_half(xField) + cs2 * psi)
        + (cs2 - 1.)/(2. * cs2) * gradient_pi_squared);
     
+    derivative_alpha_1 = - exp_2_phi_plus_psi * (2.*partial_derivative_phi_x + 2.*partial_derivative_psi_x) * partial_derivative_pi_x
+      - exp_2_phi_plus_psi*double_partial_derivative_pi_xx;
+    
+    derivative_alpha_2 = - exp_2_phi_plus_psi * (2.*partial_derivative_phi_y + 2.*partial_derivative_psi_y) * partial_derivative_pi_y
+      - exp_2_phi_plus_psi*double_partial_derivative_pi_yy;
+    
+    derivative_alpha_3 = - exp_2_phi_plus_psi * (2.*partial_derivative_phi_z + 2.*partial_derivative_psi_z) * partial_derivative_pi_z
+      - exp_2_phi_plus_psi*double_partial_derivative_pi_zz;
+
+    derivative_beta_1 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_x - partial_derivative_zeta_x + cs2*partial_derivative_psi_x
+      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_x);
+      
+    derivative_beta_2 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_y - partial_derivative_zeta_y + cs2*partial_derivative_psi_y
+      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_y);
+
+    derivative_beta_1 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_z - partial_derivative_zeta_z + cs2*partial_derivative_psi_z
+      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_z);
+      
+    
+    // product rule of alpha*beta
+    div_v_upper_1 = beta*derivative_alpha_1 + alpha_1*derivative_beta_1;
+    div_v_upper_2 = beta*derivative_alpha_2 + alpha_2*derivative_beta_2;
+    div_v_upper_3 = beta*derivative_alpha_3 + alpha_3*derivative_beta_3;
+
+    div_v_upper_fluid(xField) = div_v_upper_1 + div_v_upper_2 + div_v_upper_3;
+
+
+    
+
+    //velocity_common_factor = - exp_2_phi_plus_psi * (1. - 1./cs2 * (3. * cs2 * (1. + w) * Hcon * pi_k(xField) - zeta_half(xField) + cs2 * psi)
+    //   + (cs2 - 1.)/(2. * cs2) * gradient_pi_squared);
+    
     // Fluid properties
+    velocity_common_factor = - exp_2_phi_plus_psi*beta;
 
     // delta rho
     delta_rho_fluid(xField) = delta_rho_pre_factor * (3. * cs2 * Hcon * pi_k(xField) - zeta_half(xField) - (2. * cs2 - 1.) / 2. * gradient_pi_squared);
@@ -970,16 +1102,16 @@ void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<F
       //
       //////////////////////////
       template <class FieldType>
-      void update_pi_eq( double dtau, Field<FieldType> & phi, Field<FieldType> & phi_old, Field<FieldType> & chi,Field<FieldType> & chi_old, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double Hcon)
+      void update_pi_eq( double dtau, Field<FieldType> & psi_prime,Field<FieldType> & phi, Field<FieldType> & chi, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double Hcon)
       {
-        double psi, psi_prime, psi_half;
+        double psi, psi_half;
         double Coeff1 = 1./(1. + Hcon * dtau/2.);
         Site x(phi.lattice());
         for (x.first(); x.test(); x.next())
           {
             psi=phi(x) - chi(x); //psi(n)
-            psi_prime= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x))) / dtau; //psi'(n)
-            psi_half= psi + psi_prime * dtau/2.; //psi_half (n+1/2) = psi(n) + psi_prime'(n) dtau/2
+            //psi_prime= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x))) / global_dtau; //psi'(n)
+            psi_half= psi + psi_prime(x) * dtau/2.; //psi_half (n+1/2) = psi(n) + psi_prime'(n) dtau/2
             //*****************************************
             //pi Updating which is linear by definition
             //*****************************************
@@ -1007,10 +1139,10 @@ void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<F
       // We use predictor corrector method to calculate \zeta precisely for non-linear case. (for linear equation is does not make better)
       // updating zeta from n-1/2 to n+1/2 by zeta'(n)
       template <class FieldType>
-      void update_zeta_eq(double dtau, double dx,double a, Field<FieldType> & phi, Field<FieldType> & phi_old, Field<FieldType> & chi, Field<FieldType> & chi_old, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double cs2, double s, double ca2, double Hcon, double H_prime, int non_linearity )
+      void update_zeta_eq(double dtau, double dx,double a,Field<FieldType> & phi_prime ,Field<FieldType> & phi, Field<FieldType> & chi, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double cs2, double s, double ca2, double Hcon, double H_prime, int non_linearity)
         {
         double Gradphi_Gradpi, Gradpsi_Gradpi, Gradpi_Gradpi, GradZeta_Gradpi, Gradi_nablai_pi_Grad_pi_squared, Dx_psi, Dy_psi, Dz_psi;
-        double C1, C2, C3, psi, psi_old, psi_prime, phi_prime, Laplacian_pi, zeta_old_integer, zeta_old_half ;
+        double C1, C2, C3, psi, psi_old, Laplacian_pi, zeta_old_integer, zeta_old_half ;
         //Since a_kess is at n so H_prime is at n which is needed to calculate zeta(n+1/2)
         //**************************************************************
         //Coefficient two, H(n), H_prime(n) since BG already updated
@@ -1049,12 +1181,12 @@ void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<F
           //**********************************************
           //phi'(n)
           //**********************************************
-          phi_prime= (phi(x) - phi_old(x))/dtau; //phi_prime(n) since we want to use it to compute zeta (n+1/2)
+          //phi_prime= (phi(x) - phi_old(x))/dtau; //phi_prime(n) since we want to use it to compute zeta (n+1/2)
           //********************************
           //psi'(n)
           //psi(n)
           //********************************
-          psi_prime= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x)))/dtau;
+          //psi_prime= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x)))/dtau;
           if (non_linearity ==1)
             {
             //**********
@@ -1158,7 +1290,7 @@ void calculate_fluid_properties(Field<FieldType> & Sigma_upper_ij_fluid, Field<F
           //***************************************
           zeta_half(x) =       C1 * ( zeta_half(x) + dtau * (
             /*Linear(1,2)*/ + (3. * ca2 + s) * Hcon * zeta_half(x)/2. + 3. * cs2 * Hcon * psi
-             /*Linear(3,4,5)*/  - C2 * pi_k(x)+ 3. * cs2 * phi_prime + cs2 * Laplacian_pi
+             /*Linear(3,4,5)*/  - C2 * pi_k(x)+ 3. * cs2 * phi_prime(x) + cs2 * Laplacian_pi
          /*Non-linear terms*/   + non_linearity * (
          /*Non-linear(1,2)*/    - cs2 * (phi(x) - psi) * Laplacian_pi
          /*Non-linear(3)  */    - 3. * cs2 * Hcon * (1. + ca2) * pi_k(x) * Laplacian_pi

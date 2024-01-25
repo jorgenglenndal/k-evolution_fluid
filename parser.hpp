@@ -674,6 +674,8 @@ bool parseFieldSpecifiers(parameter * & params, const int numparam, const char *
 					pvalue |= MASK_V_UPPER_I_FLUID;
 				else if (strcmp(item, "Sigma_upper_ij_fluid") == 0 || strcmp(item, "Sigma_fluid") == 0)
 					pvalue |= MASK_SIGMA_UPPER_IJ_FLUID;
+				else if (strcmp(item, "div_v_upper_fluid") == 0)
+					pvalue |= MASK_DIV_V_UPPER_FLUID;
 				//else if (strcmp(item, "v_x_fluid") == 0)
 				//	pvalue |= MASK_V_X_FLUID;
 				//else if (strcmp(item, "v_y_fluid") == 0)
@@ -752,6 +754,8 @@ bool parseFieldSpecifiers(parameter * & params, const int numparam, const char *
 				pvalue |= MASK_V_UPPER_I_FLUID;
 			else if (strcmp(start, "Sigma_upper_ij_fluid") == 0 || strcmp(start, "Sigma_fluid") == 0)
 				pvalue |= MASK_SIGMA_UPPER_IJ_FLUID;
+			else if (strcmp(start, "div_v_upper_fluid") == 0)
+				pvalue |= MASK_DIV_V_UPPER_FLUID;
 			//else if (strcmp(start, "v_x_fluid") == 0)
 			//	pvalue |= MASK_V_X_FLUID;
 			//else if (strcmp(start, "v_y_fluid") == 0)
