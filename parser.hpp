@@ -1930,8 +1930,8 @@ parallel.abortForce();
   #ifdef NONLINEAR_TEST
   if (!parseParameter(params, numparam, "new_nKe_numsteps",  sim.new_nKe_numsteps))
   {
-    sim.new_nKe_numsteps = 10;
-    if(parallel.isRoot())  cout << "new_nKe_numsteps not specified "<< endl;	
+    sim.new_nKe_numsteps = sim.nKe_numsteps;
+    if(parallel.isRoot())  cout << "new_nKe_numsteps = nKe_numsteps "<< endl;	
   }
 
   if (!parseParameter(params, numparam, "known_blowup_time",  sim.known_blowup_time))

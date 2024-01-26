@@ -752,7 +752,8 @@ for (x.first(); x.test(); x.next())
   avg_T00_Kess_file << "### z,              delta_T00_Kess/rho_smg,        delta_T00_Kess/average(rho_smg + delta_T00_kess)" << endl;
 
   div_variables<<"### Here are the variables" << endl;
-  div_variables<<"cs2_kessence         " << cosmo.cs2_kessence << endl;
+  div_variables<<"cs2_kessence         " << gsl_spline_eval(cs2_spline, a, acc) << endl;
+  div_variables<<"N_kessence           " << sim.nKe_numsteps << endl;
   div_variables<<"### (z),       H_conf*avg_pi,       max |H_conf*pi_k|,       avg_zeta,      max_abs_zeta"  <<endl;
 
   Result_avg<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
@@ -1313,16 +1314,13 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
     cosmo
   #endif
     ); //COUT << 865 << endl;
-
-
-pi_k.updateHalo();
-zeta_half.updateHalo();
-phi.updateHalo();
-chi.updateHalo();
-calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
-	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc));
-
-#endif 
+   pi_k.updateHalo();
+   zeta_half.updateHalo();
+   phi.updateHalo();
+   chi.updateHalo();
+   calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_half,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
+   	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc));
+  #endif 
 
 
 
@@ -1881,7 +1879,7 @@ calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_flu
 		  //loop_in_loop = 1;
 		  //COUT << i << "    " << sim.new_nKe_numsteps << "      " << old_nKe_numsteps << "    " << sim.new_nKe_numsteps*(1-(i+1)/old_nKe_numsteps) << endl;
 		  sim.kess_inner_loop_check_func(true);
-		  COUT << "remaining steps = "<<remaining_steps_with_new_nKe_numsteps << endl;
+		  COUT << "remaining steps = "<<remaining_steps_with_new_nKe_numsteps << ", i = "<< i << endl;
 		  for (j=0;j<remaining_steps_with_new_nKe_numsteps;j++)
 			{
   		    //sim.change_nKe_numsteps(sim.new_nKe_numsteps);
