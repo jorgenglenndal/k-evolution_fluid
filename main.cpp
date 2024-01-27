@@ -1503,6 +1503,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 #ifdef NONLINEAR_TEST
   double old_nKe_numsteps = sim.nKe_numsteps; // double to avoid int/int round off
   int remaining_steps_with_new_nKe_numsteps;
+  double kessence_iteration_loop_in_loop;
   
 //#ifdef FLUID_VARIABLES
   double gsl_rho_spline = gsl_spline_eval(rho_smg_spline, a, acc);
@@ -1533,8 +1534,8 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
   double a_kess=a;
   if(cycle==0)
   {
-    for (i=0;i<sim.nKe_numsteps;i++)
-    {
+    ////for (i=0;i<sim.nKe_numsteps;i++)
+    ////{
 	  //#ifdef NONLINEAR_TEST
 	  //previous_avg_zeta = average_func(  zeta_half,1., numpts3d ) ;
 	  //previous_largest_perturbation = 
@@ -1542,7 +1543,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 	  //#endif
       update_zeta_eq(-dtau/ (2. * sim.nKe_numsteps), dx, a_kess, phi_prime,phi, chi, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
       zeta_half.updateHalo();
-    }
+    ////}
   }
 	for (i=0;i<sim.nKe_numsteps;i++)
 	{
@@ -1560,32 +1561,32 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 	//zeta_half_old.updateHalo();
 	previous_a_kess = a_kess;
 	//COUT << "cs^2    = "<<gsl_spline_eval(cs2_spline, a_kess, acc) << endl;
-	if (i==0){
-	avg_pi = average_func(  pi_k, Hconf(a_kess, fourpiG,
-	  #ifdef HAVE_HICLASS_BG
-	  H_spline,acc
-	  #else
-	  cosmo
-	  #endif
-	  ), numpts3d );
-
-	avg_zeta = average_func(  zeta_half,1., numpts3d );
-
-	//COUT << "average pi =   "<< avg_pi <<endl;
-	max_abs_pi = max_abs_func(pi_k, Hconf(a_kess, fourpiG,
-	  #ifdef HAVE_HICLASS_BG
-	  H_spline,acc
-	  #else
-	  cosmo
-	  #endif
-	  ));
-	max_abs_zeta = max_abs_func(zeta_half,1.);
-	if (cycle==0) div_variables <<  1./(a_kess) -1. <<"          "<< avg_pi <<"        " << max_abs_pi<<"        "<< avg_zeta<<"       "<< max_abs_zeta << "         "<< "---" <<endl;
-	}
-	previous_max_abs_zeta = max_abs_zeta;  // unused
-	previous_max_abs_pi = max_abs_pi;  // unused
-	previous_avg_pi = avg_pi;  // unused
-	previous_avg_zeta = avg_zeta;  // unused
+////	if (i==0){
+////	avg_pi = average_func(  pi_k, Hconf(a_kess, fourpiG,
+////	  #ifdef HAVE_HICLASS_BG
+////	  H_spline,acc
+////	  #else
+////	  cosmo
+////	  #endif
+////	  ), numpts3d );
+////
+////	avg_zeta = average_func(  zeta_half,1., numpts3d );
+////
+////	//COUT << "average pi =   "<< avg_pi <<endl;
+////	max_abs_pi = max_abs_func(pi_k, Hconf(a_kess, fourpiG,
+////	  #ifdef HAVE_HICLASS_BG
+////	  H_spline,acc
+////	  #else
+////	  cosmo
+////	  #endif
+////	  ));
+////	max_abs_zeta = max_abs_func(zeta_half,1.);
+////	if (cycle==0) div_variables <<  1./(a_kess) -1. <<"          "<< avg_pi <<"        " << max_abs_pi<<"        "<< avg_zeta<<"       "<< max_abs_zeta << "         "<< "---" <<endl;
+////	}
+	//previous_max_abs_zeta = max_abs_zeta;  // unused
+	//previous_max_abs_pi = max_abs_pi;  // unused
+	//previous_avg_pi = avg_pi;  // unused
+	//previous_avg_zeta = avg_zeta;  // unused
 	#endif
 
     update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
@@ -1596,7 +1597,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
     //In the pi update we also update zeta_int because we need the values of a_kess and H_kess at step n+1/2
     //By the below update we get pi(n+1) and zeta(n+1)
     //********************************************************************************
-    update_pi_eq(dtau/ sim.nKe_numsteps,psi_prime, phi, chi, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc)); // H_old is updated here in the function
+    update_pi_eq(dtau/ sim.nKe_numsteps,psi_prime, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc),i); // H_old is updated here in the function
 		pi_k.updateHalo();
 
     //********************************************************************************
@@ -1878,6 +1879,10 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 		  /////////////////////////
 		  //loop_in_loop = 1;
 		  //COUT << i << "    " << sim.new_nKe_numsteps << "      " << old_nKe_numsteps << "    " << sim.new_nKe_numsteps*(1-(i+1)/old_nKe_numsteps) << endl;
+		   if (!(sim.kess_inner_loop_check))
+		   	kessence_iteration_loop_in_loop = sim.nKe_numsteps/old_nKe_numsteps*(i+1.); // the field pi_k is evolved to i+1 in the i'th iteration. dtau in the update functions is here dtau_j 
+		   else
+		   	kessence_iteration_loop_in_loop = 1.; // kess_inner_loop_check means that i =0, with the new N_kess. pi_k is here therefore already evolved to j=1 .
 		  sim.kess_inner_loop_check_func(true);
 		  COUT << "remaining steps = "<<remaining_steps_with_new_nKe_numsteps << ", i = "<< i << endl;
 		  for (j=0;j<remaining_steps_with_new_nKe_numsteps;j++)
@@ -1899,8 +1904,12 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 		    //In the pi update we also update zeta_int because we need the values of a_kess and H_kess at step n+1/2
 		    //By the below update we get pi(n+1) and zeta(n+1)
 		    //********************************************************************************
-		    update_pi_eq(dtau/ sim.nKe_numsteps,psi_prime, phi, chi, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc)); // H_old is updated here in the function
-				pi_k.updateHalo();
+		    //if (i!=0)
+			update_pi_eq(dtau/ sim.nKe_numsteps,psi_prime, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc),kessence_iteration_loop_in_loop + j); // H_old is updated here in the function
+			//else
+			//update_pi_eq(dtau/ sim.nKe_numsteps,psi_prime, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc),sim.nKe_numsteps/old_nKe_numsteps*(i+1.) + j);
+				
+			pi_k.updateHalo();
 
 		    //********************************************************************************
 		    // Now we have pi(n+1) and a_kess(n+1/2) so we update background by halfstep to have a_kess(n+1)
@@ -2066,7 +2075,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 				) << "\t"<< setw(9) <<sim.snapcount_b  <<endl;
 			  sim.snapcount_b_add_one();
 			}
-			COUT << "snapcount_b = " << sim.snapcount_b << endl;
+			//COUT << "snapcount_b = " << sim.snapcount_b << endl;
 				  
 				  //sim.change_nKe_numsteps(100);
 				  //if (parallel.isRoot()) cout << "nKe_numsteps = " << sim.nKe_numsteps << endl;

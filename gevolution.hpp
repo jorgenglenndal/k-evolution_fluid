@@ -1102,16 +1102,16 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
       //
       //////////////////////////
       template <class FieldType>
-      void update_pi_eq( double dtau, Field<FieldType> & psi_prime,Field<FieldType> & phi, Field<FieldType> & chi, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double Hcon)
+      void update_pi_eq( double dtau, Field<FieldType> & psi_prime,Field<FieldType> & phi_old, Field<FieldType> & chi_old, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double Hcon,double kessence_iteration)
       {
-        double psi, psi_half;
+        double psi_old, psi_half;
         double Coeff1 = 1./(1. + Hcon * dtau/2.);
-        Site x(phi.lattice());
+        Site x(pi_k.lattice());
         for (x.first(); x.test(); x.next())
           {
-            psi=phi(x) - chi(x); //psi(n)
+            psi_old=phi_old(x) - chi_old(x); //psi(n)
             //psi_prime= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x))) / global_dtau; //psi'(n)
-            psi_half= psi + psi_prime(x) * dtau/2.; //psi_half (n+1/2) = psi(n) + psi_prime'(n) dtau/2
+            psi_half= psi_old + psi_prime(x)*dtau*(kessence_iteration + 1./2.);// * dtau/2.; //psi_half (n+1/2) = psi(n) + psi_prime'(n) dtau/2
             //*****************************************
             //pi Updating which is linear by definition
             //*****************************************
