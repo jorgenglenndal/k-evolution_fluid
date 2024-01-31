@@ -853,6 +853,9 @@ double alternative_energy_overdensity_Kess;
 			
          // if(x.coord(0)==32 && x.coord(1)==12 && x.coord(2)==32) cout<<"zeta_half: "<<zeta_half(x)<<endl;
   		}
+		//if (cycle==0)phi_old.saveHDF5(output_path + "phi_old_test.h5");
+		//parallel.abortForce();
+		
 //#ifdef FLUID_VARIABLES
 //	phi_old.updateHalo();
 //	chi_old.updateHalo();

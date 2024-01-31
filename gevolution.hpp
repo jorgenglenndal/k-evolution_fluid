@@ -576,14 +576,14 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
     derivative_alpha_3 = - exp_2_phi_plus_psi * (2.*partial_derivative_phi_z + 2.*partial_derivative_psi_z) * partial_derivative_pi_z
       - exp_2_phi_plus_psi*double_partial_derivative_pi_zz;
 
-    derivative_beta_1 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_x - partial_derivative_zeta_x + cs2*partial_derivative_psi_x
-      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_x);
+    derivative_beta_1 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_x - partial_derivative_zeta_x + cs2*partial_derivative_psi_x)
+      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_x;
       
-    derivative_beta_2 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_y - partial_derivative_zeta_y + cs2*partial_derivative_psi_y
-      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_y);
+    derivative_beta_2 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_y - partial_derivative_zeta_y + cs2*partial_derivative_psi_y)
+      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_y;
 
-    derivative_beta_1 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_z - partial_derivative_zeta_z + cs2*partial_derivative_psi_z
-      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_z);
+    derivative_beta_3 = - 1./cs2*(3.*cs2*(1. + w)*Hcon*partial_derivative_pi_z - partial_derivative_zeta_z + cs2*partial_derivative_psi_z)
+      + (cs2 - 1.)/(2. * cs2)*partial_derivative_gradient_pi_squared_z;
       
     
     // product rule of alpha*beta
