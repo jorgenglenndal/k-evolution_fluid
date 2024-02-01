@@ -817,14 +817,14 @@ string str_filename ;
 string str_filename2 ;
 string str_filename3 ;
 
-double previous_a_kess;
+//double previous_a_kess;
 //int numpts = sim.numpts;
-double previous_avg_pi;
-double previous_avg_zeta;
+//double previous_avg_pi;
+//double previous_avg_zeta;
 double max_abs_pi;
 double max_abs_zeta;
-double previous_max_abs_zeta;
-double previous_max_abs_pi;
+//double previous_max_abs_zeta;
+//double previous_max_abs_pi;
 double energy_overdensity_Kess;
 double alternative_energy_overdensity_Kess;
 #endif
@@ -1556,22 +1556,9 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 //      zeta_half.updateHalo();
 //    ////}
 //  }
-	//if ((dtau > dtau_old) && cycle>0){ // cannot allow backwards solving, as equations are unstable.
-	//	cout << "zeta_half is not possible to solve..." << endl;
-	//	cout << "dtau_old = " << dtau_old << ", and dtau = " << dtau <<"."<< endl;
-	//	parallel.abortForce();
-	//}
-	//if (cycle == 0){
-	//update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
-    //zeta_half.updateHalo();	
-	//}
-	//else if (dtau < dtau_old){
-	//update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
-    //zeta_half.updateHalo();
-	//}
-	//else{} // if dtau = dtau_old, zeta_half is at the correct time step 
+	
 
-
+	// evolving the zeta_half field to the correct halv step. zeta_half is only allowed to be evolved backwards in time at the first cycle.
 	if ((dtau < dtau_old) || (cycle == 0)){
 		update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     	zeta_half.updateHalo();
@@ -1587,11 +1574,11 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 	// optimize by if test. No need to compute this for larger z than in the blowup criteria
 	//testing_previous_avg_pi = average_func(pi_k,1.,numpts3d);
 	//previous_largest_perturbation = abs_largest_perturbation_func(pi_k,1.,testing_previous_avg_pi);
-	set_field1_equal_to_field2(pi_k_old,pi_k);
-	set_field1_equal_to_field2(zeta_half_old,zeta_half);
+	////set_field1_equal_to_field2(pi_k_old,pi_k);
+	////set_field1_equal_to_field2(zeta_half_old,zeta_half);
 	//pi_k_old.updateHalo();
 	//zeta_half_old.updateHalo();
-	previous_a_kess = a_kess;
+	//previous_a_kess = a_kess;
 	//COUT << "cs^2    = "<<gsl_spline_eval(cs2_spline, a_kess, acc) << endl;
 ////	if (i==0){
 ////	avg_pi = average_func(  pi_k, Hconf(a_kess, fourpiG,
