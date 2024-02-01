@@ -1556,14 +1556,26 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 //      zeta_half.updateHalo();
 //    ////}
 //  }
-	if ((dtau > dtau_old) && cycle>0){ // cannot allow backwards solving, as equations are unstable.
-		cout << "zeta_half is not possible to solve..." << endl;
-		cout << "dtau_old = " << dtau_old << ", and dtau = " << dtau <<"."<< endl;
-		parallel.abortForce();
+	//if ((dtau > dtau_old) && cycle>0){ // cannot allow backwards solving, as equations are unstable.
+	//	cout << "zeta_half is not possible to solve..." << endl;
+	//	cout << "dtau_old = " << dtau_old << ", and dtau = " << dtau <<"."<< endl;
+	//	parallel.abortForce();
+	//}
+	//if (cycle == 0){
+	//update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+    //zeta_half.updateHalo();	
+	//}
+	//else if (dtau < dtau_old){
+	//update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+    //zeta_half.updateHalo();
+	//}
+	//else{} // if dtau = dtau_old, zeta_half is at the correct time step 
+
+
+	if ((dtau < dtau_old) || (cycle == 0)){
+		update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+    	zeta_half.updateHalo();
 	}
-	update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
-    zeta_half.updateHalo();
-  
 
 	for (i=0;i<sim.nKe_numsteps;i++)
 	{
