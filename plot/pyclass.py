@@ -672,8 +672,11 @@ for i in range(1,51):
 divergence ="/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test4/" +"snap_000_div_v_upper_fluid.h5"
 overdensity ="/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test4/"+ "snap_000_delta_rho_fluid.h5"
 #test_file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/new_update_funcs/" + "phi_old_test.h5"
+new_div = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/140601/"  + "snap_000_div_v_upper_fluid.h5"#"div_v_upper_fluid_1.h5"
+new_density = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/140601/"  + "snap_000_delta_rho_fluid.h5"#"div_v_upper_fluid_1.h5"
 
-test = plot_class(filename=overdensity)# 
+
+test = plot_class(filename=new_div)# 
 #test = plot_class(filename=divergence)# ,indices=["singles",0])
 ##test = plot_class(test_file)
 #test = plot_class(file,indices=["singles",49])
