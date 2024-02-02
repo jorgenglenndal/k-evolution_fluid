@@ -82,23 +82,23 @@ def plot(file,y,implementation,color,marker=False,s=False):
             sys.exit(1)
 
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N1/div_variables.txt"
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_not_source/N1/div_variables.txt"
 plot(file,"max_pi","new","mediumblue")
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N5/div_variables.txt"
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_not_source/N5/div_variables.txt"
 plot(file,"max_pi","new","orange")
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N10/div_variables.txt"
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_not_source/N10/div_variables.txt"
 plot(file,"max_pi","new","seagreen")
 
 # old impl
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N1/div_variables.txt"
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test_not_source/N1/div_variables.txt"
 plot(file,"max_pi","old","mediumblue",marker = "x",s=70)
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N5/div_variables.txt"
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test_not_source/N5/div_variables.txt"
 plot(file,"max_pi","old","orange",marker = "x",s=70)
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N10/div_variables.txt"
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test_not_source/N10/div_variables.txt"
 plot(file,"max_pi","old","seagreen",marker = "x",s=70)
 
 
