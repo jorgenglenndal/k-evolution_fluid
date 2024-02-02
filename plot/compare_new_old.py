@@ -55,11 +55,11 @@ def plot(file,y,implementation,color,marker=False,s=False):
         if y == "avg_pi":
             plt.scatter(z,abs(avg_pi),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker=marker,s=s)
         elif y == "max_pi":
-            plt.scatter(z,abs(max_pi),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker = marker,s=s)
+            plt.scatter(z,max_pi,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker = marker,s=s)
         elif y == "avg_zeta":
             plt.scatter(z,abs(avg_zeta),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker = marker,s=s)
         elif y == "max_zeta":
-            plt.scatter(z,abs(max_zeta),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker=marker, s=s)
+            plt.scatter(z,max_zeta,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker=marker, s=s)
         else:
             sys.exit(1)
         #marker = marker
@@ -73,53 +73,53 @@ def plot(file,y,implementation,color,marker=False,s=False):
         if y == "avg_pi":
             plt.scatter(z,abs(avg_pi),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
         elif y == "max_pi":
-            plt.scatter(z,abs(max_pi),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
+            plt.scatter(z,max_pi,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
         elif y == "avg_zeta":
             plt.scatter(z,abs(avg_zeta),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
         elif y == "max_zeta":
-            plt.scatter(z,abs(max_zeta),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
+            plt.scatter(z,max_zeta,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
         else:
             sys.exit(1)
 
 
-#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N1/div_variables.txt"
-#plot(file,"avg_pi","new","mediumblue")
-#
-#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N5/div_variables.txt"
-#plot(file,"avg_pi","new","orange")
-#
-#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N10/div_variables.txt"
-#plot(file,"avg_pi","new","seagreen")
-#
-## old impl
-#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N1/div_variables.txt"
-#plot(file,"avg_pi","old","mediumblue",marker = "x",s=70)
-#
-#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N5/div_variables.txt"
-#plot(file,"avg_pi","old","orange",marker = "x",s=70)
-#
-#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N10/div_variables.txt"
-#plot(file,"avg_pi","old","seagreen",marker = "x",s=70)
-
-
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N1/div_variables.txt"
-plot(file,"avg_pi","new","mediumblue")
+plot(file,"max_pi","new","mediumblue")
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N5/div_variables.txt"
-plot(file,"avg_pi","new","orange")
+plot(file,"max_pi","new","orange")
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N10/div_variables.txt"
-plot(file,"avg_pi","new","seagreen")
+plot(file,"max_pi","new","seagreen")
 
 # old impl
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N1/div_variables.txt"
-plot(file,"avg_pi","old","mediumblue",marker = "x",s=70)
+plot(file,"max_pi","old","mediumblue",marker = "x",s=70)
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N5/div_variables.txt"
-plot(file,"avg_pi","old","orange",marker = "x",s=70)
+plot(file,"max_pi","old","orange",marker = "x",s=70)
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N10/div_variables.txt"
-plot(file,"avg_pi","old","seagreen",marker = "x",s=70)
+plot(file,"max_pi","old","seagreen",marker = "x",s=70)
+
+
+#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N1/div_variables.txt"
+#plot(file,"avg_zeta","new","mediumblue")
+#
+#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N5/div_variables.txt"
+#plot(file,"avg_zeta","new","orange")
+#
+#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N10/div_variables.txt"
+#plot(file,"avg_zeta","new","seagreen")
+#
+## old impl
+#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N1/div_variables.txt"
+#plot(file,"avg_zeta","old","mediumblue",marker = "x",s=70)
+#
+#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N5/div_variables.txt"
+#plot(file,"avg_zeta","old","orange",marker = "x",s=70)
+#
+#file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_test/N10/div_variables.txt"
+#plot(file,"avg_zeta","old","seagreen",marker = "x",s=70)
 
 
 plt.gca().invert_xaxis()
