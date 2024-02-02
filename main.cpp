@@ -1558,7 +1558,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 //  }
 	
 
-	// evolving the zeta_half field to the correct halv step. zeta_half is only allowed to be evolved backwards in time at the first cycle.
+	// evolving the zeta_half field to the correct halv step. zeta_half is only allowed to be evolved backwards in time in the first cycle.
 	if ((dtau < dtau_old) || (cycle == 0)){
 		update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     	zeta_half.updateHalo();
@@ -2101,7 +2101,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 			if (std::isnan(avg_zeta)) parallel.abortForce();
 				  
 		    }
-		
+			// updating the zeta_integer field to n+1
 			update_zeta_eq(dtau/ sim.nKe_numsteps / 2., dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=true,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 
       	sim.change_nKe_numsteps(old_nKe_numsteps);
@@ -2110,6 +2110,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 	  	break;
 				
       }
+	  	// updating the zeta_integer field to n+1
 	  	update_zeta_eq(dtau/ sim.nKe_numsteps / 2., dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer ,evolve_zeta_integer=true, gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 	#endif
 	}
@@ -2376,7 +2377,8 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
         cosmo
       #endif
       );
-	  if (dtau>dtau_old) dtau = dtau_old;
+	  
+	  if (dtau > dtau_old) dtau = dtau_old;
 	  //COUT << cycle<<"   "<<dtau_old<<"   "<<dtau << endl;
 
 		cycle++;

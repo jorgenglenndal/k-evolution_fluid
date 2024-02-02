@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+
+
 def read_div_variables(file):
     #cs2_kessence = []
     #N_kessence = []
@@ -46,31 +49,32 @@ def read_div_variables(file):
 
 
 
-z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/new/N_k_1/div_variables.txt")
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N1/div_variables.txt")
 plt.scatter(z,abs(avg_pi),label="new avg_pi, " + "N_kess = " +str(int(N_kessence)),color="mediumblue")
 #plt.scatter(z,avg_zeta)
-z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/new/N_k_5/div_variables.txt")
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N5/div_variables.txt")
 plt.scatter(z,abs(avg_pi),label="new avg_pi, " + "N_kess = " +str(int(N_kessence)),color="orange")
 #plt.scatter(z,avg_zeta)
-z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/new/N_k_10/div_variables.txt")
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N10/div_variables.txt")
 plt.scatter(z,abs(avg_pi),label="new avg_pi, " + "N_kess = " +str(int(N_kessence)),color="seagreen")
 #plt.scatter(z,avg_zeta)
 
 
-z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/old/N_k_1/div_variables.txt")
-plt.scatter(z,abs(avg_pi),label="old avg_pi, " + "N_kess = " +str(int(N_kessence)),color="mediumblue",marker="x",s=70)
-#plt.scatter(z,avg_zeta)
-z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/old/N_k_5/div_variables.txt")
-plt.scatter(z,abs(avg_pi),label="old avg_pi, " + "N_kess = " +str(int(N_kessence)),color="orange",marker="x",s=70)
-#plt.scatter(z,avg_zeta)
-z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/old/N_k_10/div_variables.txt")
-plt.scatter(z,abs(avg_pi),label="old avg_pi, " + "N_kess = " +str(int(N_kessence)),color="seagreen",marker="x",s=70)
-#plt.scatter(z,avg_zeta)
+###z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/old/N_k_1/div_variables.txt")
+###plt.scatter(z,abs(avg_pi),label="old avg_pi, " + "N_kess = " +str(int(N_kessence)),color="mediumblue",marker="x",s=70)
+####plt.scatter(z,avg_zeta)
+###z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/old/N_k_5/div_variables.txt")
+###plt.scatter(z,abs(avg_pi),label="old avg_pi, " + "N_kess = " +str(int(N_kessence)),color="orange",marker="x",s=70)
+####plt.scatter(z,avg_zeta)
+###z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/old/N_k_10/div_variables.txt")
+###plt.scatter(z,abs(avg_pi),label="old avg_pi, " + "N_kess = " +str(int(N_kessence)),color="seagreen",marker="x",s=70)
+####plt.scatter(z,avg_zeta)
 plt.gca().invert_xaxis()
 plt.yscale('log')
 plt.legend()
 plt.xlabel("z")
 plt.show()
+sys.exit(0)
 
 
 
