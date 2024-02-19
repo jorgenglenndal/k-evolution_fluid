@@ -110,12 +110,12 @@ class visualization_class:
             print("Shape of " + self.filename[i] +" = " +str(np.shape(data)))
         return data
     
-    def mask(self,method = "rng",percentage=0.5,percentile=(0.25,99.75,"outside"),seed = 1234):
+    def mask(self,method = "rng",percent=0.5,percentile=(0.25,99.75,"outside"),seed = 1234):
         self.mask_bool = True
         self.mask_method = method
         if method =="rng":
             self.mask_seed = seed
-            self.mask_percentage = percentage
+            self.mask_percent = percent
         elif method == "limits":
             self.mask_percentile = percentile
         else:
@@ -152,7 +152,7 @@ class visualization_class:
         if self.verbose_bool: print("Masking...")
         
         if self.mask_method == "rng":
-            if self.verbose_bool: print("Keeping "+ str(self.mask_percentage)+"% " "of the data")
+            if self.verbose_bool: print("Keeping "+ str(self.mask_percent)+"% " "of the data")
             if self.mask_seed == False:
                 if self.verbose_bool: print("Using 'numpy.random.default_rng()' for uniform random sampling")
                 rng = np.random.default_rng()
@@ -162,9 +162,9 @@ class visualization_class:
                 
             random = rng.random(size=self.n_grid**3)   
             random = random.reshape(self.shape)
-            self.condition = random >= (100-self.mask_percentage)/100
-            actual_percentage = len((self.condition[self.condition]).flatten())/self.n_grid**3*100
-            if self.verbose_bool: print(f"Actual percentage of data kept: {actual_percentage:.3f}")
+            self.condition = random >= (100-self.mask_percent)/100
+            actual_percent = len((self.condition[self.condition]).flatten())/self.n_grid**3*100
+            if self.verbose_bool: print(f"Percent of data kept: {actual_percent:.3f}")
             self.rng_generated_bool = True
         
         elif self.mask_method== "limits":
@@ -186,8 +186,8 @@ class visualization_class:
             else:
                 print("Third element in 'percentile' must be 'outside' or 'inside'. Aborting...")
                 sys.exit(1) 
-            actual_percentage = len((self.condition[self.condition]).flatten())/self.n_grid**3*100
-            if self.verbose_bool: print(f"Percentage of data kept: {actual_percentage:.3f}")           
+            actual_percent = len((self.condition[self.condition]).flatten())/self.n_grid**3*100
+            if self.verbose_bool: print(f"Percent of data kept: {actual_percent:.3f}")           
 
         else:
             print(str(self.mask_method) + " is not a method in mask_func. Aborting...")
@@ -612,7 +612,7 @@ class visualization_class:
         
     def help_method(self):
         print("")
-        print("Help: Possible options for 'method' is 'rng' and 'limits'. 'rng' needs the parameter 'percentage' to determine how many percent of the data to keep. 'limits' needs a parameter 'percentile' on the form [a,b,c], where a is the bottom percentile, of interest, of the data and b is the top percentile, of interest, of the data. c must be either 'outside' or 'inside' the limits. Limits are excluded from the resulting dataset. End help. ")
+        print("Help: Possible options for 'method' is 'rng' and 'limits'. 'rng' needs the parameter 'percent' to determine how many percent of the data to keep. 'limits' needs a parameter 'percentile' on the form [a,b,c], where a is the bottom percentile, of interest, of the data and b is the top percentile, of interest, of the data. c must be either 'outside' or 'inside' the limits. Limits are excluded from the resulting dataset. End help. ")
         print("")
 
     def move_camera_func(self):
@@ -688,7 +688,7 @@ test.scatter(rescale_factor=1)
 #test.move_camera()
 #test.help_indexing()
 test.mask(percentile=(10,90,"outside"),method="limits") 
-#test.mask(percentage=0.75,method="rng")
+#test.mask(percent=0.75,method="rng")
 #test.offscreen_rendering()
 test.show()
 #test.move_camera()
