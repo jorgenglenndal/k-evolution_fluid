@@ -3,6 +3,50 @@ import numpy as np
 import sys
 
 
+
+def read_blowup(file):
+    blowup_redshift = -2
+    with open(file, 'r') as file:
+        for line in file:
+            if line.startswith("#"):
+                continue
+            elif line.startswith("cs2_kessence"):
+                words = line.split()
+                cs2_kessence=float(words[1])
+                #print(cs2_kessence[-1])
+                #print(str(i)+ " cs2 added")
+                continue
+            elif line.startswith("N_kessence"):
+                words = line.split()
+                N_kessence=float(words[1])
+                #print(cs2_kessence[-1])
+                #print(str(i)+ " cs2 added")
+                continue
+            else:
+                words = line.split()
+                if "inf" in words[1] or "nan" in words[1] or abs(float(words[1])) >= 1:
+                    blowup_redshift = float(words[0])
+                    break
+    return blowup_redshift
+
+            
+          
+
+def read_potentials(file):
+    z,phi,psi = [],[],[]
+    with open(file, 'r') as file:
+        for line in file:
+            if line.startswith("#"):
+                continue
+            else:
+                words = line.split()
+                z.append(float(words[0]))
+                phi.append(float(words[1]))
+                psi.append(float(words[2]))
+    return np.array(z), np.array(phi),np.array(psi)
+
+
+
 def read_div_variables(file):
     #cs2_kessence = []
     #N_kessence = []
@@ -80,6 +124,83 @@ def plot(file,y,implementation,color,marker=False,s=False):
             plt.scatter(z,max_zeta,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
         else:
             sys.exit(1)
+
+
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/not_sourcing_gravity/Ngrid_32/div_variables.txt")
+print(zb)
+plt.scatter(32**3,1+zb)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/sourcing_gravity/Ngrid_32/div_variables.txt")
+print(zb)
+plt.scatter(32**3,1+zb,label="sourcing",marker="x",s=80)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/not_sourcing_gravity/Ngrid_64/div_variables.txt")
+print(zb)
+plt.scatter(64**3,1+zb)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/sourcing_gravity/Ngrid_64/div_variables.txt")
+print(zb)
+plt.scatter(64**3,1+zb,label="source",marker="x",s=80)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/not_sourcing_gravity/Ngrid_128/div_variables.txt")
+print(zb)
+plt.scatter(128**3,1+zb)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/sourcing_gravity/Ngrid_128/div_variables.txt")
+print(zb)
+plt.scatter(128**3,1+zb,label="source",marker="x",s=80)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/not_sourcing_gravity/Ngrid_256/div_variables.txt")
+print(zb)
+plt.scatter(256**3,1+zb)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/sourcing_gravity/Ngrid_256/div_variables.txt")
+print(zb)
+plt.scatter(256**3,1+zb,label="source",marker="x",s=80)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/not_sourcing_gravity/Ngrid_512/div_variables.txt")
+print(zb)
+plt.scatter(512**3,1+zb)
+
+zb = read_blowup("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/sourcing_gravity/Ngrid_512/div_variables.txt")
+print(zb)
+plt.scatter(512**3,1+zb,label="source",marker="x",s=80)
+
+#plt.legend()
+plt.yscale("log")
+plt.xlim(1e5,5e8)
+plt.xscale("log")
+plt.ylabel("1+z_b")
+plt.grid()
+plt.xlabel("N_grid")
+plt.show()
+
+
+sys.exit(0)
+plt.title("Relative change",size=15)
+###z,phi,psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_potentials/sourcing/potentials.txt")
+###plt.scatter(z,phi,label="phi_sourcing",color = "mediumblue",marker = "x",s=70)
+###plt.scatter(z,psi,label="psi_sourcing",color = "orange",marker = "+",s=80)
+
+
+z,phi,psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/test_potentials/potentials.txt")
+plt.scatter(z,phi,label="phi",color = "mediumblue")
+plt.scatter(z,psi,label="psi",color = "orange",s=8)
+
+###plt.plot([100,0],[0.1,0.1],color = "red",label = "10% relative change",linestyle="dashed")
+
+plt.gca().invert_xaxis()
+plt.legend()
+###plt.yscale("log")
+#plt.ylabel("%")
+###plt.xlim(20,0)
+plt.xlabel("z")
+plt.show()
+sys.exit(0)
+
+
+
 
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002_not_source/N1/div_variables.txt"

@@ -315,7 +315,7 @@ COUT << "running on " << n*m << " cores." << endl;
   //phi at two step before to compute phi'(n+1/2)
 	Field<Real> phi_prime;
   #ifdef NONLINEAR_TEST
-	Field<Real> psi_prime;
+	//Field<Real> psi_prime;
 
   Field<Real> short_wave;
   Field<Real> relativistic_term;
@@ -405,7 +405,7 @@ COUT << "running on " << n*m << " cores." << endl;
 	Field<Cplx> phi_prime_scalarFT;
   #ifdef NONLINEAR_TEST
   	Field<Real> zeta_integer;
-  Field<Cplx> psi_prime_scalarFT;
+  //Field<Cplx> psi_prime_scalarFT;
   Field<Cplx> short_wave_scalarFT;
   Field<Cplx> relativistic_term_scalarFT;
   Field<Cplx> stress_tensor_scalarFT;
@@ -469,9 +469,9 @@ COUT << "running on " << n*m << " cores." << endl;
 	PlanFFT<Cplx> phi_prime_plan(&phi_prime, &phi_prime_scalarFT);
   //Relativistic corrections
   #ifdef NONLINEAR_TEST
-  psi_prime.initialize(lat,1);
-  psi_prime_scalarFT.initialize(latFT,1);
-  PlanFFT<Cplx> psi_prime_plan(&psi_prime, &psi_prime_scalarFT);
+  //psi_prime.initialize(lat,1);
+  //psi_prime_scalarFT.initialize(latFT,1);
+  //PlanFFT<Cplx> psi_prime_plan(&psi_prime, &psi_prime_scalarFT);
   short_wave.initialize(lat,1);
   short_wave_scalarFT.initialize(latFT,1);
   PlanFFT<Cplx> short_wave_plan(&short_wave, &short_wave_scalarFT);
@@ -670,6 +670,9 @@ for (x.first(); x.test(); x.next())
     zeta_half_old(x)            = 0.0;
 	zeta_integer(x)             = 0.0;
     pi_k(x)                     = 0.0;
+
+	phi_old(x)                  = 0.0;
+	chi_old(x)                  = 0.0;
 	
 	// setting everything to zero just to be sure that there is a numer associated with every lattice point at all times
 	delta_rho_fluid(x)          = 0.0;
@@ -736,6 +739,7 @@ for (x.first(); x.test(); x.next())
   std::ofstream Redshifts;
   std::ofstream kess_snapshots;
   std::ofstream div_variables;
+  std::ofstream potentials;
   std::string output_path = sim.output_path;
   std::string filename_avg_T00_Kess = output_path + "avg_T00_Kess.txt";
   std::string filename_avg = output_path + "Result_avg.txt";
@@ -745,6 +749,8 @@ for (x.first(); x.test(); x.next())
   std::string filename_redshift = output_path + "redshifts.txt";
   std::string filename_kess_snapshots = output_path + "kess_snapshots.txt";
   std::string filename_div_variables = output_path + "div_variables.txt";
+  std::string filename_potentials = output_path + "potentials.txt";
+
   avg_T00_Kess_file.open(filename_avg_T00_Kess, std::ios::out);
   Result_avg.open(filename_avg, std::ios::out);
   Result_real.open(filename_real, std::ios::out);
@@ -753,6 +759,7 @@ for (x.first(); x.test(); x.next())
   Redshifts.open(filename_redshift, std::ios::out);
   kess_snapshots.open(filename_kess_snapshots, std::ios::out);
   div_variables.open(filename_div_variables, std::ios::out);
+  potentials.open(filename_potentials, std::ios::out);
 
   avg_T00_Kess_file << "### z,              delta_T00_Kess/rho_smg,        delta_T00_Kess/average(rho_smg + delta_T00_kess)" << endl;
 
@@ -760,6 +767,9 @@ for (x.first(); x.test(); x.next())
   div_variables<<"cs2_kessence         " << gsl_spline_eval(cs2_spline, a, acc) << endl;
   div_variables<<"N_kessence           " << sim.nKe_numsteps << endl;
   div_variables<<"### (z),       H_conf*avg_pi,       max |H_conf*pi_k|,       avg_zeta,      max_abs_zeta"  <<endl;
+
+  potentials << "### z,       relative change in Phi,           relative change in Psi" <<endl;
+	
 
   Result_avg<<"### The result of the average over time \n### d tau = "<< dtau<<endl;
   Result_avg<<"### number of kessence update = "<<  sim.nKe_numsteps <<endl;
@@ -851,6 +861,32 @@ double alternative_energy_overdensity_Kess;
 	while (true)    // main loop
 	{
 		// phi and chi are here the initial conditions at cycle 0
+		if (cycle > 0){
+			double relative_Phi;
+			double Psi;
+			double Psi_old;
+			double relative_Psi;
+			double temp_Phi = 0.0;
+			double temp_Psi = 0.0;
+			for (x.first(); x.test(); x.next()){
+				relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
+				Psi = phi(x) - chi(x);
+				Psi_old = phi_old(x) - chi_old(x);
+				relative_Psi = (Psi-Psi_old)/Psi_old;
+				if (relative_Phi < 0.0) relative_Phi *= -1.;
+				if (relative_Psi < 0.0) relative_Psi *= -1.; 
+				if (relative_Phi > temp_Phi) temp_Phi = relative_Phi;
+				if (relative_Psi > temp_Psi) temp_Psi = relative_Psi;
+			}
+			// finding the maximum over all processes
+			parallel.max(relative_Phi);
+			parallel.max(relative_Psi);
+
+			if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
+			if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
+
+			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< endl; 
+		}
   	for (x.first(); x.test(); x.next())
   		{
   			phi_old(x) = phi(x);
@@ -2098,7 +2134,19 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 				  
 				  //sim.change_nKe_numsteps(100);
 				  //if (parallel.isRoot()) cout << "nKe_numsteps = " << sim.nKe_numsteps << endl;
-			if (std::isnan(avg_zeta)) parallel.abortForce();
+			if (std::isnan(avg_zeta)){
+				avg_T00_Kess_file.close();
+				Result_avg.close();
+  				Result_real.close();
+				Result_fourier.close();
+  				Result_max.close();
+  				Redshifts.close();
+  				kess_snapshots.close();
+  				div_variables.close();
+				potentials.close();
+
+				parallel.abortForce();
+			} 
 				  
 		    }
 			// updating the zeta_integer field to n+1
@@ -2397,6 +2445,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
   	Redshifts.close();
   	kess_snapshots.close();
   	div_variables.close();
+	potentials.close();
 #endif
 
 	COUT << COLORTEXT_GREEN << " simulation complete." << COLORTEXT_RESET << endl;

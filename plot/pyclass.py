@@ -8,7 +8,7 @@ from mayavi import mlab
 
 
 
-class plot_class:
+class visualization_class:
     def __init__(self,filename,filetype = "hdf5",indices="all",data_indexing="numpy",verbose=True):
         self.filetype = filetype
         self.verbose_bool = verbose
@@ -676,7 +676,7 @@ new_div = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/140601/"  + "sna
 new_density = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/140601/"  + "snap_000_delta_rho_fluid.h5"#"div_v_upper_fluid_1.h5"
 
 
-test = plot_class(filename=new_div)# 
+test = visualization_class(filename=new_div)# 
 #test = plot_class(filename=divergence)# ,indices=["singles",0])
 ##test = plot_class(test_file)
 #test = plot_class(file,indices=["singles",49])
