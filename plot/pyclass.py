@@ -1,4 +1,3 @@
-"Modified (day/month/year): 11/01/24"
 import numpy as np
 import sys
 import h5py
