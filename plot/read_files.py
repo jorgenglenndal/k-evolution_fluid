@@ -2,7 +2,77 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+#arr =[]
+#a = np.exp(-20)
+#b = 1/9*np.log(np.exp(3)/a)
+#for i in range(10):
+#    arr.append(a*np.exp(i*b))
+#
+#
+#print(arr)
+#print(np.logspace(base=np.exp(1),start=-20,stop=3,num=10))
+#sys.exit(0)
 
+
+def read_deta_dt(filename):
+    gev  = []
+    kess = []
+    with open(filename, 'r') as infile:
+        for line in infile:
+            if line.startswith("#"):
+                continue
+            else:
+                words = line.split()
+                if words[0] == "gev":
+                    gev.append(float(words[4]))
+                if words[0] == "kess":
+                    kess.append(float(words[4]))
+    return gev, kess
+
+
+
+
+def Omega_func(file):
+    Omega_DE = []
+    Omega_M = []
+    #Omega_b = []
+    Omega_Rad = []
+    a = []
+    z = []
+    with open(file, 'r') as infile:
+        for line in infile:
+            if line.startswith("#"):
+                continue
+            else:
+                words = line.split()
+                a.append(float(words[0]))
+                z.append(float(words[1]))
+                Omega_DE.append(float(words[2]))
+                Omega_M.append(float(words[3])+float(words[4]))
+                #Omega_b.append(float(words[4]))
+                Omega_Rad.append(float(words[5])+float(words[6]))
+    return np.array(a), np.array(z), np.array(Omega_DE), np.array(Omega_M), np.array(Omega_Rad)
+
+
+# reading rho_i/rho_crit_0
+def read_DE_a(file):
+    a = []
+    z = []
+    DE = []
+    M = []
+    Rad = []
+    with open(file,"r") as infile:
+        for line in infile:
+            if line.startswith("#"):
+                continue
+            else:
+                words = line.split()
+                a.append(float(words[0]))
+                z.append(float(words[1]))
+                DE.append(float(words[2]))
+                M.append(float(words[3]))
+                Rad.append(float(words[4]))
+    return np.array(a), np.array(z), np.array(DE), np.array(M), np.array(Rad)
 
 def read_blowup(file):
     blowup_redshift = -2
@@ -124,6 +194,92 @@ def plot(file,y,implementation,color,marker=False,s=False):
             plt.scatter(z,max_zeta,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
         else:
             sys.exit(1)
+
+
+
+def CLASS_file(file):
+    z = []
+    #z = []
+    #DE = []
+    #M = []
+    #Rad = []
+    with open(file,"r") as infile:
+        for line in infile:
+            if line.startswith("#"):
+                continue
+            else:
+                words = line.split()
+                z.append(float(words[0]))
+                #z.append(float(words[1]))
+                #DE.append(float(words[2]))
+                #M.append(float(words[3]))
+                #Rad.append(float(words[4]))
+    return np.array(z)#, np.array(z), np.array(DE), np.array(M), np.array(Rad)
+
+
+
+
+z = CLASS_file("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/class_background.dat")
+print(z)
+sys.exit(0)
+
+
+
+
+
+#def Omega_from_friedmann(a,w,Omega_0,rho_crit):
+#    Omega = 
+#    return np.array(a),np.array(Omega)
+
+
+def equality(time,a,b): # same length of all lists
+    for i in range(len(time)-1):
+        diff_old = a[i] - b[i] 
+        if ((a[i+1] - b[i+1])/diff_old < 0):
+            return (time[i+1] + time[i])/2
+
+
+a, z, DE, M ,Rad = read_DE_a("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_1/rho_i_rho_crit_0.txt")
+#print(equality(a,DE,M))
+#sys.exit(0)
+plt.title(r"$\rho_i/\rho_\mathrm{crit,0} \ , \quad c_s^2=1,\ w\approx -1$")
+plt.semilogy(np.log(a),DE,label="DE")
+plt.semilogy(np.log(a),Rad,label="Radiation")
+plt.semilogy(np.log(a),M,label="Matter")
+plt.semilogy(np.log(np.ones(2)*equality(a,DE,M)),np.array([1e-10,1e+30]),"--",label="Cosmic time = 10.3 [Gyr]",color="k")
+plt.xlabel("ln a")
+plt.legend()
+plt.xlim(-15,0.1)
+plt.ylim(1e-5,1e+23)
+plt.savefig("/uio/hume/student-u23/jorgeagl/src/master/master_project/rand_figs/coincidence_w1.pdf")
+#plt.gca().invert_xaxis()
+plt.show()
+#sys.exit(0)
+
+
+
+a, z, Omega_DE, Omega_M, Omega_Rad = Omega_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_0/Omega.txt")
+sum = np.zeros(len(a))
+#sum[:] = Omega_DE[:]+ Omega_CDM[:]+ Omega_b[:]+ Omega_g[:]
+plt.title(r"$\Omega_i \ , \quad c_s^2=1,\ w\approx 0$")
+plt.plot(np.log(a),Omega_DE,label=r"$\Omega_\mathrm{DE}$")
+plt.plot(np.log(a),Omega_Rad,label=r"$\Omega_\mathrm{Rad}$")
+plt.plot(np.log(a),Omega_M,label=r"$\Omega_\mathrm{M}$")
+#plt.plot(np.log(a),Omega_b,label=r"$\Omega_\mathrm{b}$")
+plt.xlabel(r"$\ln (a)$")
+#plt.plot(np.log(a),sum)
+#plt.plot(z,Omega_DE,label="DE")
+#plt.plot(z,Omega_CDM,label="CDM")
+#plt.plot(z,Omega_b,label="b")
+#plt.plot(z,Omega_g,label="g")
+
+plt.legend()
+#plt.gca().invert_xaxis()
+plt.xlim(-15,0.1)
+#plt.savefig("/uio/hume/student-u23/jorgeagl/src/master/master_project/rand_figs/Omega_w0.pdf")
+plt.show()
+sys.exit()
+
 
 
 

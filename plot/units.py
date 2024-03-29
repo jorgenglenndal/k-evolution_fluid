@@ -10,7 +10,8 @@ M_sun = 1.989e+30 *kg
 Mpc = 3.086e+22*m 
 G = 6.6743e-11 *m**3* kg**-1* s**-2
 c = 299792458* m / s
-
+Gyr = 60*60*24*365*10**9*s
+        
 rho_crit = 2.77459457e11 *M_sun*h**2/Mpc**3 # critical density [M_sun h^2 / Mpc^3]
 rho_crit_CLASS = rho_crit*8*pi*G/3/c**2
 #print(rho_crit_CLASS*Mpc**2)
@@ -19,4 +20,9 @@ rho_crit_CLASS = rho_crit*8*pi*G/3/c**2
 #rho_crit_gev = 2.77459457e11/c**2*M_sun*h**2/Mpc*8*pi/3*G
 #print(rho_crit_gev)
 
-print(100*h*1000/Mpc)
+#print(100*h*1000/Mpc)
+
+#age [time]     c = 1 = length/time --> time = length --> time*c = length 
+
+#age [length[Mpc]]     --> age = age*Mpc/c *1/(60*60*24*365*10**9) [Gyr]
+

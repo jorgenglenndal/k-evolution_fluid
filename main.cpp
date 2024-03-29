@@ -136,6 +136,12 @@ int main(int argc, char **argv)
   gsl_spline * rho_smg_prime_spline = NULL;
   gsl_spline * p_smg_prime_spline = NULL;
   gsl_spline * rho_crit_spline = NULL;
+  // testing
+  gsl_spline * rho_ur_spline = NULL;
+  gsl_spline * time_spline = NULL;
+  gsl_spline * conformal_time_spline = NULL;
+  //gsl_spline * p_tot_prime_spline = NULL;
+
   #endif
 
 #ifndef H5_DEBUG
@@ -275,6 +281,11 @@ COUT << "running on " << n*m << " cores." << endl;
     loadBGFunctions(class_background, p_smg_prime_spline, "(.)p_smg_prime", sim.z_in);
     loadBGFunctions(class_background, alpha_K_spline, "kineticity_smg", sim.z_in);
     loadBGFunctions(class_background, rho_crit_spline, "(.)rho_crit", sim.z_in);
+	//testing
+	loadBGFunctions(class_background, rho_ur_spline, "(.)rho_ur", sim.z_in);
+	loadBGFunctions(class_background, time_spline, "proper time [Gyr]", sim.z_in);
+	loadBGFunctions(class_background, conformal_time_spline, "conf. time [Mpc]", sim.z_in);
+	//loadBGFunctions(class_background, p_tot_prime_spline, "(.)p_tot_prime", sim.z_in);
   #endif
 #endif
 
@@ -710,12 +721,12 @@ for (x.first(); x.test(); x.next())
 ////			i_d = static_cast<double>(i);
 ////			j_d = static_cast<double>(j);
 ////			k_d = static_cast<double>(k);
-////			if(mySite.setCoord(i,j,0)) delta_rho_fluid(mySite) = i_d*i_d + 1.;   //pow(i_d*i_d + j_d*j_d + k_d*k_d,1./2.);
+////			if(mySite.setCoord(i,j,k)) v_upper_i_fluid(mySite,0) = 1.;   //pow(i_d*i_d + j_d*j_d + k_d*k_d,1./2.);
 ////		}
 ////	}
 ////  }
-////  delta_rho_fluid.updateHalo();
-////  delta_rho_fluid.saveHDF5(output_path_test + "delta_rho_fluid1.h5");
+////  //v_upper_i_fluid.updateHalo();
+////  v_upper_i_fluid.saveHDF5(output_path_test + "velocity_test.h5");
 ////  for (x.first(); x.test(); x.next())
 ////  {
 ////	//COUT <<  << endl;
@@ -731,7 +742,8 @@ for (x.first(); x.test(); x.next())
 //   //****************************
 //   //****SAVE DATA To test Backreaction
 //   //****************************
-  std::ofstream avg_T00_Kess_file;	
+  std::ofstream rho_i_rho_crit_0;
+  std::ofstream convert_to_cosmic_velocity;	
   std::ofstream Result_avg;
   std::ofstream Result_real;
   std::ofstream Result_fourier;
@@ -740,8 +752,10 @@ for (x.first(); x.test(); x.next())
   std::ofstream kess_snapshots;
   std::ofstream div_variables;
   std::ofstream potentials;
+  std::ofstream Omega;
   std::string output_path = sim.output_path;
-  std::string filename_avg_T00_Kess = output_path + "avg_T00_Kess.txt";
+  std::string filename_convert_to_cosmic_velocity = output_path + "convert_to_cosmic_velocity.txt";
+  std::string filename_rho_i_rho_crit_0 = output_path + "rho_i_rho_crit_0.txt";
   std::string filename_avg = output_path + "Result_avg.txt";
   std::string filename_real = output_path + "Result_real.txt";
   std::string filename_fourier = output_path + "Result_fourier.txt";
@@ -750,8 +764,10 @@ for (x.first(); x.test(); x.next())
   std::string filename_kess_snapshots = output_path + "kess_snapshots.txt";
   std::string filename_div_variables = output_path + "div_variables.txt";
   std::string filename_potentials = output_path + "potentials.txt";
+  std::string filename_Omega = output_path + "Omega.txt";
 
-  avg_T00_Kess_file.open(filename_avg_T00_Kess, std::ios::out);
+  rho_i_rho_crit_0.open(filename_rho_i_rho_crit_0, std::ios::out);
+  convert_to_cosmic_velocity.open(filename_convert_to_cosmic_velocity, std::ios::out);
   Result_avg.open(filename_avg, std::ios::out);
   Result_real.open(filename_real, std::ios::out);
   Result_fourier.open(filename_fourier, std::ios::out);
@@ -760,8 +776,14 @@ for (x.first(); x.test(); x.next())
   kess_snapshots.open(filename_kess_snapshots, std::ios::out);
   div_variables.open(filename_div_variables, std::ios::out);
   potentials.open(filename_potentials, std::ios::out);
+  Omega.open(filename_Omega, std::ios::out);
 
-  avg_T00_Kess_file << "### z,              delta_T00_Kess/rho_smg,        delta_T00_Kess/average(rho_smg + delta_T00_kess)" << endl;
+
+  convert_to_cosmic_velocity << "###    type(gev/kess)[0],     snapcount[1],         a[2],              z[3],            Delta conformal time / Delta cosmic time[4]" << endl;
+
+  Omega << "###  scale factor [0], redshift [1],      Omega_DE [2],    Omega_CDM [3],    Omega_baryons [4],    Omega_photons [5],      Omega_massless_neutrinos [6]" << endl;
+
+  rho_i_rho_crit_0 << "### a [0],    z [1],              rho_DE/rho_crit_0 [2],        rho_M/rho_crit_0 [3],       rho_Rad/rho_crit_0 [4]" << endl;
 
   div_variables<<"### Here are the variables" << endl;
   div_variables<<"cs2_kessence         " << gsl_spline_eval(cs2_spline, a, acc) << endl;
@@ -837,6 +859,9 @@ double max_abs_zeta;
 //double previous_max_abs_pi;
 double energy_overdensity_Kess;
 double alternative_energy_overdensity_Kess;
+
+std::vector<double> Omega_vector;
+double Gevolution_H0 = sqrt(2. * fourpiG / 3.);
 #endif
 
 	//******************************************************************
@@ -857,9 +882,58 @@ double alternative_energy_overdensity_Kess;
 // writeSpectra_phi_prime(sim, cosmo, fourpiG, a, pkcount, &phi_prime, &phi_prime_scalarFT, &phi_prime_plan);
 
 // writeSpectra(sim, cosmo, fourpiG, a, pkcount, &pcls_cdm, &pcls_b, pcls_ncdm, &phi, &pi_k, &zeta_half, &chi, &Bi, &T00_Kess, &T0i_Kess, &Tij_Kess, &source, &Sij, &scalarFT ,&scalarFT_pi, &scalarFT_zeta_half, &BiFT, &T00_KessFT, &T0i_KessFT, &Tij_KessFT, &SijFT, &plan_phi, &plan_pi_k, &plan_zeta_half, &plan_chi, &plan_Bi, &plan_T00_Kess, &plan_T0i_Kess, &plan_Tij_Kess, &plan_source, &plan_Sij);
+	
+	// Calculating the dimensionless energy desities, i.e., Omega_i(a) = rho_i(a)/rho_crit(a). This is done using hiclass.
+	#ifdef NONLINEAR_TEST
 
+//	//double proper_time = proper_time_gev(gsl_spline_eval(time_spline, a_for_proper_time, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG); // proper time in gevolution units
+//    //double proper_time_test = gsl_spline_eval(time_spline, a_for_proper_time, acc)*299792458.*60.*60.*24.*365.*10**9./3.086e+22 * gsl_spline_eval(H_spline,1.,acc)/sqrt(2./3.*fourpiG); // proper time in gevolution units
+//	double dt = proper_time_gev(gsl_spline_eval(time_spline, a_for_proper_time, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG) - proper_time_gev(gsl_spline_eval(time_spline, a, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG);
+	//double dtau_dt = dtau/dt;
+	//COUT << "dtau_dt    "  <<  dtau_dt << endl;
+
+
+	//double tau_for_testing = particleHorizon(0.5, fourpiG,
+    //#ifdef HAVE_HICLASS_BG
+    //gsl_spline_eval(H_spline, 1., acc), class_background
+    //#else
+    //cosmo
+    //#endif
+    //);
+  
+  
+  //double tau_from_class = gsl_spline_eval(conformal_time_spline, 0.5, acc)*gsl_spline_eval(H_spline,1.,acc)/sqrt(2./3.*fourpiG);
+  //COUT   <<"testing,    spline      " <<tau_for_testing << "    "  << tau_from_class << endl;
+  //double proper_time_test = gsl_spline_eval(time_spline, 0.5, acc)*299792458.*60.*60.*24.*365.*10**9./3.086e+22 * gsl_spline_eval(H_spline,1.,acc)/sqrt(2./3.*fourpiG); // proper time in gevolution units
+
+
+
+	for (int k = 0; k < 1000; k++){
+		const double c_1 = exp(-15.);
+        const double c_2 = 1./999.*log(exp(1.)/c_1);
+		double a_for_plotting = c_1*exp(k*c_2);  // making an array with logarithmic spacing, i.e., x_i = c_1*e^(i*c_2).
+		Omega_vector = calculate_Omega(gsl_spline_eval(rho_crit_spline, a_for_plotting, acc),gsl_spline_eval(rho_smg_spline, a_for_plotting, acc),gsl_spline_eval(rho_cdm_spline, a_for_plotting, acc),gsl_spline_eval(rho_b_spline, a_for_plotting, acc),gsl_spline_eval(rho_g_spline, a_for_plotting, acc),gsl_spline_eval(rho_ur_spline, a_for_plotting, acc));
+		Omega << a_for_plotting << "     " << 1./a_for_plotting - 1. << "     " << Omega_vector[0] << "     " << Omega_vector[1] << "     " << Omega_vector[2] << "        "   << Omega_vector[3]<< "        "   << Omega_vector[4] << endl;
+		rho_i_rho_crit_0 << a_for_plotting << "     " << 1./a_for_plotting - 1.  << "    " << gsl_spline_eval(rho_smg_spline, a_for_plotting, acc)/gsl_spline_eval(rho_crit_spline, 1., acc)<< "     " <<  (gsl_spline_eval(rho_b_spline, a_for_plotting, acc) + gsl_spline_eval(rho_cdm_spline, a_for_plotting, acc))/gsl_spline_eval(rho_crit_spline, 1., acc) <<"       " << (gsl_spline_eval(rho_g_spline, a_for_plotting, acc) + gsl_spline_eval(rho_ur_spline, a_for_plotting, acc))/gsl_spline_eval(rho_crit_spline, 1., acc) << endl;
+	}
+	Omega.close();
+	#endif
+	//double age_test = gsl_spline_eval(time_spline, 1., acc)*3.086e+22/299792458.*1./(60.*60.*24.*365.*pow(10.,9.));
+	//double age_test = gsl_spline_eval(time_spline, 0.7731939999999999, acc);
+	//cout <<"age of universe is " <<"       " << age_test<< endl; // cosmic time in Gyr
+	//parallel.abortForce();
 	while (true)    // main loop
 	{
+		//avg_T00_Kess_file << a << "     " << 1./a - 1.  << "    " << gsl_spline_eval(rho_smg_spline, a, acc)/gsl_spline_eval(rho_crit_spline, 1., acc)<< "     " <<  (gsl_spline_eval(rho_b_spline, a, acc) + gsl_spline_eval(rho_cdm_spline, a, acc))/gsl_spline_eval(rho_crit_spline, 1., acc) << endl;
+		//#ifdef NONLINEAR_TEST
+		// "###  scale factor [0], conformal time [1], redshift [2],      Omega_DE [3],    Omega_CDM [4],    Omega_baryons [5],    Omega_radiation [6]"
+		
+		//for (int iteration_in_a = 0; iteration_in_a < 1000; iteration_in_a++){
+
+		//} 
+		//Omega_vector = calculate_Omega(gsl_spline_eval(rho_crit_spline, a, acc),gsl_spline_eval(rho_smg_spline, a, acc),gsl_spline_eval(rho_cdm_spline, a, acc),gsl_spline_eval(rho_b_spline, a, acc),gsl_spline_eval(rho_g_spline, a, acc));
+		//Omega << a << "     " << tau << "     " << 1./a - 1. << "     " << Omega_vector[0] << "     " << Omega_vector[1] << "     " << Omega_vector[2] << "        "   << Omega_vector[3] << endl;
+		//#endif 
 		// phi and chi are here the initial conditions at cycle 0
 		if (cycle > 0){
 			double relative_Phi;
@@ -882,8 +956,8 @@ double alternative_energy_overdensity_Kess;
 			parallel.max(relative_Phi);
 			parallel.max(relative_Psi);
 
-			if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
-			if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
+			////if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
+			////if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
 
 			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< endl; 
 		}
@@ -1365,8 +1439,36 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
    //phi.updateHalo();
    //chi.updateHalo();
    calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, a, acc)
-   	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc));
+   	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
   #endif 
+
+	// To calculate the cosmic time intervall we need a at tau + dtau
+	double a_for_proper_time = a;
+	//double dtau_dt; // dtau/dt
+
+	rungekutta4bg(a_for_proper_time, fourpiG,
+      #ifdef HAVE_HICLASS_BG
+        H_spline, acc,
+      #else
+        cosmo,
+      #endif
+      0.5 * dtau);  // evolve background by half a time step
+
+	  rungekutta4bg(a_for_proper_time, fourpiG,
+      #ifdef HAVE_HICLASS_BG
+        H_spline, acc,
+      #else
+        cosmo,
+      #endif
+      0.5 * dtau);  // evolve background by half a time step
+
+	  // a_for_proper_time is now at tau + dtau.
+
+	// dt is the proper/cosmic/cosmological time intervall  
+	double dt = proper_time_gev(gsl_spline_eval(time_spline, a_for_proper_time, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG) - proper_time_gev(gsl_spline_eval(time_spline, a, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG);
+	double dtau_dt = dtau/dt;  // Need this to get velocities with respect to cosmic time
+	convert_to_cosmic_velocity << "gev" << "                  " <<  snapcount <<"                    " << a << "                   " << 1./a - 1. << "                        " << dtau_dt << endl;
+
 
 
 
@@ -1552,7 +1654,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
   double kessence_iteration_loop_in_loop;
   bool evolve_zeta_integer;
 //#ifdef FLUID_VARIABLES
-  double gsl_rho_spline = gsl_spline_eval(rho_smg_spline, a, acc);
+  //double gsl_rho_spline = gsl_spline_eval(rho_smg_spline, a, acc);
 //  for (x.first(); x.test(); x.next()){
 //	delta_rho_fluid(x) = 5.;
 //  }
@@ -1568,12 +1670,12 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
   //COUT << "|T00_Kess| = " << max_abs_T00_test << endl;
   //double average_T00 = average_func(T00_Kess,1.,numpts3d) + gsl_spline_eval(rho_smg_spline, a, acc);
   //COUT << "average T00 = " << average_T00 << endl;
-  double avg_T00_Kess = average_func(T00_Kess,1.,numpts3d);
+  //double avg_T00_Kess = average_func(T00_Kess,1.,numpts3d);
   //avg_rho_smg_T00_Kess = gsl_spline_eval(rho_smg_spline, a, acc) + avg_T00_Kess;
   //avg_T00_Kess /= gsl_spline_eval(rho_smg_spline, a, acc);
   
 
-  avg_T00_Kess_file <<1./(a) -1. <<"       "<<avg_T00_Kess/gsl_rho_spline << "            "<< avg_T00_Kess/(gsl_rho_spline + avg_T00_Kess) <<endl;
+  //avg_T00_Kess_file <<1./(a) -1. <<"       "<<avg_T00_Kess/gsl_rho_spline << "            "<< avg_T00_Kess/(gsl_rho_spline + avg_T00_Kess) <<endl;
    
 #endif
 
@@ -1759,7 +1861,12 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 
 	  // This if test checks if the dark energy field is blowing up. If true, the dark energy will from this time be solved inside the if test until the time step for the cycle
 	  // is complete. Then the code will continue as normal and in the next cycle the if test is always true.
-	  if ((max_abs_zeta > 1000.*avg_zeta && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time) || (abs(avg_pi) > 1.)){	  
+	  
+	  
+	  if ((max_abs_zeta > 1000.*avg_zeta && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time) || (abs(avg_pi) > 1.)){
+	  //if ((sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time)){		  
+	  
+	  
 	  //div_variables <<"### original ###" << endl;
 	  //if ((max_abs_zeta > 1000.*avg_zeta && avg_zeta > 1e-7))
 	  //if (!(sim.kess_inner_loop_check)) div_variables <<"### Blowup has happened. The above line is the first in the blowup." << endl;  
@@ -1864,7 +1971,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 			//phi.updateHalo();
 			//chi.updateHalo();
 			calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, a_kess, acc)
-				,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess,gsl_spline_eval(rho_crit_spline, 1., acc));
+				,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
 			//delta_rho_fluid.updateHalo();
 			//delta_p_fluid.updateHalo();
 			//v_upper_i_fluid.updateHalo();
@@ -2073,7 +2180,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 			  //phi.updateHalo();
 			  //chi.updateHalo();
         	  calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, a_kess, acc)
-        			,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess,gsl_spline_eval(rho_crit_spline, 1., acc));
+        			,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
         	  //delta_rho_fluid.updateHalo();
         	  //delta_p_fluid.updateHalo();
         	  //v_upper_i_fluid.updateHalo();
@@ -2135,7 +2242,8 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 				  //sim.change_nKe_numsteps(100);
 				  //if (parallel.isRoot()) cout << "nKe_numsteps = " << sim.nKe_numsteps << endl;
 			if (std::isnan(avg_zeta)){
-				avg_T00_Kess_file.close();
+				rho_i_rho_crit_0.close();
+				convert_to_cosmic_velocity.close();
 				Result_avg.close();
   				Result_real.close();
 				Result_fourier.close();
@@ -2144,6 +2252,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
   				kess_snapshots.close();
   				div_variables.close();
 				potentials.close();
+				//Omega.close();
 
 				parallel.abortForce();
 			} 
@@ -2437,7 +2546,8 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 	}
 	// closing the files
 #ifdef NONLINEAR_TEST
-    avg_T00_Kess_file.close();
+    rho_i_rho_crit_0.close();
+	convert_to_cosmic_velocity.close();
 	Result_avg.close();
   	Result_real.close();
 	Result_fourier.close();
@@ -2446,6 +2556,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
   	kess_snapshots.close();
   	div_variables.close();
 	potentials.close();
+	//Omega.close();
 #endif
 
 	COUT << COLORTEXT_GREEN << " simulation complete." << COLORTEXT_RESET << endl;

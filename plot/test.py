@@ -1,3 +1,92 @@
+from pyclass import *
+#from read_files import read_deta_dt
+m = 1
+s = 1
+
+c = 299792458* m / s
+c_km_s = c/1e+3
+
+def read_deta_dt(filename):
+    gev  = []
+    kess = []
+    with open(filename, 'r') as infile:
+        for line in infile:
+            if line.startswith("#"):
+                continue
+            else:
+                words = line.split()
+                if words[0] == "gev":
+                    gev.append(float(words[4]))
+                if words[0] == "kess":
+                    kess.append(float(words[4]))
+    return gev, kess
+
+convert_to_cosmic_time_gev, convert_to_cosmic_time_kess = read_deta_dt("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/convert_to_cosmic_velocity.txt")
+
+for i in range(len(convert_to_cosmic_time_gev)):
+     convert_to_cosmic_time_gev[i] *= c_km_s
+
+root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/"
+test_file = [root + "snap_001_v_upper_i_fluid.h5"]
+test_file = [root + "snap_001_div_v_upper_fluid.h5"]
+
+
+
+#def load_hdf5_data(filename, print_shape = True,print_h5_data_info=True):
+#        with h5py.File(filename,'r') as file:
+#            keys = list(file.keys())
+#            if print_h5_data_info:
+#                print(keys)
+#                print(type(file[keys[0]]))
+#            if len(keys) != 1:
+#                print("Wrong format in HDF5 file. File must contain one dataset. Modyfy the 'load_hdf5_data' function. Aborting...")
+#                sys.exit(1)
+#
+#            data = file[keys[0]][()]  # returns as a numpy array. See hdf5 documentation online
+#
+#            #print(type(file[keys[0]])) 
+#        #if self.verbose_bool and print_shape:
+#        print("Shape of " + filename +" = " +str(np.shape(data)))
+#        return data
+#
+#data = load_hdf5_data(test_file)
+#print(data[:,:,:,2])
+#sys.exit(0)
+
+#N = 25
+#A = np.zeros((N,N,N))
+#for k in range(N):
+#    for j in range(N):
+#        for i in range(N):
+#            A[k,j,i] = i**5-j**5+k**5
+#
+#np.save("A_test",A)
+
+
+#test = visualization_class("A_test.npy",filetype="npy")# 
+#test = visualization_class(filename=divergence)# ,indices=["singles",0])
+test = visualization_class(filename=test_file)#
+#test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev[1])
+
+##test = plot_class(test_file)
+#test = plot_class(file,indices=["singles",49])
+test.symmetric_colorbar()
+#test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev[1])
+test.scatter(rescale_factor=1)
+#test.log_scale(method="split")
+#test.save()
+#test.move_camera()
+#test.help_indexing()
+test.mask(percentile=(5,95,"outside"),method="limits") 
+#test.mask(percent=2,method="rng")
+#test.offscreen_rendering()
+test.show()
+#test.move_camera()
+test.execute()
+#print(test.rescale_data_factor_positive)
+print("Done")
+
+sys.exit(0)
 import sys
 import numpy as np
 
@@ -8,10 +97,14 @@ import numpy as np
 ##print(b[0] == a[0]) 
 #print(a)      
 ##[[0,0,0],[0,0,0],[0,0,0]]
-#test = np.array([[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]],[[2,2,2],[2,2,2],[2,2,2]]])
+#test = np.array([[[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]],[[2,2,2],[2,2,2],[2,2,2]]],[[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]],[[2,2,2],[2,2,2],[2,2,2]]],[[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]],[[2,2,2],[2,2,2],[2,2,2]]],[[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]],[[2,2,2],[2,2,2],[2,2,2]]]]  )
+#test = np.array( [     [    [[0,0],[0,0],[0,0]  ],[ [0,0],[0,0],[0,0]  ]],[ [[0,0],[0,0],[0,0]  ],[ [0,0],[0,0],[0,0]  ]],[ [[0,0],[0,0],[0,0]  ],[ [0,0],[0,0],[0,0]  ]]]   )
+test = np.zeros((2,2,2,3))
+
 #np.save("./test_indexing",test)
-test = np.load("./test_indexing.npy")
+#test = np.load("./test_indexing.npy")
 print(test)
+print(np.shape(test))
 sys.exit(0)
 #
 #[[True,True,True],[True,True,True],[True,True,True]]

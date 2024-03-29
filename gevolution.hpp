@@ -439,11 +439,11 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
 // the fluid properties are calculated from the field values
 template <class FieldType>
 void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldType> & Sigma_upper_ij_fluid, Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_integer,Field<FieldType> & phi_old,Field<FieldType> & chi_old,double rho_smg, double p_smg, double cs2, double Hcon
-  ,double dx, double a, double rho_crit_0){
+  ,double dx, double a, double rho_crit_0, double Gevolution_H0){
   
-  double w = p_smg/rho_smg;
-  double delta_rho_pre_factor = -(rho_smg + p_smg)/cs2/rho_smg; // dividing by rho_smg to cancel CLASS units to get overdensity
-  double delta_p_pre_factor = -(rho_smg + p_smg)/p_smg; // dividing by p_smg to cancel CLASS units to get overdensity for pressure
+  double w = p_smg/rho_smg; // is normally constant
+  double delta_rho_pre_factor = -(rho_smg + p_smg)/cs2/rho_smg; // dividing by rho_smg to cancel CLASS units to get overdensity. Also to get the "overdensity"
+  double delta_p_pre_factor = -(rho_smg + p_smg)/p_smg; // dividing by p_smg to cancel CLASS units to get overdensity for pressure. Also to get the "overdensity"  
   double Sigma_upper_ij_pre_factor = (rho_smg + p_smg)/rho_crit_0;   // shoud divide by rho_crit_0 to get rid of CLASS units
 
   double velocity_common_factor;
@@ -591,7 +591,7 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
     div_v_upper_2 = beta*derivative_alpha_2 + alpha_2*derivative_beta_2;
     div_v_upper_3 = beta*derivative_alpha_3 + alpha_3*derivative_beta_3;
 
-    div_v_upper_fluid(xField) = div_v_upper_1 + div_v_upper_2 + div_v_upper_3;
+    div_v_upper_fluid(xField) = (div_v_upper_1 + div_v_upper_2 + div_v_upper_3)/Gevolution_H0; // Dividing by H0 to make the divergence dimensionless
 
 
     
@@ -627,6 +627,32 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
 
 
 #ifdef NONLINEAR_TEST
+
+// proper time in gevolution units
+double proper_time_gev(double proper_time, double H0_CLASS,double fourpiG){
+  return proper_time*299792458.*60.*60.*24.*365.*pow(10.,9.)/(3.086*pow(10.,22.))* H0_CLASS/sqrt(2./3.*fourpiG);
+}
+
+
+
+// calculating the unitless densities
+std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CDM,double rho_b,double rho_g,double rho_ur){
+  std::vector<double> Omega;
+  double Omega_CDM = rho_CDM/rho_crit;
+  double Omega_DE = rho_DE/rho_crit;
+  double Omega_b = rho_b/rho_crit;
+  double Omega_g = rho_g/rho_crit;
+  double Omega_ur = rho_ur/rho_crit;
+  Omega.push_back(Omega_DE);
+  Omega.push_back(Omega_CDM);
+  Omega.push_back(Omega_b);
+  Omega.push_back(Omega_g);
+  Omega.push_back(Omega_ur);
+  return Omega; 
+}
+
+
+
   //Checking field
     template <class FieldType>
     void check_field(Field<FieldType> & field, double constant , string field_name, long n3, string message = "")
