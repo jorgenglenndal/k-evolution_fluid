@@ -617,6 +617,7 @@ class visualization_class:
                 ###69.04300699344203
                 if self.move_camera_bool == False: mlab.view(-119.00051786825493, 69.04300699344203, 3, np.array([0.5,0.45,0.4]))#[0.50011478, 0.50011478, 0.50011774]))
             #mlab.savefig("divergence_mayavi_061053.png")    
+            #mlab.show()
             if self.plot_bool:
                 #if self.mask_bool == False and self.verbose_bool: print("Plotting without masking... May be very slow.")
                 if self.save_bool:
@@ -625,7 +626,7 @@ class visualization_class:
                         sys.exit(1)
                     if self.verbose_bool: print("Saving files as ./tmp_i.png")
                     #mlab.jpeg_quality = 100
-                    mlab.savefig("tmp_%04d.png" % i)
+                    mlab.savefig("tmp_%04d.png" % i,size=(40,40))
                 if self.move_camera_bool:
                     self.move_camera_func()
                 if self.show_bool: 

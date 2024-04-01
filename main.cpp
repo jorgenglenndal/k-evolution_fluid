@@ -907,7 +907,7 @@ double Gevolution_H0 = sqrt(2. * fourpiG / 3.);
   //double proper_time_test = gsl_spline_eval(time_spline, 0.5, acc)*299792458.*60.*60.*24.*365.*10**9./3.086e+22 * gsl_spline_eval(H_spline,1.,acc)/sqrt(2./3.*fourpiG); // proper time in gevolution units
 
 
-
+	// Writing the time evolution of Omega_i to file.
 	for (int k = 0; k < 1000; k++){
 		const double c_1 = exp(-15.);
         const double c_2 = 1./999.*log(exp(1.)/c_1);
@@ -934,6 +934,7 @@ double Gevolution_H0 = sqrt(2. * fourpiG / 3.);
 		//Omega_vector = calculate_Omega(gsl_spline_eval(rho_crit_spline, a, acc),gsl_spline_eval(rho_smg_spline, a, acc),gsl_spline_eval(rho_cdm_spline, a, acc),gsl_spline_eval(rho_b_spline, a, acc),gsl_spline_eval(rho_g_spline, a, acc));
 		//Omega << a << "     " << tau << "     " << 1./a - 1. << "     " << Omega_vector[0] << "     " << Omega_vector[1] << "     " << Omega_vector[2] << "        "   << Omega_vector[3] << endl;
 		//#endif 
+		
 		// phi and chi are here the initial conditions at cycle 0
 		if (cycle > 0){
 			double relative_Phi;
@@ -1444,7 +1445,6 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 
 	// To calculate the cosmic time intervall we need a at tau + dtau
 	double a_for_proper_time = a;
-	//double dtau_dt; // dtau/dt
 
 	rungekutta4bg(a_for_proper_time, fourpiG,
       #ifdef HAVE_HICLASS_BG
@@ -1465,9 +1465,10 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 	  // a_for_proper_time is now at tau + dtau.
 
 	// dt is the proper/cosmic/cosmological time intervall  
+	double avg_a = (a_for_proper_time + a)/2.;
 	double dt = proper_time_gev(gsl_spline_eval(time_spline, a_for_proper_time, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG) - proper_time_gev(gsl_spline_eval(time_spline, a, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG);
 	double dtau_dt = dtau/dt;  // Need this to get velocities with respect to cosmic time
-	convert_to_cosmic_velocity << "gev" << "                  " <<  snapcount <<"                    " << a << "                   " << 1./a - 1. << "                        " << dtau_dt << endl;
+	convert_to_cosmic_velocity << "gev" << "                  " <<  snapcount <<"                    " << avg_a << "                   " << 1./avg_a - 1. << "                        " << dtau_dt << endl;
 
 
 

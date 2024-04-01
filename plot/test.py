@@ -9,6 +9,8 @@ c_km_s = c/1e+3
 def read_deta_dt(filename):
     gev  = []
     kess = []
+    a_gev = []
+    a_kess = []
     with open(filename, 'r') as infile:
         for line in infile:
             if line.startswith("#"):
@@ -17,18 +19,24 @@ def read_deta_dt(filename):
                 words = line.split()
                 if words[0] == "gev":
                     gev.append(float(words[4]))
+                    a_gev.append(float(words[2]))
                 if words[0] == "kess":
                     kess.append(float(words[4]))
-    return gev, kess
+                    a_kess.append(float(words[2]))
+    #for i in range(a_gev):
+         
+                
+    return gev, kess,a_gev,a_kess
 
-convert_to_cosmic_time_gev, convert_to_cosmic_time_kess = read_deta_dt("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/convert_to_cosmic_velocity.txt")
+convert_to_cosmic_time_gev, convert_to_cosmic_time_kess,a_gev,a_kess = read_deta_dt("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/convert_to_cosmic_velocity.txt")
+
 
 for i in range(len(convert_to_cosmic_time_gev)):
-     convert_to_cosmic_time_gev[i] *= c_km_s
+    convert_to_cosmic_time_gev[i] *= c_km_s*a_gev[i]
 
 root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/"
-test_file = [root + "snap_001_v_upper_i_fluid.h5"]
-test_file = [root + "snap_001_div_v_upper_fluid.h5"]
+test_file = [root + "snap_000_v_upper_i_fluid.h5",root + "snap_001_v_upper_i_fluid.h5",root + "snap_002_v_upper_i_fluid.h5",root + "snap_003_v_upper_i_fluid.h5"]
+#test_file = [root + "snap_001_div_v_upper_fluid.h5"]
 
 
 
@@ -66,7 +74,7 @@ test_file = [root + "snap_001_div_v_upper_fluid.h5"]
 #test = visualization_class("A_test.npy",filetype="npy")# 
 #test = visualization_class(filename=divergence)# ,indices=["singles",0])
 test = visualization_class(filename=test_file)#
-#test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev[1])
+test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev)
 
 ##test = plot_class(test_file)
 #test = plot_class(file,indices=["singles",49])
@@ -77,7 +85,7 @@ test.scatter(rescale_factor=1)
 #test.save()
 #test.move_camera()
 #test.help_indexing()
-test.mask(percentile=(5,95,"outside"),method="limits") 
+test.mask(percentile=(0,95,"outside"),method="limits") 
 #test.mask(percent=2,method="rng")
 #test.offscreen_rendering()
 test.show()
