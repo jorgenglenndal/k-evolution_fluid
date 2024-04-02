@@ -862,6 +862,7 @@ double alternative_energy_overdensity_Kess;
 
 std::vector<double> Omega_vector;
 double Gevolution_H0 = sqrt(2. * fourpiG / 3.);
+double a_old_for_kess_velocity;
 #endif
 
 	//******************************************************************
@@ -907,7 +908,7 @@ double Gevolution_H0 = sqrt(2. * fourpiG / 3.);
   //double proper_time_test = gsl_spline_eval(time_spline, 0.5, acc)*299792458.*60.*60.*24.*365.*10**9./3.086e+22 * gsl_spline_eval(H_spline,1.,acc)/sqrt(2./3.*fourpiG); // proper time in gevolution units
 
 
-	// Writing the time evolution of Omega_i to file.
+	// Writing the time evolution of Omega_i to file. a is spaced as a = np.logspace(-15,1,1000,base=np.exp(1))
 	for (int k = 0; k < 1000; k++){
 		const double c_1 = exp(-15.);
         const double c_2 = 1./999.*log(exp(1.)/c_1);
@@ -935,33 +936,35 @@ double Gevolution_H0 = sqrt(2. * fourpiG / 3.);
 		//Omega << a << "     " << tau << "     " << 1./a - 1. << "     " << Omega_vector[0] << "     " << Omega_vector[1] << "     " << Omega_vector[2] << "        "   << Omega_vector[3] << endl;
 		//#endif 
 		
+		// checking if potentials change much
 		// phi and chi are here the initial conditions at cycle 0
-		if (cycle > 0){
-			double relative_Phi;
-			double Psi;
-			double Psi_old;
-			double relative_Psi;
-			double temp_Phi = 0.0;
-			double temp_Psi = 0.0;
-			for (x.first(); x.test(); x.next()){
-				relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
-				Psi = phi(x) - chi(x);
-				Psi_old = phi_old(x) - chi_old(x);
-				relative_Psi = (Psi-Psi_old)/Psi_old;
-				if (relative_Phi < 0.0) relative_Phi *= -1.;
-				if (relative_Psi < 0.0) relative_Psi *= -1.; 
-				if (relative_Phi > temp_Phi) temp_Phi = relative_Phi;
-				if (relative_Psi > temp_Psi) temp_Psi = relative_Psi;
-			}
-			// finding the maximum over all processes
-			parallel.max(relative_Phi);
-			parallel.max(relative_Psi);
-
-			////if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
-			////if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
-
-			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< endl; 
-		}
+////		if (cycle > 0){
+////			double relative_Phi;
+////			double Psi;
+////			double Psi_old;
+////			double relative_Psi;
+////			double temp_Phi = 0.0;
+////			double temp_Psi = 0.0;
+////			for (x.first(); x.test(); x.next()){
+////				relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
+////				Psi = phi(x) - chi(x);
+////				Psi_old = phi_old(x) - chi_old(x);
+////				relative_Psi = (Psi-Psi_old)/Psi_old;
+////				if (relative_Phi < 0.0) relative_Phi *= -1.;
+////				if (relative_Psi < 0.0) relative_Psi *= -1.; 
+////				if (relative_Phi > temp_Phi) temp_Phi = relative_Phi;
+////				if (relative_Psi > temp_Psi) temp_Psi = relative_Psi;
+////			}
+////			// finding the maximum over all processes
+////			parallel.max(relative_Phi);
+////			parallel.max(relative_Psi);
+////
+////			////if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
+////			////if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
+////
+////			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< endl; 
+////		}
+	if (dtau_old > 0.0){
   	for (x.first(); x.test(); x.next())
   		{
   			phi_old(x) = phi(x);
@@ -970,6 +973,7 @@ double Gevolution_H0 = sqrt(2. * fourpiG / 3.);
 			
          // if(x.coord(0)==32 && x.coord(1)==12 && x.coord(2)==32) cout<<"zeta_half: "<<zeta_half(x)<<endl;
   		}
+	}
 		//if (cycle==0)phi_old.saveHDF5(output_path + "phi_old_test.h5");
 		//parallel.abortForce();
 
@@ -1396,10 +1400,13 @@ lightcone_output_time += MPI_Wtime() - ref_time;
 ref_time = MPI_Wtime();
 #endif
 
-for (x.first(); x.test(); x.next())
-{
-  phi_prime(x) =(phi(x)-phi_old(x))/(dtau);
-  //psi_prime(x)= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x))) / dtau; //psi'(n)
+
+if (dtau_old > 0.0){
+	for (x.first(); x.test(); x.next())
+	{
+	  phi_prime(x) =(phi(x)-phi_old(x))/dtau_old;
+	  //psi_prime(x)= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x))) / dtau; //psi'(n)
+	}
 }
 //COUT << 1223 << endl;
 		// snapshot output
@@ -1428,6 +1435,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 {
 
   #ifdef FLUID_VARIABLES
+  if (cycle > 1){
 	Hc = Hconf(a, fourpiG,
   #ifdef HAVE_HICLASS_BG
     H_spline, acc
@@ -1439,38 +1447,21 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
    //zeta_half.updateHalo();
    //phi.updateHalo();
    //chi.updateHalo();
-   calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, a, acc)
+
+   calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
    	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
-  #endif 
-
-	// To calculate the cosmic time intervall we need a at tau + dtau
-	double a_for_proper_time = a;
-
-	rungekutta4bg(a_for_proper_time, fourpiG,
-      #ifdef HAVE_HICLASS_BG
-        H_spline, acc,
-      #else
-        cosmo,
-      #endif
-      0.5 * dtau);  // evolve background by half a time step
-
-	  rungekutta4bg(a_for_proper_time, fourpiG,
-      #ifdef HAVE_HICLASS_BG
-        H_spline, acc,
-      #else
-        cosmo,
-      #endif
-      0.5 * dtau);  // evolve background by half a time step
-
-	  // a_for_proper_time is now at tau + dtau.
-
+    
 	// dt is the proper/cosmic/cosmological time intervall  
-	double avg_a = (a_for_proper_time + a)/2.;
-	double dt = proper_time_gev(gsl_spline_eval(time_spline, a_for_proper_time, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG) - proper_time_gev(gsl_spline_eval(time_spline, a, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG);
-	double dtau_dt = dtau/dt;  // Need this to get velocities with respect to cosmic time
+	double avg_a = (a_old_for_kess_velocity + a)/2.;   
+	double dt = proper_time_gev(gsl_spline_eval(time_spline, a, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG) - proper_time_gev(gsl_spline_eval(time_spline, a_old_for_kess_velocity, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG);
+	double dtau_dt = dtau_old/dt;  // Need this to get velocities with respect to cosmic time
 	convert_to_cosmic_velocity << "gev" << "                  " <<  snapcount <<"                    " << avg_a << "                   " << 1./avg_a - 1. << "                        " << dtau_dt << endl;
-
-
+	}
+	else{
+		COUT << COLORTEXT_RED << "Fluid properties at initial time are not well defined. They will be written to file anyway..." << COLORTEXT_RESET << endl;
+		convert_to_cosmic_velocity << "gev" << "                  " <<  snapcount <<"                    " << 0. << "                   " << -1. << "                        " << 0. << endl;
+	}
+	#endif
 
 
 	COUT << COLORTEXT_CYAN << " writing snapshot" << COLORTEXT_RESET << " at z = " << ((1./a) - 1.) <<  " (cycle " << cycle << "), tau/boxsize = " << tau << endl;
@@ -1680,6 +1671,8 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
    
 #endif
 
+	// Skipping the k-essence update during zero'th cycle, since we don't have access to the time derivative of the gravitational potentials
+	if (dtau_old > 0.){
   double a_kess=a;
 //  if(cycle==0)
 //  {
@@ -1695,21 +1688,29 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 //      zeta_half.updateHalo();
 //    ////}
 //  }
-	
-
-	// evolving the zeta_half field to the correct halv step. zeta_half is only allowed to be evolved backwards in time in the first cycle.
-	if ((dtau < dtau_old) || (cycle == 0)){
-		update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
-    	zeta_half.updateHalo();
-	}
-
-	for (i=0;i<sim.nKe_numsteps;i++)
-	{
     #ifdef NONLINEAR_TEST
 	if (sim.kess_inner_loop_check){
 	  sim.change_nKe_numsteps(sim.new_nKe_numsteps);
 	  COUT << "nKe_numsteps has been changed in the outer loop"<< endl;
 	  }
+	  #endif
+	
+	// zeta_half is only allowed to be evolved backwards in time in the first cycle, i.e., cycle == 1
+	if (cycle == 1){
+		update_zeta_eq(-1./(sim.nKe_numsteps*2.) * dtau, dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+    	zeta_half.updateHalo();
+	}
+	else{
+		// Evolving the zeta_half field to the correct half step if necessary. The field can only be evolved forwards in time
+		if (dtau < dtau_old){
+			update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+    		zeta_half.updateHalo();
+		}
+	}
+
+	for (i=0;i<sim.nKe_numsteps;i++)
+	{
+    
 	// optimize by if test. No need to compute this for larger z than in the blowup criteria
 	//testing_previous_avg_pi = average_func(pi_k,1.,numpts3d);
 	//previous_largest_perturbation = abs_largest_perturbation_func(pi_k,1.,testing_previous_avg_pi);
@@ -1745,9 +1746,18 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 	//previous_max_abs_pi = max_abs_pi;  // unused
 	//previous_avg_pi = avg_pi;  // unused
 	//previous_avg_zeta = avg_zeta;  // unused
+	
+	// getting a at next to last step...
+	#ifdef NONLINEAR_TEST
+	if (i ==  sim.nKe_numsteps-2){
+		a_kess_old = a_kess;
+		dtau_kess = dtau/sim.nKe_numsteps;
+	} 
+	
 	#endif
 
-    update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+
+    update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     zeta_half.updateHalo();
     rungekutta4bg(a_kess, fourpiG, H_spline, acc, dtau  / sim.nKe_numsteps / 2.0);
     //********************************************************************************
@@ -1755,7 +1765,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
     //In the pi update we also update zeta_int because we need the values of a_kess and H_kess at step n+1/2
     //By the below update we get pi(n+1) and zeta(n+1)
     //********************************************************************************
-    update_pi_eq(dtau/ sim.nKe_numsteps,phi,chi, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc));//,i); // H_old is updated here in the function
+    update_pi_eq(dtau/ sim.nKe_numsteps, dtau_old,dtau,phi,chi, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc));//,i); // H_old is updated here in the function
 	pi_k.updateHalo();
 
     //********************************************************************************
@@ -1971,7 +1981,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 			//zeta_half.updateHalo();
 			//phi.updateHalo();
 			//chi.updateHalo();
-			calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, a_kess, acc)
+			calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi,chi,gsl_spline_eval(rho_smg_spline, a_kess, acc)
 				,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
 			//delta_rho_fluid.updateHalo();
 			//delta_p_fluid.updateHalo();
@@ -2059,7 +2069,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 			//previous_avg_pi = average_func(pi_k,1.,numpts3d);
 			//previous_largest_perturbation = abs_largest_perturbation_func(pi_k,1.,previous_avg_pi);
 			
-		    update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess, phi_prime,phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+		    update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess, phi_prime,phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 		    zeta_half.updateHalo();
 		    rungekutta4bg(a_kess, fourpiG, H_spline, acc, dtau  / sim.nKe_numsteps / 2.0);
 		    //********************************************************************************
@@ -2068,7 +2078,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 		    //By the below update we get pi(n+1) and zeta(n+1)
 		    //********************************************************************************
 		    //if (i!=0)
-			update_pi_eq(dtau/ sim.nKe_numsteps,phi,chi, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc));//,kessence_iteration_loop_in_loop + j); // H_old is updated here in the function
+			update_pi_eq(dtau/ sim.nKe_numsteps,dtau_old,dtau,phi,chi, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc));//,kessence_iteration_loop_in_loop + j); // H_old is updated here in the function
 			//else
 			//update_pi_eq(dtau/ sim.nKe_numsteps,psi_prime, phi_old, chi_old, pi_k, zeta_half, Hconf(a_kess, fourpiG, H_spline, acc),sim.nKe_numsteps/old_nKe_numsteps*(i+1.) + j);
 				
@@ -2180,7 +2190,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 			  //zeta_half.updateHalo();
 			  //phi.updateHalo();
 			  //chi.updateHalo();
-        	  calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi_old,chi_old,gsl_spline_eval(rho_smg_spline, a_kess, acc)
+        	  calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi,chi,gsl_spline_eval(rho_smg_spline, a_kess, acc)
         			,gsl_spline_eval(p_smg_spline, a_kess, acc),gsl_spline_eval(cs2_spline, a_kess, acc), Hc,dx,a_kess,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
         	  //delta_rho_fluid.updateHalo();
         	  //delta_p_fluid.updateHalo();
@@ -2260,7 +2270,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 				  
 		    }
 			// updating the zeta_integer field to n+1
-			update_zeta_eq(dtau/ sim.nKe_numsteps / 2., dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=true,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+			update_zeta_eq(dtau/ sim.nKe_numsteps / 2., dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=true,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 
       	sim.change_nKe_numsteps(old_nKe_numsteps);
 		COUT << "nKe_numsteps after loop in loop = "<< sim.nKe_numsteps << endl;
@@ -2269,7 +2279,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 				
       }
 	  	// updating the zeta_integer field to n+1
-	  	update_zeta_eq(dtau/ sim.nKe_numsteps / 2., dx, a_kess,phi_prime, phi_old, chi_old, pi_k, zeta_half,zeta_integer ,evolve_zeta_integer=true, gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
+	  	update_zeta_eq(dtau/ sim.nKe_numsteps / 2., dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer ,evolve_zeta_integer=true, gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 	#endif
 	}
 
@@ -2278,6 +2288,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
     kessence_update_time += MPI_Wtime() - ref_time;
     ref_time = MPI_Wtime();
 #endif
+	}
 
 #else // If not HAVE_HICLASS_BG We use  kevolution with w, c_s^2 constants.
 //**********************
@@ -2429,7 +2440,10 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 		update_q_time += MPI_Wtime() - ref2_time;
 		ref2_time = MPI_Wtime();
 #endif
-
+	
+	#ifdef FLUID_VARIABLES
+	a_old_for_kess_velocity = a;
+	#endif
       rungekutta4bg(a, fourpiG,
       #ifdef HAVE_HICLASS_BG
         H_spline, acc,

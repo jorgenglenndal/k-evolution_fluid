@@ -438,7 +438,7 @@ void projection_Tmunu_kessence( Field<FieldType> & T00, Field<FieldType> & T0i, 
 #ifdef FLUID_VARIABLES
 // the fluid properties are calculated from the field values
 template <class FieldType>
-void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldType> & Sigma_upper_ij_fluid, Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_integer,Field<FieldType> & phi_old,Field<FieldType> & chi_old,double rho_smg, double p_smg, double cs2, double Hcon
+void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldType> & Sigma_upper_ij_fluid, Field<FieldType> & delta_rho_fluid,Field<FieldType> & delta_p_fluid,Field<FieldType> & v_upper_i_fluid,Field<FieldType> & pi_k,Field<FieldType> & zeta_integer,Field<FieldType> & phi,Field<FieldType> & chi,double rho_smg, double p_smg, double cs2, double Hcon
   ,double dx, double a, double rho_crit_0, double Gevolution_H0){
   
   double w = p_smg/rho_smg; // is normally constant
@@ -502,17 +502,17 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
 
   Site xField(pi_k.lattice());
   for (xField.first(); xField.test(); xField.next()){
-    psi           = phi_old(xField) - chi_old(xField); 
-    psi_x_plus_1  = phi_old(xField + 0) - chi_old(xField + 0);
-    psi_x_minus_1 = phi_old(xField - 0) - chi_old(xField - 0);
-    psi_y_plus_1  = phi_old(xField + 1) - chi_old(xField + 1);
-    psi_y_minus_1 = phi_old(xField - 1) - chi_old(xField - 1);
-    psi_z_plus_1  = phi_old(xField + 2) - chi_old(xField + 2);
-    psi_z_minus_1 = phi_old(xField - 2) - chi_old(xField - 2);
+    psi           = phi(xField) - chi(xField); 
+    psi_x_plus_1  = phi(xField + 0) - chi(xField + 0);
+    psi_x_minus_1 = phi(xField - 0) - chi(xField - 0);
+    psi_y_plus_1  = phi(xField + 1) - chi(xField + 1);
+    psi_y_minus_1 = phi(xField - 1) - chi(xField - 1);
+    psi_z_plus_1  = phi(xField + 2) - chi(xField + 2);
+    psi_z_minus_1 = phi(xField - 2) - chi(xField - 2);
 
-    partial_derivative_phi_x = (phi_old(xField + 0) - phi_old(xField - 0))/(2. * dx);
-    partial_derivative_phi_y = (phi_old(xField + 1) - phi_old(xField - 1))/(2. * dx);
-    partial_derivative_phi_z = (phi_old(xField + 2) - phi_old(xField - 2))/(2. * dx);
+    partial_derivative_phi_x = (phi(xField + 0) - phi(xField - 0))/(2. * dx);
+    partial_derivative_phi_y = (phi(xField + 1) - phi(xField - 1))/(2. * dx);
+    partial_derivative_phi_z = (phi(xField + 2) - phi(xField - 2))/(2. * dx);
 
     partial_derivative_psi_x = (psi_x_plus_1 - psi_x_minus_1)/(2. * dx);
     partial_derivative_psi_y = (psi_y_plus_1 - psi_y_minus_1)/(2. * dx);
@@ -521,11 +521,6 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
     partial_derivative_zeta_x = (zeta_integer(xField + 0) - zeta_integer(xField - 0))/(2. * dx);
     partial_derivative_zeta_y = (zeta_integer(xField + 1) - zeta_integer(xField - 1))/(2. * dx);
     partial_derivative_zeta_z = (zeta_integer(xField + 2) - zeta_integer(xField - 2))/(2. * dx);
-
-
-    //gradient_pi_squared  = 0.25*(pi_k(xField+0) - pi_k(xField - 0))* (pi_k(xField + 0) - pi_k(xField-0))/(dx*dx);
-    //gradient_pi_squared += 0.25*(pi_k(xField+1) - pi_k(xField - 1))* (pi_k(xField + 1) - pi_k(xField-1))/(dx*dx);
-    //gradient_pi_squared += 0.25*(pi_k(xField+2) - pi_k(xField - 2))* (pi_k(xField + 2) - pi_k(xField-2))/(dx*dx); 
 
     partial_derivative_pi_x = (pi_k(xField + 0) - pi_k(xField - 0))/(2. * dx);
     partial_derivative_pi_y = (pi_k(xField + 1) - pi_k(xField - 1))/(2. * dx);
@@ -558,7 +553,7 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
       + partial_derivative_pi_y*double_partial_derivative_pi_yz
       + partial_derivative_pi_z*double_partial_derivative_pi_zz);                                        
 
-    exp_2_phi_plus_psi = exp(2. * (phi_old(xField) + psi));
+    exp_2_phi_plus_psi = exp(2. * (phi(xField) + psi));
     
     alpha_1 = -exp_2_phi_plus_psi*partial_derivative_pi_x;
     alpha_2 = -exp_2_phi_plus_psi*partial_derivative_pi_y;
@@ -1128,17 +1123,19 @@ std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CD
       //
       //////////////////////////
       template <class FieldType>
-      void update_pi_eq( double dtau, Field<FieldType> & phi,Field<FieldType> & chi,Field<FieldType> & phi_old, Field<FieldType> & chi_old, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double Hcon)//,double kessence_iteration)
+      void update_pi_eq( double dtau,double dtau_old,double cycle_dtau, Field<FieldType> & phi,Field<FieldType> & chi,Field<FieldType> & phi_old, Field<FieldType> & chi_old, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, double Hcon)//,double kessence_iteration)
       {
-        double psi,psi_old, psi_half;
+        double psi,psi_old, psi_half,psi_prime;
         double Coeff1 = 1./(1. + Hcon * dtau/2.);
         Site x(pi_k.lattice());
         for (x.first(); x.test(); x.next())
           {
-            psi = phi(x) - chi(x); // psi(n+1)
-            psi_old = phi_old(x) - chi_old(x); //psi(n)
+            psi = phi(x) - chi(x); // psi(n)
+            psi_old = phi_old(x) - chi_old(x); //psi(n-1)
+            psi_prime = (psi-psi_old)/dtau_old;
             //psi_prime= ((phi(x) - chi(x)) - (phi_old(x) - chi_old(x))) / global_dtau; //psi'(n)
-            psi_half = (psi + psi_old)/2.; // reduces to a "correct" expression for N_kess = 1   //psi_old + psi_prime(x)*dtau*(kessence_iteration + 1./2.);// * dtau/2.; //psi_half (n+1/2) = psi(n) + psi_prime'(n) dtau/2
+            //psi_half = (psi + psi_old)/2.; // reduces to a "correct" expression for N_kess = 1   //psi_old + psi_prime(x)*dtau*(kessence_iteration + 1./2.);// * dtau/2.; //psi_half (n+1/2) = psi(n) + psi_prime'(n) dtau/2
+            psi_half = psi + psi_prime*cycle_dtau/2.; // assuming psi is constant during a cycle time step
             //*****************************************
             //pi Updating which is linear by definition
             //*****************************************
@@ -1166,10 +1163,10 @@ std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CD
       // We use predictor corrector method to calculate \zeta precisely for non-linear case. (for linear equation is does not make better)
       // updating zeta from n-1/2 to n+1/2 by zeta'(n)
       template <class FieldType>
-      void update_zeta_eq(double dtau, double dx,double a,Field<FieldType> & phi_prime ,Field<FieldType> & phi_old, Field<FieldType> & chi_old, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, Field<FieldType> & zeta_integer,bool evolve_zeta_integer, double cs2, double s, double ca2, double Hcon, double H_prime, int non_linearity)
+      void update_zeta_eq(double dtau, double dx,double a,Field<FieldType> & phi_prime ,Field<FieldType> & phi, Field<FieldType> & chi, Field<FieldType> & pi_k , Field<FieldType> & zeta_half, Field<FieldType> & zeta_integer,bool evolve_zeta_integer, double cs2, double s, double ca2, double Hcon, double H_prime, int non_linearity)
         {
         double Gradphi_Gradpi, Gradpsi_Gradpi, Gradpi_Gradpi, GradZeta_Gradpi, Gradi_nablai_pi_Grad_pi_squared, Dx_psi, Dy_psi, Dz_psi;
-        double C1, C2, C3, psi, psi_old, Laplacian_pi, zeta_old_integer, zeta_old_half ;
+        double C1, C2, C3, psi, Laplacian_pi, zeta_old_integer, zeta_old_half ;
         //Since a_kess is at n so H_prime is at n which is needed to calculate zeta(n+1/2)
         //**************************************************************
         //Coefficient two, H(n), H_prime(n) since BG already updated
@@ -1201,7 +1198,7 @@ std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CD
           //********************************************
           //psi(n)
           //*********************************************
-          psi_old = phi_old(x) - chi_old(x); // psi(n)
+          psi = phi(x) - chi(x); // psi(n)
           //Coefficient one, H(at n)
           //***************************
           C1 = 1./(1. -  (3. * ca2 + s) * Hcon  * dtau/2. -  non_linearity * (1. - cs2) *  Laplacian_pi * dtau/2.);
@@ -1219,15 +1216,15 @@ std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CD
             //**********
             //Grad_i Psi
             //**********
-            Dx_psi = ((phi_old(x + 0) - chi_old(x + 0)) - (phi_old(x - 0) - chi_old(x - 0)));
-            Dy_psi = ((phi_old(x + 1) - chi_old(x + 1)) - (phi_old(x - 1) - chi_old(x - 1)));
-            Dz_psi = ((phi_old(x + 2) - chi_old(x + 2)) - (phi_old(x - 2) - chi_old(x - 2)));
+            Dx_psi = ((phi(x + 0) - chi(x + 0)) - (phi(x - 0) - chi(x - 0)));
+            Dy_psi = ((phi(x + 1) - chi(x + 1)) - (phi(x - 1) - chi(x - 1)));
+            Dz_psi = ((phi(x + 2) - chi(x + 2)) - (phi(x - 2) - chi(x - 2)));
             //*******************
             //Grad_phi . Grad_pi
             //******************
-            Gradphi_Gradpi= 0.25 * (phi_old(x + 0)  - phi_old(x - 0)) * (pi_k(x + 0) - pi_k(x - 0)) / (dx * dx);
-            Gradphi_Gradpi+=0.25 * (phi_old(x + 1)  - phi_old(x - 1)) * (pi_k(x + 1) - pi_k(x - 1)) / (dx * dx);
-            Gradphi_Gradpi+=0.25 * (phi_old(x + 2)  - phi_old(x - 2)) * (pi_k(x + 2) - pi_k(x - 2)) / (dx * dx);
+            Gradphi_Gradpi= 0.25 * (phi(x + 0)  - phi(x - 0)) * (pi_k(x + 0) - pi_k(x - 0)) / (dx * dx);
+            Gradphi_Gradpi+=0.25 * (phi(x + 1)  - phi(x - 1)) * (pi_k(x + 1) - pi_k(x - 1)) / (dx * dx);
+            Gradphi_Gradpi+=0.25 * (phi(x + 2)  - phi(x - 2)) * (pi_k(x + 2) - pi_k(x - 2)) / (dx * dx);
             //*******************
             //Grad_psi . Grad_pi
             //******************
@@ -1317,10 +1314,10 @@ std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CD
           //***************************************
           if (evolve_zeta_integer) // the time step is implicitly dtau/2 by the function argument
           zeta_integer(x) =       C1 * ( zeta_half(x) + dtau * (
-            /*Linear(1,2)*/ + (3. * ca2 + s) * Hcon * zeta_half(x)/2. + 3. * cs2 * Hcon * psi_old
+            /*Linear(1,2)*/ + (3. * ca2 + s) * Hcon * zeta_half(x)/2. + 3. * cs2 * Hcon * psi
              /*Linear(3,4,5)*/  - C2 * pi_k(x)+ 3. * cs2 * phi_prime(x) + cs2 * Laplacian_pi
          /*Non-linear terms*/   + non_linearity * (
-         /*Non-linear(1,2)*/    - cs2 * (phi_old(x) - psi_old) * Laplacian_pi
+         /*Non-linear(1,2)*/    - cs2 * (phi(x) - psi) * Laplacian_pi
          /*Non-linear(3)  */    - 3. * cs2 * Hcon * (1. + ca2) * pi_k(x) * Laplacian_pi
          /*Non-linear(3)  */    + (1. - cs2) * (zeta_half(x)) * Laplacian_pi
           /*Non-linear(5,6,7)*/  - cs2 * Gradphi_Gradpi + Gradpsi_Gradpi - C3 * Gradpi_Gradpi
@@ -1331,10 +1328,10 @@ std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CD
                                   );
           else
           zeta_half(x) =       C1 * ( zeta_half(x) + dtau * (
-            /*Linear(1,2)*/ + (3. * ca2 + s) * Hcon * zeta_half(x)/2. + 3. * cs2 * Hcon * psi_old
+            /*Linear(1,2)*/ + (3. * ca2 + s) * Hcon * zeta_half(x)/2. + 3. * cs2 * Hcon * psi
              /*Linear(3,4,5)*/  - C2 * pi_k(x)+ 3. * cs2 * phi_prime(x) + cs2 * Laplacian_pi
          /*Non-linear terms*/   + non_linearity * (
-         /*Non-linear(1,2)*/    - cs2 * (phi_old(x) - psi_old) * Laplacian_pi
+         /*Non-linear(1,2)*/    - cs2 * (phi(x) - psi) * Laplacian_pi
          /*Non-linear(3)  */    - 3. * cs2 * Hcon * (1. + ca2) * pi_k(x) * Laplacian_pi
          /*Non-linear(3)  */    + (1. - cs2) * (zeta_half(x)) * Laplacian_pi
           /*Non-linear(5,6,7)*/  - cs2 * Gradphi_Gradpi + Gradpsi_Gradpi - C3 * Gradpi_Gradpi

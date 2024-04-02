@@ -35,7 +35,8 @@ for i in range(len(convert_to_cosmic_time_gev)):
     convert_to_cosmic_time_gev[i] *= c_km_s*a_gev[i]
 
 root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/"
-test_file = [root + "snap_000_v_upper_i_fluid.h5",root + "snap_001_v_upper_i_fluid.h5",root + "snap_002_v_upper_i_fluid.h5",root + "snap_003_v_upper_i_fluid.h5"]
+test_file = [root + "snap_000_v_upper_i_fluid.h5", root + "snap_001_v_upper_i_fluid.h5",root + "snap_002_v_upper_i_fluid.h5",root + "snap_003_v_upper_i_fluid.h5"]
+test_file = [root + "snap_000_div_v_upper_fluid.h5", root + "snap_001_div_v_upper_fluid.h5",root + "snap_002_div_v_upper_fluid.h5",root + "snap_003_div_v_upper_fluid.h5"]
 #test_file = [root + "snap_001_div_v_upper_fluid.h5"]
 
 
@@ -74,7 +75,7 @@ test_file = [root + "snap_000_v_upper_i_fluid.h5",root + "snap_001_v_upper_i_flu
 #test = visualization_class("A_test.npy",filetype="npy")# 
 #test = visualization_class(filename=divergence)# ,indices=["singles",0])
 test = visualization_class(filename=test_file)#
-test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev)
+#test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev)
 
 ##test = plot_class(test_file)
 #test = plot_class(file,indices=["singles",49])
@@ -85,7 +86,7 @@ test.scatter(rescale_factor=1)
 #test.save()
 #test.move_camera()
 #test.help_indexing()
-test.mask(percentile=(0,95,"outside"),method="limits") 
+test.mask(percentile=(5,95,"outside"),method="limits") 
 #test.mask(percent=2,method="rng")
 #test.offscreen_rendering()
 test.show()
