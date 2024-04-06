@@ -5,38 +5,50 @@ s = 1
 
 c = 299792458* m / s
 c_km_s = c/1e+3
+Gevolution_H0 = 0.100069
 
-def read_deta_dt(filename):
-    gev  = []
-    kess = []
-    a_gev = []
-    a_kess = []
-    with open(filename, 'r') as infile:
-        for line in infile:
-            if line.startswith("#"):
-                continue
-            else:
-                words = line.split()
-                if words[0] == "gev":
-                    gev.append(float(words[4]))
-                    a_gev.append(float(words[2]))
-                if words[0] == "kess":
-                    kess.append(float(words[4]))
-                    a_kess.append(float(words[2]))
-    #for i in range(a_gev):
-         
-                
-    return gev, kess,a_gev,a_kess
-
-convert_to_cosmic_time_gev, convert_to_cosmic_time_kess,a_gev,a_kess = read_deta_dt("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/convert_to_cosmic_velocity.txt")
-
-
-for i in range(len(convert_to_cosmic_time_gev)):
-    convert_to_cosmic_time_gev[i] *= c_km_s*a_gev[i]
+#def read_H0(filename):
+#    gev  = []
+#    kess = []
+#    a_gev = []
+#    a_kess = []
+#    with open(filename, 'r') as infile:
+#        for line in infile:
+#            if line.startswith("#"):
+#                continue
+#            else:
+#                words = line.split()
+#                if words[0] == "gev":
+#                    gev.append(float(words[4]))
+#                    a_gev.append(float(words[2]))
+#                if words[0] == "kess":
+#                    kess.append(float(words[4]))
+#                    a_kess.append(float(words[2]))
+#    #for i in range(a_gev):
+#         
+#                
+#    return gev, kess,a_gev,a_kess
+##
+#convert_to_cosmic_time_gev, convert_to_cosmic_time_kess,a_gev,a_kess = read_deta_dt("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/convert_to_cosmic_velocity.txt")
+#
+#
+#for i in range(len(convert_to_cosmic_time_gev)):
+#    convert_to_cosmic_time_gev[i] *= c_km_s*a_gev[i]
 
 root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/"
-test_file = [root + "snap_000_v_upper_i_fluid.h5", root + "snap_001_v_upper_i_fluid.h5",root + "snap_002_v_upper_i_fluid.h5",root + "snap_003_v_upper_i_fluid.h5"]
-test_file = [root + "snap_000_div_v_upper_fluid.h5", root + "snap_001_div_v_upper_fluid.h5",root + "snap_002_div_v_upper_fluid.h5",root + "snap_003_div_v_upper_fluid.h5"]
+
+test_file = []
+#root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/"
+for i in range(1,51):
+    #("tmp_%04d.png" % i)
+    #file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)
+    #test_file.append(root + "v_upper_i_fluid_" + str(i) +  ".h5")
+    test_file.append(root + "delta_rho_fluid_" + str(i) +  ".h5")
+    #test_file.append(root + "pi_k_" + str(i) +  ".h5")
+
+
+#test_file = [root + "snap_000_v_upper_i_fluid.h5", root + "snap_001_v_upper_i_fluid.h5",root + "snap_002_v_upper_i_fluid.h5",root + "snap_003_v_upper_i_fluid.h5"]
+#test_file = [root + "snap_000_div_v_upper_fluid.h5", root + "snap_001_div_v_upper_fluid.h5",root + "snap_002_div_v_upper_fluid.h5",root + "snap_003_div_v_upper_fluid.h5"]
 #test_file = [root + "snap_001_div_v_upper_fluid.h5"]
 
 
@@ -74,19 +86,19 @@ test_file = [root + "snap_000_div_v_upper_fluid.h5", root + "snap_001_div_v_uppe
 
 #test = visualization_class("A_test.npy",filetype="npy")# 
 #test = visualization_class(filename=divergence)# ,indices=["singles",0])
-test = visualization_class(filename=test_file)#
-#test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev)
+test = visualization_class(filename=test_file,indices=["range",1,len(test_file),5])#
+#test.rescale_all_data(rescale_all_data_factor=Gevolution_H0)
 
 ##test = plot_class(test_file)
 #test = plot_class(file,indices=["singles",49])
 test.symmetric_colorbar()
-#test.rescale_all_data(rescale_all_data_factor=convert_to_cosmic_time_gev[1])
+#test.rescale_all_data(rescale_all_data_factor=Gevolution_H0)
 test.scatter(rescale_factor=1)
-#test.log_scale(method="split")
+test.log_scale(method="abs")
 #test.save()
 #test.move_camera()
 #test.help_indexing()
-test.mask(percentile=(5,95,"outside"),method="limits") 
+test.mask(percentile=(0,99,"outside"),method="limits") 
 #test.mask(percent=2,method="rng")
 #test.offscreen_rendering()
 test.show()

@@ -1931,7 +1931,14 @@ parallel.abortForce();
   if (!parseParameter(params, numparam, "new_nKe_numsteps",  sim.new_nKe_numsteps))
   {
     sim.new_nKe_numsteps = sim.nKe_numsteps;
-    if(parallel.isRoot())  cout << "new_nKe_numsteps = nKe_numsteps "<< endl;	
+    if(parallel.isRoot())  cout << "new_nKe_numsteps = nKe_numsteps "<< endl;
+  }
+
+  if ((sim.new_nKe_numsteps < sim.nKe_numsteps)  ||  (sim.new_nKe_numsteps % sim.nKe_numsteps != 0 )){
+	if(parallel.isRoot()){  
+		cout << "new_nKe_numsteps is smaller than nKe_numsteps and/or not divisible by nKe_numsteps "<< endl;
+		parallel.abortForce();
+	}
   }
 
   if (!parseParameter(params, numparam, "known_blowup_time",  sim.known_blowup_time))

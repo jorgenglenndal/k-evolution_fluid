@@ -272,6 +272,7 @@ struct metadata
 	int nKe_numsteps;
 	int new_nKe_numsteps;
 	bool kess_inner_loop_check = false;
+	bool blowup_criteria_met = false;
 	int Kess_source_gravity;
   int NL_kessence;
   int bg_hiclass;
@@ -286,6 +287,11 @@ struct metadata
   void snapcount_b_add_one(){
 	snapcount_b += 1;
   }
+
+  void blowup_func(bool blowup){
+	blowup_criteria_met = blowup;
+  }
+
   // Using hiclass to evaluate time dependence of quantities!
 	//kessence end
 };

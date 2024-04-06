@@ -623,7 +623,8 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
 
 #ifdef NONLINEAR_TEST
 
-// proper time in gevolution units
+// proper time in gevolution units (converting from the class spline, which is in Gyr)
+// unused
 double proper_time_gev(double proper_time, double H0_CLASS,double fourpiG){
   return proper_time*299792458.*60.*60.*24.*365.*pow(10.,9.)/(3.086*pow(10.,22.))* H0_CLASS/sqrt(2./3.*fourpiG);
 }
