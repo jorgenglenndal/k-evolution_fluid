@@ -1649,7 +1649,7 @@ if (dtau_old > 0.){
 			//COUT << "inside if test for j loop" << endl;
 			// Aborting if we have all the snapshots...
 	  		
-			sim.kess_inner_loop_check_func(true);
+			if (sim.kess_inner_loop_check == false) sim.kess_inner_loop_check_func(true);
 			
 			// Finding the correct number of iterations to conserve the global timestep.
 			int num_j_iterations = sim.new_nKe_numsteps*(1. - (i+0.)/sim.nKe_numsteps); 
