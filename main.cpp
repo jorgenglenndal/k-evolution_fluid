@@ -743,7 +743,7 @@ for (x.first(); x.test(); x.next())
 //   //****SAVE DATA To test Backreaction
 //   //****************************
   std::ofstream rho_i_rho_crit_0;
-  std::ofstream convert_to_cosmic_velocity;	
+  //std::ofstream convert_to_cosmic_velocity;	
   std::ofstream Result_avg;
   std::ofstream Result_real;
   std::ofstream Result_fourier;
@@ -754,7 +754,7 @@ for (x.first(); x.test(); x.next())
   std::ofstream potentials;
   std::ofstream Omega;
   std::string output_path = sim.output_path;
-  std::string filename_convert_to_cosmic_velocity = output_path + "convert_to_cosmic_velocity.txt";
+  //std::string filename_convert_to_cosmic_velocity = output_path + "convert_to_cosmic_velocity.txt";
   std::string filename_rho_i_rho_crit_0 = output_path + "rho_i_rho_crit_0.txt";
   std::string filename_avg = output_path + "Result_avg.txt";
   std::string filename_real = output_path + "Result_real.txt";
@@ -767,7 +767,7 @@ for (x.first(); x.test(); x.next())
   std::string filename_Omega = output_path + "Omega.txt";
 
   rho_i_rho_crit_0.open(filename_rho_i_rho_crit_0, std::ios::out);
-  convert_to_cosmic_velocity.open(filename_convert_to_cosmic_velocity, std::ios::out);
+  //convert_to_cosmic_velocity.open(filename_convert_to_cosmic_velocity, std::ios::out);
   Result_avg.open(filename_avg, std::ios::out);
   Result_real.open(filename_real, std::ios::out);
   Result_fourier.open(filename_fourier, std::ios::out);
@@ -779,7 +779,7 @@ for (x.first(); x.test(); x.next())
   Omega.open(filename_Omega, std::ios::out);
 
 
-  convert_to_cosmic_velocity << "###    type(gev/kess)[0],     snapcount[1],         a[2],              z[3],            Delta conformal time / Delta cosmic time[4]" << endl;
+  //convert_to_cosmic_velocity << "###    type(gev/kess)[0],     snapcount[1],         a[2],              z[3],            Delta conformal time / Delta cosmic time[4]" << endl;
 
   Omega << "###  scale factor [0], redshift [1],      Omega_DE [2],    Omega_CDM [3],    Omega_baryons [4],    Omega_photons [5],      Omega_massless_neutrinos [6]" << endl;
 
@@ -1794,7 +1794,7 @@ if (dtau_old > 0.){
 				  
 			if (std::isnan(avg_zeta)){
 				rho_i_rho_crit_0.close();
-				convert_to_cosmic_velocity.close();
+				//convert_to_cosmic_velocity.close();
 				Result_avg.close();
   				Result_real.close();
 				Result_fourier.close();
@@ -2253,7 +2253,7 @@ else{
 	// closing the files
 #ifdef NONLINEAR_TEST
     rho_i_rho_crit_0.close();
-	convert_to_cosmic_velocity.close();
+	//convert_to_cosmic_velocity.close();
 	Result_avg.close();
   	Result_real.close();
 	Result_fourier.close();

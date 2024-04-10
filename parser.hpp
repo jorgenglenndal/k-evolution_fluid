@@ -1944,7 +1944,7 @@ parallel.abortForce();
   if (!parseParameter(params, numparam, "known_blowup_time",  sim.known_blowup_time))
   {
     sim.known_blowup_time = -1.; // Redshift
-    if(parallel.isRoot())  cout << "known blowup time not specified "<< endl;	
+    if(parallel.isRoot())  cout << " known blowup time not specified "<< endl;	
   }
   
   #endif
