@@ -442,8 +442,8 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
   ,double dx, double a, double rho_crit_0, double Gevolution_H0){
   
   double w = p_smg/rho_smg; // is normally constant
-  double delta_rho_pre_factor = -(rho_smg + p_smg)/cs2/rho_smg; // dividing by rho_smg to cancel CLASS units to get overdensity. Also to get the "overdensity"
-  double delta_p_pre_factor = -(rho_smg + p_smg)/p_smg; // dividing by p_smg to cancel CLASS units to get overdensity for pressure. Also to get the "overdensity"  
+  double delta_rho_pre_factor = -(rho_smg + p_smg)/cs2/rho_smg; // dividing by rho_smg to cancel CLASS units to get overdensity. 
+  double delta_p_pre_factor = -(rho_smg + p_smg)/p_smg; // dividing by p_smg to cancel CLASS units to get overdensity for pressure. 
   double Sigma_upper_ij_pre_factor = (rho_smg + p_smg)/rho_crit_0;   // shoud divide by rho_crit_0 to get rid of CLASS units
 
   double velocity_common_factor;
@@ -624,7 +624,7 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
 #ifdef NONLINEAR_TEST
 
 // proper time in gevolution units (converting from the class spline, which is in Gyr)
-// unused
+// unused function
 double proper_time_gev(double proper_time, double H0_CLASS,double fourpiG){
   return proper_time*299792458.*60.*60.*24.*365.*pow(10.,9.)/(3.086*pow(10.,22.))* H0_CLASS/sqrt(2./3.*fourpiG);
 }
