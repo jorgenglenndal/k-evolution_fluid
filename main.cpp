@@ -1664,10 +1664,10 @@ if (dtau_old > 0.){
 				// evolve and write fields
 				//COUT << "cycle = " << cycle <<  "   i = " << i<< "   j = " << j << endl;
 
-				if (!(sim.snapcount_b <= sim.num_snapshot_kess)){
-					COUT << "Aborting as we have all the kess_snapshots..." << endl;
-	  		    	if(parallel.isRoot()) parallel.abortForce();
-	  			}
+//				if (!(sim.snapcount_b <= sim.num_snapshot_kess)){
+//					COUT << "Aborting as we have all the kess_snapshots..." << endl;
+//	  		    	if(parallel.isRoot()) parallel.abortForce();
+//	  			}
 				
 
 		    	update_zeta_eq(dtau/ sim.new_nKe_numsteps, dx, a_kess, phi_prime,phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
@@ -1887,10 +1887,10 @@ if (dtau_old > 0.){
 	  sim.blowup_func(true);  	  
 	  
       // Aborting if we have all the snapshots...
-	  if (!(sim.snapcount_b <= sim.num_snapshot_kess)){
-		COUT << "Aborting as we have all the kess_snapshots..." << endl;
-	    if(parallel.isRoot()) parallel.abortForce();
-	  }
+//	  if (!(sim.snapcount_b <= sim.num_snapshot_kess)){
+//		COUT << "Aborting as we have all the kess_snapshots..." << endl;
+//	    if(parallel.isRoot()) parallel.abortForce();
+//	  }
       COUT << "\033[1;32mThe blowup criteria are met, the requested snapshots being produced\033[0m\n";
 	   div_variables << "### The blowup criteria are met"<<endl;
 	  
