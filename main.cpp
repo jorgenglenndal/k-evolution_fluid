@@ -1605,33 +1605,36 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 //Kessence - LeapFrog:START
 //**********************
 
-// Skipping the k-essence update during zero'th cycle, since we don't have access to the time derivative of the gravitational potentials
+// Skipping the k-essence update during zero'th cycle, since we don't have access to the time derivative of the gravitational potentials. Not great not terrible.
 if (dtau_old > 0.){
-	double a_kess = a;
-	bool evolve_zeta_integer;
+	double a_kess = a; // Scale factor used for k_essence update.
+	bool evolve_zeta_integer; // Used for updating zeta_integer.
 	
 	// zeta_half is allowed to be evolved backwards in time in the first cycle, i.e., cycle == 1, to get the correct half step. 
 	// see thesis for details
+
+	// Evolving zeta_half back one half k_essence step.
 	if (cycle == 1){
 		update_zeta_eq(-1./(sim.nKe_numsteps*2.) * dtau, dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     	zeta_half.updateHalo();
 	}
 	else{
-		if (sim.blowup_criteria_met==false){ // constant N_kess
+		if (sim.blowup_criteria_met==false){ // Constant N_kess.  If new time step is smaller than old timestep, zeta_half must be evolved forwards
+		                                     //    to the correct half step. Blowup has not happened here.
 			if (dtau < dtau_old){
 				update_zeta_eq(1./(sim.nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     			zeta_half.updateHalo();
 			}
 		}
 		else{
-			if (sim.kess_inner_loop_check==false){ // both time step and N_kess may vary
+			if (sim.kess_inner_loop_check==false){ // Blowup happened in the last iteration of the previous k_ess update. Both time step and N_kess may vary here.
 				if (dtau_old/sim.nKe_numsteps > dtau/sim.new_nKe_numsteps){	
 					update_zeta_eq( dtau_old/(2.*sim.nKe_numsteps) - dtau/(2.*sim.new_nKe_numsteps)  , dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     				zeta_half.updateHalo();
 				}
 			}
-			else{
-				if (dtau < dtau_old){ // constant N_kess
+			else{ 
+				if (dtau < dtau_old){ // Constant N_kess. Blowup happened inside the k_ess loop of the previous cycle. We need only account for the change in cycle time step here.
 					update_zeta_eq(1./(sim.new_nKe_numsteps*2.) * (-dtau + dtau_old), dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     				zeta_half.updateHalo();
 				}
@@ -1642,20 +1645,18 @@ if (dtau_old > 0.){
 	// k-essence loop (the (i) loop)
 	for (i=0;i<sim.nKe_numsteps;i++){
 
-		// this loop activates if blowup has happened.
+		// This section activates if blowup has happened.
 		#ifdef NONLINEAR_TEST
-		//COUT << "cycle = " << cycle <<  "   i = " << i<<endl;
 		if (sim.blowup_criteria_met){
-			//COUT << "inside if test for j loop" << endl;
 			// Aborting if we have all the snapshots...
-	  		
+
 			if (sim.kess_inner_loop_check == false) sim.kess_inner_loop_check_func(true);
 			
-			// Finding the correct number of iterations to conserve the global timestep.
+			// Finding the correct number of iterations to conserve the global (cycle) timestep.
 			int num_j_iterations = sim.new_nKe_numsteps*(1. - (i+0.)/sim.nKe_numsteps); 
 			
-			// evolving zeta_half to correct time step again.
-			if ((sim.new_nKe_numsteps > sim.nKe_numsteps) && (i>0)){ // blowup must have happened inside i loop
+			// Evolving zeta_half to correct time step. Need only account for the change in N_kess. 
+			if ((sim.new_nKe_numsteps > sim.nKe_numsteps) && (i>0)){ // For i==0, the pre evolution of zeta_half is done before the (i) loop.
 				update_zeta_eq(dtau/2.*(1./sim.nKe_numsteps - 1./sim.new_nKe_numsteps), dx, a_kess, phi_prime,phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 				zeta_half.updateHalo();	
 			}
@@ -1720,7 +1721,7 @@ if (dtau_old > 0.){
 
 
 				if ( sim.snapcount_b <= sim.num_snapshot_kess ){
-				// updating zeta_integer field to n+1 (same as pi_k)
+				// Updating zeta_integer field to same time as pi_k.
 				update_zeta_eq(dtau/ sim.new_nKe_numsteps / 2., dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=true,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
 				zeta_integer.updateHalo();
 		      
@@ -1812,7 +1813,7 @@ if (dtau_old > 0.){
 				}// j loop
 			break; // breaking the i loop.
 		}// if test
-		#endif
+		#endif // NONLINEAR_TEST
 
     update_zeta_eq(dtau/ sim.nKe_numsteps, dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     zeta_half.updateHalo();
@@ -1883,7 +1884,7 @@ if (dtau_old > 0.){
 	  //if ((max_abs_zeta > 1000.*avg_zeta && avg_zeta > 1e-7) || (sim.kess_inner_loop_check) || (1./(a_kess) -1.0 <= sim.known_blowup_time) || (abs(avg_pi) > 1.)){
 	if ((1./(a_kess) -1.0 <= sim.known_blowup_time) || (max_abs_zeta > 0.001) ){
 
-	  // blowup has happened
+	  // Blowup has happened
 	  sim.blowup_func(true);  	  
 	  
       // Aborting if we have all the snapshots...
