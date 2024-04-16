@@ -196,6 +196,26 @@ def plot(file,y,implementation,color,marker=False,s=False):
             sys.exit(1)
 
 
+print("plotting...")
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/N1/div_variables.txt"
+plot(file,"max_pi","new","mediumblue")
+
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/N5/div_variables.txt"
+plot(file,"max_pi","new","orange")
+
+file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/N10/div_variables.txt"
+plot(file,"max_pi","new","seagreen")
+print("Done plotting")
+plt.gca().invert_xaxis()
+#plt.xlim(20,100)
+#plt.ylim(-10,100)
+plt.legend()
+plt.yscale('log')
+plt.show()
+
+
+
+
 
 def CLASS_file(file):
     z = []
