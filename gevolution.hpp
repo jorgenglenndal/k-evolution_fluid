@@ -786,7 +786,7 @@ std::vector<double> calculate_Omega(double rho_crit, double rho_DE,double rho_CD
     for(x.first(); x.test(); x.next())
     {
       temp = field(x);
-      if (temp < 0) temp *= -1.;
+      if (temp < 0.) temp *= -1.;
       if (temp > largest_value) largest_value = temp;
     }
 	  parallel.max(largest_value); // max of all processes...

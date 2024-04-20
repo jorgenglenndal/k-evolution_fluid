@@ -103,7 +103,7 @@ def read_blowup(file):
           
 
 def read_potentials(file):
-    z,phi,psi = [],[],[]
+    z,rel_phi,rel_psi,max_phi,max_psi = [],[],[],[],[]
     with open(file, 'r') as file:
         for line in file:
             if line.startswith("#"):
@@ -111,9 +111,11 @@ def read_potentials(file):
             else:
                 words = line.split()
                 z.append(float(words[0]))
-                phi.append(float(words[1]))
-                psi.append(float(words[2]))
-    return np.array(z), np.array(phi),np.array(psi)
+                rel_phi.append(float(words[1]))
+                rel_psi.append(float(words[2]))
+                max_phi.append(float(words[3]))
+                max_psi.append(float(words[4]))
+    return np.array(z), np.array(rel_phi),np.array(rel_psi),np.array(max_phi),np.array(max_psi)
 
 
 
@@ -197,23 +199,34 @@ def plot(file,y,implementation,color,marker=False,s=False):
 
 
 print("plotting...")
+z,rel_phi,rel_psi,max_phi,max_psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1test/potentials.txt")
+plt.scatter(z,rel_psi)
+z,rel_phi,rel_psi,max_phi,max_psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1test2/potentials.txt")
+#plt.plot(z,max_phi)
+#plt.scatter(z,max_psi)
+plt.scatter(z,rel_psi)
+
+plt.yscale('log')
+plt.gca().invert_xaxis()
+plt.show()
+sys.exit(0)
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1/div_variables.txt"
-plot(file,"avg_zeta","new","mediumblue")
+plot(file,"avg_pi","new","mediumblue")
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N5/div_variables.txt"
-plot(file,"avg_zeta","new","orange")
+plot(file,"avg_pi","new","orange")
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N10/div_variables.txt"
-plot(file,"avg_zeta","new","seagreen")
+plot(file,"avg_pi","new","seagreen")
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/old/variable_dtau/N1/div_variables.txt"
-plot(file,"avg_zeta","old","mediumblue",marker = "x",s=70)
+plot(file,"avg_pi","old","mediumblue",marker = "x",s=70)
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/old/variable_dtau/N5/div_variables.txt"
-plot(file,"avg_zeta","old","orange",marker = "x",s=70)
+plot(file,"avg_pi","old","orange",marker = "x",s=70)
 
 file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/old/variable_dtau/N10/div_variables.txt"
-plot(file,"avg_zeta","old","seagreen",marker = "x",s=70)
+plot(file,"avg_pi","old","seagreen",marker = "x",s=70)
 
 ###file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/N1/div_variables.txt"
 ###plot(file,"max_zeta","new","mediumblue")

@@ -939,32 +939,43 @@ double a_old_for_kess_velocity;
 		
 		// checking if potentials change much
 		// phi and chi are here the initial conditions at cycle 0
-////		if (cycle > 0){
-////			double relative_Phi;
-////			double Psi;
-////			double Psi_old;
-////			double relative_Psi;
-////			double temp_Phi = 0.0;
-////			double temp_Psi = 0.0;
-////			for (x.first(); x.test(); x.next()){
-////				relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
-////				Psi = phi(x) - chi(x);
-////				Psi_old = phi_old(x) - chi_old(x);
-////				relative_Psi = (Psi-Psi_old)/Psi_old;
-////				if (relative_Phi < 0.0) relative_Phi *= -1.;
-////				if (relative_Psi < 0.0) relative_Psi *= -1.; 
-////				if (relative_Phi > temp_Phi) temp_Phi = relative_Phi;
-////				if (relative_Psi > temp_Psi) temp_Psi = relative_Psi;
-////			}
-////			// finding the maximum over all processes
-////			parallel.max(relative_Phi);
-////			parallel.max(relative_Psi);
-////
-////			////if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
-////			////if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
-////
-////			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< endl; 
-////		}
+		if (dtau_old > 0.0){
+			double temp_relative_Phi;
+			double Psi;
+			double Psi_old;
+			double temp_relative_Psi;
+			double relative_Phi = 0.0;
+			double relative_Psi = 0.0;
+			double temp_max_Phi;
+			double temp_max_Psi;
+			double max_Phi = 0.0;
+			double max_Psi = 0.0;
+
+			for (x.first(); x.test(); x.next()){
+				temp_relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
+				Psi = phi(x) - chi(x);
+				Psi_old = phi_old(x) - chi_old(x);
+				temp_relative_Psi = (Psi-Psi_old)/Psi_old;
+				if (temp_relative_Phi < 0.0) temp_relative_Phi *= -1.;
+				if (temp_relative_Psi < 0.0) temp_relative_Psi *= -1.;
+				if (phi(x)<0.0) temp_max_Phi = -phi(x);
+				if (temp_max_Phi > max_Phi) max_Phi = temp_max_Phi;
+				if (Psi<0.0) temp_max_Psi = -Psi;
+				if (temp_max_Psi > max_Psi) max_Psi = temp_max_Psi;
+				if (temp_relative_Phi > relative_Phi) relative_Phi = temp_relative_Phi;
+				if (temp_relative_Psi > relative_Psi) relative_Psi = temp_relative_Psi;
+			}
+			// finding the maximum over all processes
+			parallel.max(relative_Phi);
+			parallel.max(relative_Psi);
+			parallel.max(max_Phi);
+			parallel.max(max_Psi);
+
+			////if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
+			////if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
+
+			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< "		" <<  max_Phi << "		"<<max_Psi << endl; 
+		}
 	if (dtau_old > 0.0){
   	for (x.first(); x.test(); x.next())
   		{
@@ -1398,6 +1409,24 @@ if (dtau_old > 0.0){
 	}
 }
 
+////
+#ifdef FLUID_VARIABLES
+  if (cycle > 1){
+	Hc = Hconf(a, fourpiG,
+  #ifdef HAVE_HICLASS_BG
+    H_spline, acc
+  #else
+    cosmo
+  #endif
+    ); 
+
+   calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
+   	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
+	double max_drf = max_abs_func(delta_rho_fluid,1.);
+	COUT << max_drf << endl;
+  }
+	#endif
+////
 
 if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 {
