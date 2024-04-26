@@ -99,7 +99,59 @@ def read_blowup(file):
                     break
     return blowup_redshift
 
+import os
+def blowup_redshifts_func(dir_path):
+    test_list = []
+    last_avg_pi = 0
+    for path, dirnames, filenames in os.walk(dir_path):
+        test_list.append(dirnames)
+    subdirs = test_list[0]
+    for i in range(len(subdirs)):
+        
+        subdirs[i] = dir_path + subdirs[i] + "/"
+    #print(subdirs)
+    #sys.exit(0)
+
+    blowup_redshift = []
+    cs2_kessence = []
+    for i in range(len(subdirs)):
+        #if (subdirs[i] == dir_path + "original_imp/"):
+        #    continue
+        #print(i)
+        #if len(cs2_kessence) > len(blowup_redshift): # if no blowup, we do not want sound speed
+        #    cs2_kessence.pop()
+            #print(str(i)+ " cs2 popped")
+            #print("popped")
+        with open(subdirs[i] + "div_variables.txt", 'r') as file:
+            for line in file:
+                if line.startswith("#"):
+                    continue
+                elif line.startswith("cs2_kessence"):
+                    words = line.split()
+                    cs2_kessence.append(float(words[1]))
+                    #print(cs2_kessence[-1])
+                    #print(str(i)+ " cs2 added")
+                    continue
+                elif line.startswith("N_kessence"):
+                    continue
+                else:
+                    words = line.split()
+                    if "inf" in words[1] or "nan" in words[1] or abs(float(words[1])) > 1:
+                        blowup_redshift.append(float(words[0]))
+                        
+                        #print(str(i) + " blowup")
+                        #print(cs2_kessence[-1])
+                        break
+                    last_avg_pi = words[1]
+                    #if abs(float(words[1])) > 1000:
+                    #    blowup_redshift.append(float(words[0]))
+                    #    break
+        if len(cs2_kessence) > len(blowup_redshift): # if no blowup, we do not want sound speed
+                print("Blowup did not happen for " +str(cs2_kessence[-1])+". However, last avg_pi is " + str(last_avg_pi))
+                cs2_kessence.pop()
             
+            #print(str(len(subdirs)-1)+ " cs2 popped")    
+    return blowup_redshift,cs2_kessence
           
 
 def read_potentials(file):
@@ -199,6 +251,19 @@ def plot(file,y,implementation,color,marker=False,s=False):
 
 
 print("plotting...")
+
+
+blowup, cs2 = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/")
+plt.scatter(blowup,cs2)
+plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}=256^3, \ L = \ 300\mathrm{Mpc/h},  w = -0.9$',size=16)
+plt.yscale('log')
+plt.xlabel(r'$z_b$',size=16)
+plt.ylabel(r'$c_s^2$',size=16)
+plt.tight_layout()
+plt.show()
+
+
+sys.exit(0)
 z,rel_phi,rel_psi,max_phi,max_psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1test/potentials.txt")
 plt.scatter(z,rel_psi)
 z,rel_phi,rel_psi,max_phi,max_psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1test2/potentials.txt")

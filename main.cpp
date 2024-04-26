@@ -698,6 +698,7 @@ for (x.first(); x.test(); x.next())
 	Sigma_upper_ij_fluid(x,0,2) = 0.0;
 	Sigma_upper_ij_fluid(x,1,2) = 0.0;
 	div_v_upper_fluid(x)        = 0.0; 
+	phi_prime(x)                = 0.0;
 	//v_x_fluid(x) = 0.0;
 	//v_y_fluid(x) = 0.0;
 	//v_z_fluid(x) = 0.0;
@@ -705,6 +706,7 @@ for (x.first(); x.test(); x.next())
   zeta_integer.updateHalo();
   zeta_half.updateHalo();  // communicate halo values
   pi_k.updateHalo();  // communicate halo values
+  phi_prime.updateHalo();
   //zeta_half_old.updateHalo();
   //delta_rho_fluid.updateHalo();
   //delta_p_fluid.updateHalo();
@@ -939,7 +941,7 @@ double a_old_for_kess_velocity;
 		
 		// checking if potentials change much
 		// phi and chi are here the initial conditions at cycle 0
-		if (dtau_old > 0.0){
+		if (cycle > 1){
 			double temp_relative_Phi;
 			double Psi;
 			double Psi_old;
@@ -950,21 +952,32 @@ double a_old_for_kess_velocity;
 			double temp_max_Psi;
 			double max_Phi = 0.0;
 			double max_Psi = 0.0;
+			double avg_rel_Phi = 0.0;
+
 
 			for (x.first(); x.test(); x.next()){
-				temp_relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
+				//temp_relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
+				temp_relative_Phi = phi_prime(x);
 				Psi = phi(x) - chi(x);
 				Psi_old = phi_old(x) - chi_old(x);
 				temp_relative_Psi = (Psi-Psi_old)/Psi_old;
 				if (temp_relative_Phi < 0.0) temp_relative_Phi *= -1.;
+				avg_rel_Phi += temp_relative_Phi;
 				if (temp_relative_Psi < 0.0) temp_relative_Psi *= -1.;
 				if (phi(x)<0.0) temp_max_Phi = -phi(x);
+					else temp_max_Phi = phi(x);
 				if (temp_max_Phi > max_Phi) max_Phi = temp_max_Phi;
 				if (Psi<0.0) temp_max_Psi = -Psi;
+					else temp_max_Psi = Psi;
 				if (temp_max_Psi > max_Psi) max_Psi = temp_max_Psi;
 				if (temp_relative_Phi > relative_Phi) relative_Phi = temp_relative_Phi;
 				if (temp_relative_Psi > relative_Psi) relative_Psi = temp_relative_Psi;
 			}
+			
+			// summing over all processes
+			paralell.sum(avg_rel_Phi)/numpts3d;
+
+
 			// finding the maximum over all processes
 			parallel.max(relative_Phi);
 			parallel.max(relative_Psi);
@@ -974,9 +987,9 @@ double a_old_for_kess_velocity;
 			////if (relative_Phi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Phi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Phi<<"%"<< endl;
 			////if (relative_Psi > 0.01) COUT <<COLORTEXT_RED <<"Warning: relative change in Psi is " <<COLORTEXT_RESET<<std::fixed<<std::setprecision(2) <<100.0*relative_Psi<<"%"<< endl;
 
-			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< "		" <<  max_Phi << "		"<<max_Psi << endl; 
+			potentials << 1./a -1. <<"     "<<relative_Phi<<"     "<<relative_Psi<< "		" <<  max_Phi << "		"<<max_Psi << "        "<< avg_rel_Phi  <<endl; 
 		}
-	if (dtau_old > 0.0){
+	if (dtau_old>0.0){
   	for (x.first(); x.test(); x.next())
   		{
   			phi_old(x) = phi(x);
@@ -986,6 +999,7 @@ double a_old_for_kess_velocity;
          // if(x.coord(0)==32 && x.coord(1)==12 && x.coord(2)==32) cout<<"zeta_half: "<<zeta_half(x)<<endl;
   		}
 	}
+	
 		//if (cycle==0)phi_old.saveHDF5(output_path + "phi_old_test.h5");
 		//parallel.abortForce();
 
@@ -1409,30 +1423,30 @@ if (dtau_old > 0.0){
 	}
 }
 
-////
-#ifdef FLUID_VARIABLES
-  if (cycle > 1){
-	Hc = Hconf(a, fourpiG,
-  #ifdef HAVE_HICLASS_BG
-    H_spline, acc
-  #else
-    cosmo
-  #endif
-    ); 
-
-   calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
-   	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
-	double max_drf = max_abs_func(delta_rho_fluid,1.);
-	COUT << max_drf << endl;
-  }
-	#endif
-////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//#ifdef FLUID_VARIABLES
+//  if (cycle > 1){
+//	Hc = Hconf(a, fourpiG,
+//  #ifdef HAVE_HICLASS_BG
+//    H_spline, acc
+//  #else
+//    cosmo
+//  #endif
+//    ); 
+//
+//   calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
+//   	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
+//	double max_drf = max_abs_func(delta_rho_fluid,1.);
+//	COUT << max_drf << endl;
+//  }
+//	#endif
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 {
 
   #ifdef FLUID_VARIABLES
-  if (cycle > 1){
+  if (cycle > 1){ 
 	Hc = Hconf(a, fourpiG,
   #ifdef HAVE_HICLASS_BG
     H_spline, acc
@@ -1444,15 +1458,9 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
    calculate_fluid_properties(div_v_upper_fluid,Sigma_upper_ij_fluid, delta_rho_fluid,delta_p_fluid,v_upper_i_fluid,pi_k,zeta_integer,phi,chi,gsl_spline_eval(rho_smg_spline, a, acc)
    	,gsl_spline_eval(p_smg_spline, a, acc),gsl_spline_eval(cs2_spline, a, acc), Hc,dx,a,gsl_spline_eval(rho_crit_spline, 1., acc), Gevolution_H0);
     
-	// dt is the proper/cosmic/cosmological time intervall  
-	//double avg_a = (a_old_for_kess_velocity + a)/2.;   
-	//double dt = proper_time_gev(gsl_spline_eval(time_spline, a, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG) - proper_time_gev(gsl_spline_eval(time_spline, a_old_for_kess_velocity, acc),gsl_spline_eval(H_spline,1.,acc),fourpiG);
-	//double dtau_dt = dtau_old/dt;  // Need this to get velocities with respect to cosmic time
-	//convert_to_cosmic_velocity << "gev" << "                  " <<  snapcount <<"                    " << avg_a << "                   " << 1./avg_a - 1. << "                        " << dtau_dt << endl;
 	}
 	else{
 		COUT << COLORTEXT_RED << "Fluid properties at initial time are not well defined. They will be written to file anyway..." << COLORTEXT_RESET << endl;
-		//convert_to_cosmic_velocity << "gev" << "                  " <<  snapcount <<"                    " << 0. << "                   " << -1. << "                        " << 0. << endl;
 	}
 	#endif
 
@@ -1634,8 +1642,7 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 //Kessence - LeapFrog:START
 //**********************
 
-// Skipping the k-essence update during zero'th cycle, since we don't have access to the time derivative of the gravitational potentials. Not great not terrible.
-if (dtau_old > 0.){
+
 	double a_kess = a; // Scale factor used for k_essence update.
 	bool evolve_zeta_integer; // Used for updating zeta_integer.
 	
@@ -1643,7 +1650,7 @@ if (dtau_old > 0.){
 	// see thesis for details
 
 	// Evolving zeta_half back one half k_essence step.
-	if (cycle == 1){
+	if (cycle == 0){
 		update_zeta_eq(-1./(sim.nKe_numsteps*2.) * dtau, dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     	zeta_half.updateHalo();
 	}
@@ -2009,7 +2016,7 @@ else{
     ref_time = MPI_Wtime();
 #endif
 	
-}// if dtau_old > 0.
+
 
 #else // If not HAVE_HICLASS_BG We use  kevolution with w, c_s^2 constants.
 //**********************
