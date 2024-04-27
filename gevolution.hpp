@@ -444,7 +444,7 @@ void calculate_fluid_properties(Field<FieldType> &div_v_upper_fluid,Field<FieldT
   double w = p_smg/rho_smg; // is normally constant
   double delta_rho_pre_factor = -(rho_smg + p_smg)/cs2/rho_smg; // dividing by rho_smg to cancel CLASS units to get overdensity. 
   double delta_p_pre_factor = -(rho_smg + p_smg)/p_smg; // dividing by p_smg to cancel CLASS units to get overdensity for pressure. 
-  double Sigma_upper_ij_pre_factor = (rho_smg + p_smg)/rho_crit_0;   // shoud divide by rho_crit_0 to get rid of CLASS units
+  double Sigma_upper_ij_pre_factor = (rho_smg + p_smg)/rho_crit_0;   // should divide by rho_crit_0 to get rid of CLASS units
 
   double velocity_common_factor;
   double gradient_pi_squared;

@@ -956,8 +956,8 @@ double a_old_for_kess_velocity;
 
 
 			for (x.first(); x.test(); x.next()){
-				//temp_relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
-				temp_relative_Phi = phi_prime(x);
+				temp_relative_Phi = (phi(x)-phi_old(x))/phi_old(x);
+				//temp_relative_Phi = phi_prime(x);
 				Psi = phi(x) - chi(x);
 				Psi_old = phi_old(x) - chi_old(x);
 				temp_relative_Psi = (Psi-Psi_old)/Psi_old;
@@ -975,8 +975,8 @@ double a_old_for_kess_velocity;
 			}
 			
 			// summing over all processes
-			paralell.sum(avg_rel_Phi)/numpts3d;
-
+			parallel.sum(avg_rel_Phi);
+			avg_rel_Phi /= numpts3d;
 
 			// finding the maximum over all processes
 			parallel.max(relative_Phi);
@@ -1641,18 +1641,48 @@ if (snapcount < sim.num_snapshot && 1. / a < sim.z_snapshot[snapcount] + 1.)
 //**********************
 //Kessence - LeapFrog:START
 //**********************
-
-
+// hideous bug if solving for cycle = 0
+if (dtau_old>0.0){
 	double a_kess = a; // Scale factor used for k_essence update.
 	bool evolve_zeta_integer; // Used for updating zeta_integer.
-	
+
 	// zeta_half is allowed to be evolved backwards in time in the first cycle, i.e., cycle == 1, to get the correct half step. 
 	// see thesis for details
 
 	// Evolving zeta_half back one half k_essence step.
-	if (cycle == 0){
+	if (cycle==1){
+		avg_pi = average_func(  pi_k, Hconf(a_kess, fourpiG,
+	  				#ifdef HAVE_HICLASS_BG
+	  				H_spline,acc
+	  				#else
+	  				cosmo
+	  				#endif
+	  				), numpts3d );
+
+		avg_zeta = average_func(  zeta_half,1., numpts3d );
+
+				//COUT << "average pi =   "<< avg_pi <<endl;
+		max_abs_pi = max_abs_func(pi_k, Hconf(a_kess, fourpiG,
+	  				#ifdef HAVE_HICLASS_BG
+	  				H_spline,acc
+	  				#else
+	  				cosmo
+	  				#endif
+	  				));
+		max_abs_zeta = max_abs_func(zeta_half,1.);
+		//double avg_phi = average_func(  phi,1., numpts3d );
+
+		div_variables <<  1./(a_kess) -1. <<"          "<< avg_pi <<"        " << max_abs_pi<<"        "<< avg_zeta<<"       "<< max_abs_zeta <<endl;
+
+
 		update_zeta_eq(-1./(sim.nKe_numsteps*2.) * dtau, dx, a_kess,phi_prime, phi, chi, pi_k, zeta_half,zeta_integer,evolve_zeta_integer=false,  gsl_spline_eval(cs2_spline, a_kess, acc), gsl_spline_eval(cs2_prime_spline, a_kess, acc)/gsl_spline_eval(cs2_spline, a_kess, acc)/(a_kess* gsl_spline_eval(H_spline, a_kess, acc)),  gsl_spline_eval(p_smg_prime_spline, a_kess, acc)/gsl_spline_eval(rho_smg_prime_spline, a_kess, acc), Hconf(a_kess, fourpiG, H_spline, acc), Hconf_prime(a_kess, fourpiG, H_spline, acc), sim.NL_kessence);
     	zeta_half.updateHalo();
+		//avg_zeta = average_func(  zeta_half,1., numpts3d );
+		//COUT << "avg_phi = "<<avg_phi<< endl;
+		//COUT << "avg_zeta = "<<avg_zeta<< endl;
+
+
+
 	}
 	else{
 		if (sim.blowup_criteria_met==false){ // Constant N_kess.  If new time step is smaller than old timestep, zeta_half must be evolved forwards
@@ -2016,7 +2046,7 @@ else{
     ref_time = MPI_Wtime();
 #endif
 	
-
+}
 
 #else // If not HAVE_HICLASS_BG We use  kevolution with w, c_s^2 constants.
 //**********************

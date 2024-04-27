@@ -100,9 +100,16 @@ def read_blowup(file):
     return blowup_redshift
 
 import os
-def blowup_redshifts_func(dir_path):
+def blowup_redshifts_func(dir_path,dt,Ngrid):
+    #temp_blowup = -1
+    if Ngrid:
+        Ngrid_list =[]
+    if (dt == True):
+        dt_list = []
     test_list = []
     last_avg_pi = 0
+    last_max_zeta = 0
+    last_z = -1
     for path, dirnames, filenames in os.walk(dir_path):
         test_list.append(dirnames)
     subdirs = test_list[0]
@@ -122,8 +129,37 @@ def blowup_redshifts_func(dir_path):
         #    cs2_kessence.pop()
             #print(str(i)+ " cs2 popped")
             #print("popped")
+
+        if (dt == True):
+            with open(subdirs[i] + "file_settings_used.ini", 'r') as file:
+                #print(str(subdirs[i]))
+                for line in file:
+                    if line.startswith("time step limit ="):
+                        words = line.split()
+                        dt_list.append(float(words[4]))
+                        break
+
+        if Ngrid:
+            with open(subdirs[i] + "file_settings_used.ini", 'r') as file:
+                #print(str(subdirs[i]))
+                for line in file:
+                    if line.startswith("Ngrid ="):
+                        words = line.split()
+                        Ngrid_list.append(float(words[2]))
+                        break
+
+
         with open(subdirs[i] + "div_variables.txt", 'r') as file:
+            #print(str(subdirs[i]))
+            z_temp = []
+            zeta_temp = []
+            
+            loop_broken = False
             for line in file:
+                #if line.startswith("### The blowup criteria are met"):
+                #    blowup_redshift.append(temp_blowup)
+                #    break
+
                 if line.startswith("#"):
                     continue
                 elif line.startswith("cs2_kessence"):
@@ -136,22 +172,53 @@ def blowup_redshifts_func(dir_path):
                     continue
                 else:
                     words = line.split()
-                    if "inf" in words[1] or "nan" in words[1] or abs(float(words[1])) > 1:
+                    #if "inf" in words[-1] or "nan" in words[-1]:
+
+                    #z_temp.append(float(words[0]))
+                    #zeta_temp.append(float(words[-1]))
+                    #temp_blowup = float(words[0])
+                    if abs(float(words[1])) > 1 or "inf" in words[1] or "nan" in words[1]:
                         blowup_redshift.append(float(words[0]))
-                        
-                        #print(str(i) + " blowup")
-                        #print(cs2_kessence[-1])
+                        loop_broken = True
                         break
+
+                    #if "inf" in words[1] or "nan" in words[1] or abs(float(words[1])) > 1 or float(words[-1])>1:
+                    #    blowup_redshift.append(float(words[0]))
+                    #    break
+                        
                     last_avg_pi = words[1]
+                    last_max_zeta = words[-1]
+                    last_z = float(words[0])
+
+
                     #if abs(float(words[1])) > 1000:
                     #    blowup_redshift.append(float(words[0]))
                     #    break
+            #if "inf" in last_avg_pi or "nan" in last_avg_pi or abs(float(words[1])) > 1 or float(words[-1])>1:
+            #            blowup_redshift.append(float(words[0]))
+            if (abs(float(last_max_zeta)) > 1 or "inf" in last_max_zeta or "nan" in last_max_zeta) and loop_broken==False:
+                print("Blowup not detected in pi")
+                blowup_redshift.append(last_z)
+
+            
         if len(cs2_kessence) > len(blowup_redshift): # if no blowup, we do not want sound speed
                 print("Blowup did not happen for " +str(cs2_kessence[-1])+". However, last avg_pi is " + str(last_avg_pi))
                 cs2_kessence.pop()
-            
-            #print(str(len(subdirs)-1)+ " cs2 popped")    
-    return blowup_redshift,cs2_kessence
+                if (dt == True):
+                    dt_list.pop()
+                if Ngrid:
+                    Ngrid_list.pop()
+
+    if (dt == True) and Ngrid:
+        return np.array(blowup_redshift),np.array(cs2_kessence), np.array(dt_list), np.array(Ngrid_list)
+    if dt and Ngrid==False:
+        return blowup_redshift,cs2_kessence, dt_list
+    
+    if dt==False and Ngrid:
+        return blowup_redshift,cs2_kessence, Ngrid_list
+
+    if dt==False and Ngrid==False:
+        return blowup_redshift,cs2_kessence
           
 
 def read_potentials(file):
@@ -250,16 +317,74 @@ def plot(file,y,implementation,color,marker=False,s=False):
             sys.exit(1)
 
 
+
+
+
 print("plotting...")
+"""
+blowup, cs2,dt,Ngrid = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/source/",dt=True,Ngrid = True)
+A = np.vstack([np.log10(Ngrid**3), np.ones(len(np.log10(Ngrid**3)))]).T
+c1, c2 = np.linalg.lstsq(A, np.log10(blowup+1), rcond=None)[0]
+Ngrid_test = np.array([32,1024])
+print(c1,c2)
+plt.plot(Ngrid_test**3,Ngrid_test**(3*c1)*10**c2 ,color='grey',linestyle="dashed", label=r'Fitted line: $0.29 log(\mathrm{N}_\mathrm{grid})-1.38=log(1+z_b)$')
+plt.scatter(Ngrid**3,1+blowup,label="DE sources gravity",s=100)
+#A = np.vstack([np.log10(Ngrid**3), np.ones(len(np.log10(Ngrid**3)))]).T
+#c1, c2 = np.linalg.lstsq(A, np.log10(blowup+1), rcond=None)[0]
+#
+#plt.plot(Ngrid**3,(1+blowup)/((10**c2)*Ngrid**c1) , 'r', label='Fitted line')
+blowup, cs2,dt,Ngrid = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/not_source/",dt=True,Ngrid = True)
+plt.scatter(Ngrid**3,1+blowup,label="DE not sources gravity",marker="*",s=100)
 
-
-blowup, cs2 = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/")
-plt.scatter(blowup,cs2)
-plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}=256^3, \ L = \ 300\mathrm{Mpc/h},  w = -0.9$',size=16)
+#plt.plot([10**4,10**9],[((10**4)**0.22),((10**9)**0.22)])
+plt.xscale('log')
 plt.yscale('log')
-plt.xlabel(r'$z_b$',size=16)
-plt.ylabel(r'$c_s^2$',size=16)
+plt.xlabel(r'N$_\mathrm{grid}$',size=14)
+plt.ylabel(r'$1+z_b$',size=14)
+
+plt.legend()
+plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}, \ L = \ 300\mathrm{Mpc/h},  w = -0.9,   c_s^2=10^{-7}$',size=12)
+#plt.show()
+
+#A = np.vstack([np.log10(Ngrid**3), np.ones(len(np.log10(Ngrid**3)))]).T
+#c1, c2 = np.linalg.lstsq(A, np.log10(blowup+1), rcond=None)[0]
+#
+#plt.plot(Ngrid**3,(1+blowup)/((10**c2)*Ngrid**c1) , 'r', label='Fitted line')
 plt.tight_layout()
+plt.show()
+"""
+
+"""
+blowup, cs2,dt = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N1/source/",True,False)
+plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}=256^3, \ L = \ 300\mathrm{Mpc/h}, \ w = -0.9, \ \   c_s^2=10^{-7}$',size=12)
+print(blowup)
+print(dt)
+plt.scatter(blowup,dt,label="DE sourcing gravity",s=100)
+blowup, cs2,dt = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N1/not_source/",True,False)
+print(blowup)
+print(dt)
+plt.scatter(blowup,dt,marker="*",label="DE not sourcing gravity",s=100)
+#plt.gca().invert_xaxis()
+#plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}=256^3, \ L = \ 300\mathrm{Mpc/h},  w = -0.9$',size=12)
+#plt.yscale('log')
+plt.xlabel(r'$z_b$',size=14)
+#blowup, cs2 = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N5/not_source/")
+#plt.scatter(blowup,cs2,marker="*")
+plt.ylabel(r'$d\tau$',size=14)
+plt.tight_layout()
+plt.legend()
+#plt.savefig("fig7_N1.pdf")
+plt.show()
+"""
+
+blowup, cs2 = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig2/not_source/",False,False)
+plt.scatter(blowup,cs2,s=100)
+plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}=256^3, \ L = \ 300\mathrm{Mpc/h},  w = -0.9$',size=12)
+plt.yscale('log')
+plt.xlabel(r'$z_b$',size=14)
+plt.ylabel(r'$c_s^2$',size=14)
+plt.tight_layout()
+#plt.savefig("blowup_cs2.pdf")
 plt.show()
 
 
