@@ -36,21 +36,31 @@ Gevolution_H0 = 0.100069
 #    convert_to_cosmic_time_gev[i] *= c_km_s*a_gev[i]
 
 root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/"
-root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/demonstrate_blowup/grid64/"
+root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/demonstrate_blowup/N64/"
+root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fluid/1em3/"
 
 test_file = []
 #root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/"
-for i in range(0,51):
+for i in range(0,20):
+#    test_file.append(root + "snap_%03d_pi_k.h5" % i)
+    #("tmp_%04d.png" % i)
+    #test_file.append(root + "snap_%03d_div_v_upper_fluid.h5" % i)
+    #test_file.append(root + "snap_%03d_v_upper_i_fluid.h5" % i)
+    #test_file.append(root + "v_upper_i_fluid_" + str(i) +  ".h5")
+    #test_file.append(root + "pi_k_" + str(i) +  ".h5")
+#for i in range(1,51):
     #("tmp_%04d.png" % i)
     #file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)
     #test_file.append(root + "v_upper_i_fluid_" + str(i) +  ".h5")
     #test_file.append(root + "delta_rho_fluid_" + str(i) +  ".h5")
-    #test_file.append(root + "snap_00pi_k_" + str(i) +  ".h5")
-    test_file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)                    
+    test_file.append(root + "snap_%03d_pi_k.h5" % i)
+    #test_file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)
+
+    ###test_file.append(root + "snap_%03d_pi_k.h5" % i)                    
 #test_file = root + "snap_013_delta_rho_fluid.h5"
 
  #   test_file.append(root + "snap_00" + str(i)+  "_delta_rho_fluid.h5")
-#test_file = root + "snap_000_pi_k.h5"
+    #test_file = root + "snap_000_pi_k.h5"
 
 #test_file = [root + "snap_000_v_upper_i_fluid.h5", root + "snap_001_v_upper_i_fluid.h5",root + "snap_002_v_upper_i_fluid.h5",root + "snap_003_v_upper_i_fluid.h5"]
 #test_file = [root + "snap_000_div_v_upper_fluid.h5", root + "snap_001_div_v_upper_fluid.h5",root + "snap_002_div_v_upper_fluid.h5",root + "snap_003_div_v_upper_fluid.h5"]
@@ -91,20 +101,25 @@ for i in range(0,51):
 #file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/demonstrate_blowup/snap_001_pi_k.h5"
 #test = visualization_class("A_test.npy",filetype="npy")# 
 #test = visualization_class(filename=divergence)# ,indices=["singles",0])
-test = visualization_class(filename=test_file,indices=["range",19,len(test_file),1])#
-#test.rescale_all_data(rescale_all_data_factor=Gevolution_H0)
+#test = visualization_class(filename=test_file,indices=["range",45,len(test_file),1])#
+
+#test_file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fluid/1em7/snap_000_cdm.h5"
+test = visualization_class(filename=test_file,indices=["singles",17])#,12,13,14,15,16])#),len(test_file),1])#
+
+test.rescale_all_data(rescale_all_data_factor=Gevolution_H0)
 
 ##test = plot_class(test_file)
 #test = plot_class(file,indices=["singles",49])
-test.symmetric_colorbar()
+#test.symmetric_colorbar()
 #test.rescale_all_data(rescale_all_data_factor=Gevolution_H0)
+#test.rescale_all_data(rescale_all_data_factor=c_km_s)
 test.scatter(rescale_factor=1)
-test.log_scale(method="split")
+#test.log_scale(method="split")
 #test.save()
 #test.move_camera()
 #test.help_indexing()
-test.mask(percentile=(2.5,97.5,"outside"),method="limits") 
-#test.mask(percent=2,method="rng",seed=1111)
+test.mask(percentile=(10,90,"outside"),method="limits") 
+#test.mask(percent=1,method="rng",seed=1111)
 #test.offscreen_rendering()
 test.show()
 #test.move_camera()

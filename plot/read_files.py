@@ -222,7 +222,7 @@ def blowup_redshifts_func(dir_path,dt,Ngrid):
           
 
 def read_potentials(file):
-    z,rel_phi,rel_psi,max_phi,max_psi = [],[],[],[],[]
+    z,rel_phi,rel_psi,max_phi,max_psi,avg_rel_phi = [],[],[],[],[],[]
     with open(file, 'r') as file:
         for line in file:
             if line.startswith("#"):
@@ -234,7 +234,8 @@ def read_potentials(file):
                 rel_psi.append(float(words[2]))
                 max_phi.append(float(words[3]))
                 max_psi.append(float(words[4]))
-    return np.array(z), np.array(rel_phi),np.array(rel_psi),np.array(max_phi),np.array(max_psi)
+                avg_rel_phi.append(float(words[5]))
+    return np.array(z), np.array(rel_phi),np.array(rel_psi),np.array(max_phi),np.array(max_psi),np.array(avg_rel_phi)
 
 
 
@@ -286,15 +287,19 @@ def read_div_variables(file):
 def plot(file,y,implementation,color,marker=False,s=False):
     if marker != False and s != False:
         z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file) #read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N1/div_variables.txt")
-
+        
         if y == "avg_pi":
-            plt.scatter(z,abs(avg_pi),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker=marker,s=s)
+            plt.title("$\mathrm{Average}\ \mathcal{H}\pi$")
+            plt.scatter(z,abs(avg_pi),label= implementation+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color=color,marker=marker,s=s)
         elif y == "max_pi":
-            plt.scatter(z,max_pi,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker = marker,s=s)
+            plt.title("$\mathrm{Max}\ \mathcal{H}\pi$")
+            plt.scatter(z,max_pi,label= implementation+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color=color,marker = marker,s=s)
         elif y == "avg_zeta":
-            plt.scatter(z,abs(avg_zeta),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker = marker,s=s)
+            plt.title("$\mathrm{Average}\ \zeta$")
+            plt.scatter(z,abs(avg_zeta),label= implementation+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color=color,marker = marker,s=s)
         elif y == "max_zeta":
-            plt.scatter(z,max_zeta,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color,marker=marker, s=s)
+            plt.title("$\mathrm{Max}\ \zeta$")
+            plt.scatter(z,max_zeta,label= implementation+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color=color,marker=marker, s=s)
         else:
             sys.exit(1)
         #marker = marker
@@ -306,13 +311,17 @@ def plot(file,y,implementation,color,marker=False,s=False):
         #max_pi = abs(max_pi)
         #max_zeta = abs(max_zeta)
         if y == "avg_pi":
-            plt.scatter(z,abs(avg_pi),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
+            plt.title("$\mathrm{Average}\ \mathcal{H}\pi$")
+            plt.scatter(z,abs(avg_pi),label= implementation+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color=color)
         elif y == "max_pi":
-            plt.scatter(z,max_pi,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
+            plt.title("$\mathrm{Max}\ \mathcal{H}\pi$")
+            plt.scatter(z,max_pi,label= implementation+ ", "  + r"N$_\mathrm{kess} =$" +str(int(N_kessence)),color=color)
         elif y == "avg_zeta":
-            plt.scatter(z,abs(avg_zeta),label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
+            plt.title("$\mathrm{Average}\ \zeta$")
+            plt.scatter(z,abs(avg_zeta),label= implementation+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color=color)
         elif y == "max_zeta":
-            plt.scatter(z,max_zeta,label= implementation+ " " + y + ", N_kess = " +str(int(N_kessence)),color=color)
+            plt.title("$\mathrm{Max}\ \zeta$")
+            plt.scatter(z,max_zeta,label= implementation+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color=color)
         else:
             sys.exit(1)
 
@@ -334,7 +343,7 @@ plt.scatter(Ngrid**3,1+blowup,label="DE sources gravity",s=100)
 #
 #plt.plot(Ngrid**3,(1+blowup)/((10**c2)*Ngrid**c1) , 'r', label='Fitted line')
 blowup, cs2,dt,Ngrid = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig8/not_source/",dt=True,Ngrid = True)
-plt.scatter(Ngrid**3,1+blowup,label="DE not sources gravity",marker="*",s=100)
+plt.scatter(Ngrid**3,1+blowup,label="DE not sourcing gravity",marker="*",s=100)
 
 #plt.plot([10**4,10**9],[((10**4)**0.22),((10**9)**0.22)])
 plt.xscale('log')
@@ -376,7 +385,7 @@ plt.legend()
 #plt.savefig("fig7_N1.pdf")
 plt.show()
 """
-
+"""
 blowup, cs2 = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig2/not_source/",False,False)
 plt.scatter(blowup,cs2,s=100)
 plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}=256^3, \ L = \ 300\mathrm{Mpc/h},  w = -0.9$',size=12)
@@ -386,37 +395,230 @@ plt.ylabel(r'$c_s^2$',size=14)
 plt.tight_layout()
 #plt.savefig("blowup_cs2.pdf")
 plt.show()
+"""
 
 
-sys.exit(0)
-z,rel_phi,rel_psi,max_phi,max_psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1test/potentials.txt")
-plt.scatter(z,rel_psi)
-z,rel_phi,rel_psi,max_phi,max_psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1test2/potentials.txt")
+#z,rel_phi,rel_psi,max_phi,max_psi,avg_rel_phi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/not_source/N512/potentials.txt")
+
+fig,axs = plt.subplots(1,2,figsize=(6.5,6.5),sharey=True)
+
+z,rel_phi,rel_psi,max_phi,max_psi,avg_rel_phi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N1/not_source/dt_04/potentials.txt")
+axs[0].scatter(z,rel_phi,label="Max " + r"|$\frac{\Phi_\mathrm{New}-\Phi_\mathrm{Old}}{\Phi_\mathrm{Old}}}$|")
+axs[0].scatter(z,avg_rel_phi,label= r"$<|\frac{\Phi_\mathrm{New}-\Phi_\mathrm{Old}}{\Phi_\mathrm{Old}}|>$")
+axs[0].scatter(z,max_phi,label="Max " + r"$|\Phi |$")
+axs[0].set_yscale('log')
+axs[0].invert_xaxis()
+axs[0].set_xlabel('z')
+axs[0].set_title(r"$d\tau = 0.04$")
+
+
+z,rel_phi,rel_psi,max_phi,max_psi,avg_rel_phi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N1/not_source/dt_0025/potentials.txt")
+
+axs[1].scatter(z,rel_phi)#,label="Max relative change")
+axs[1].scatter(z,avg_rel_phi)#,label="Average relative change")
+axs[1].scatter(z,max_phi)#,label="Max " + r"$\Phi$")
+axs[1].set_yscale('log')
+axs[1].invert_xaxis()
+axs[1].set_xlabel('z')
+axs[1].set_title(r"$d\tau = 0.0025$")
+#z,rel_phi,rel_psi,max_phi,max_psi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1test2/potentials.txt")
 #plt.plot(z,max_phi)
 #plt.scatter(z,max_psi)
-plt.scatter(z,rel_psi)
+#plt.scatter(z,rel_psi)
 
-plt.yscale('log')
-plt.gca().invert_xaxis()
+#plt.yscale('log')
+#plt.gca().invert_xaxis()
+#plt.ylim(10**(-5),10**7)
+#plt.xlabel('z')
+#plt.legend()
+#plt.tight_layout()
+fig.legend(loc=(0.09,0.01),fancybox=True, shadow=True, ncol=3,fontsize=13)
+plt.subplots_adjust(top=0.965,
+bottom=0.16,
+left=0.075,
+right=0.99,
+hspace=0.275,
+wspace=0.075)
+plt.subplot_tool()
+
+plt.setp(axs,ylim=(1e-5,1e+7),xlim=(101,0))
+
 plt.show()
 sys.exit(0)
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N1/div_variables.txt"
-plot(file,"avg_pi","new","mediumblue")
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N5/div_variables.txt"
-plot(file,"avg_pi","new","orange")
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/variable_dtau/N10/div_variables.txt"
-plot(file,"avg_pi","new","seagreen")
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/old/variable_dtau/N1/div_variables.txt"
-plot(file,"avg_pi","old","mediumblue",marker = "x",s=70)
+"""
+ #read_div_variables("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/123002/N1/div_variables.txt")
+fig,axs = plt.subplots(2,2,figsize=(7.5,7.5))
+marker = "x"
+s=70
+root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/comparing_versions/"
+file = root + "new_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,0].scatter(z,abs(avg_pi),label= "New"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="mediumblue")
+axs[0,0].set_title("|$\mathrm{Average}\ \mathcal{H}\pi$|")
+axs[0,0].set_yscale('log')
+axs[0,0].set_xlabel('z')
+axs[0,0].invert_xaxis()
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/old/variable_dtau/N5/div_variables.txt"
-plot(file,"avg_pi","old","orange",marker = "x",s=70)
+file = root + "old_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,0].scatter(z,abs(avg_pi),label= "Old"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="mediumblue",marker = marker,s=s)
 
-file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/old/variable_dtau/N10/div_variables.txt"
-plot(file,"avg_pi","old","seagreen",marker = "x",s=70)
+file = root + "new_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,0].scatter(z,abs(avg_pi),label= "New"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="orange")
+
+file = root + "old_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,0].scatter(z,abs(avg_pi),label= "Old"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="orange",marker = marker,s=s)
+
+file = root + "new_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,0].scatter(z,abs(avg_pi),label= "New"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="seagreen")
+
+
+
+
+
+file = root + "old_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,0].scatter(z,abs(avg_pi),label= "Old"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="seagreen",marker = marker,s=s)
+#axs[0,0].legend(loc='upper center')
+
+#####################################################################################
+
+file = root + "new_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,0].scatter(z,abs(max_pi),color="mediumblue")
+axs[1,0].set_title("$\mathrm{Max}\ |\mathcal{H}\pi |$")
+axs[1,0].set_yscale('log')
+axs[1,0].set_xlabel('z')
+axs[1,0].invert_xaxis()
+
+file = root + "new_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,0].scatter(z,abs(max_pi),color="orange")
+
+file = root + "new_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,0].scatter(z,abs(max_pi),color="seagreen")
+
+file = root + "old_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,0].scatter(z,abs(max_pi),color="mediumblue",marker = marker,s=s)
+
+file = root + "old_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,0].scatter(z,abs(max_pi),color="orange",marker = marker,s=s)
+
+file = root + "old_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,0].scatter(z,abs(max_pi),color="seagreen",marker = marker,s=s)
+#axs[1,0].legend()
+
+#####################################################################################
+
+file = root + "new_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,1].scatter(z,abs(max_zeta),color="mediumblue")
+axs[1,1].set_title("$\mathrm{Max}\ |\zeta |$")
+axs[1,1].set_yscale('log')
+axs[1,1].set_xlabel('z')
+axs[1,1].invert_xaxis()
+
+file = root + "new_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,1].scatter(z,abs(max_zeta),color="orange")
+
+file = root + "new_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,1].scatter(z,abs(max_zeta),color="seagreen")
+
+file = root + "old_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,1].scatter(z,abs(max_zeta),color="mediumblue",marker = marker,s=s)
+
+file = root + "old_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,1].scatter(z,abs(max_zeta),color="orange",marker = marker,s=s)
+
+file = root + "old_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[1,1].scatter(z,abs(max_zeta),color="seagreen",marker = marker,s=s)
+#axs[1,1].legend()
+#####################################################################################
+
+
+file = root + "new_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,1].scatter(z,abs(avg_zeta),color="mediumblue")
+axs[0,1].set_title("|$\mathrm{Average}\ \zeta$|")
+axs[0,1].set_yscale('log')
+axs[0,1].set_xlabel('z')
+axs[0,1].invert_xaxis()
+
+file = root + "new_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,1].scatter(z,abs(avg_zeta),color="orange")
+
+file = root + "new_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,1].scatter(z,abs(avg_zeta),color="seagreen")
+
+file = root + "old_1em7/N1/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,1].scatter(z,abs(avg_zeta),color="mediumblue",marker = marker,s=s)
+
+file = root + "old_1em7/N5/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,1].scatter(z,abs(avg_zeta),color="orange",marker = marker,s=s)
+
+file = root + "old_1em7/N10/div_variables.txt"
+z,avg_pi,max_pi,avg_zeta,max_zeta, cs2_kessence,N_kessence = read_div_variables(file)
+axs[0,1].scatter(z,abs(avg_zeta),color="seagreen",marker = marker,s=s)
+#axs[0,1].legend()
+
+#####################################################################################
+#fig.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+#           ncol=3, borderaxespad=0.)
+#loc=(0.19,0)
+########fig.legend(loc="lower center",fancybox=True, shadow=True, ncol=3)
+########plt.subplot_tool()
+########plt.subplots_adjust(top=0.965,
+########bottom=0.145,
+########left=0.065,
+########right=0.99,
+########hspace=0.275,
+########wspace=0.2)
+########plt.setp(axs, xlim=(1.9,1.7))#,ylim=(1e-8,1e+5))
+
+#plt.tight_layout()
+plt.show()
+"""
+
+
+
+
+"""
+file = root + "new_1em7/N1/div_variables.txt"
+plot(file,"max_zeta","New","mediumblue")
+
+file = root + "new_1em7/N5/div_variables.txt"
+plot(file,"max_zeta","New","orange")
+
+file = root + "new_1em7/N10/div_variables.txt"
+plot(file,"max_zeta","New","seagreen")
+
+file = root + "old_1em7/N1/div_variables.txt"
+plot(file,"max_zeta","Old","mediumblue",marker = "x",s=70)
+
+file = root + "old_1em7/N5/div_variables.txt"
+plot(file,"max_zeta","Old","orange",marker = "x",s=70)
+
+file = root + "old_1em7/N10/div_variables.txt"
+plot(file,"max_zeta","Old","seagreen",marker = "x",s=70)
 
 ###file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/results/test_implementation/new/N1/div_variables.txt"
 ###plot(file,"max_zeta","new","mediumblue")
@@ -442,10 +644,20 @@ plt.gca().invert_xaxis()
 #plt.ylim(-10,100)
 plt.legend()
 plt.yscale('log')
+plt.xlabel('z')
+#plt.ylabel('')
 plt.show()
+"""
 
 
 
+
+
+
+
+
+
+sys.exit()
 
 
 def CLASS_file(file):

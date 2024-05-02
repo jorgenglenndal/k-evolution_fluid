@@ -108,7 +108,7 @@ class visualization_class:
                 sys.exit(1)
 
             data = file[keys[0]][()]  # returns as a numpy array. See hdf5 documentation online
-
+            #print(data)
             #print(type(file[keys[0]])) 
         if self.verbose_bool and print_shape:
             print("Shape of " + self.filename[i] +" = " +str(np.shape(data)))
@@ -626,7 +626,7 @@ class visualization_class:
                         sys.exit(1)
                     if self.verbose_bool: print("Saving files as ./tmp_i.png")
                     #mlab.jpeg_quality = 100
-                    mlab.savefig("tmp_%04d.png" % i,size=(40,40))
+                    mlab.savefig("tmp_%04d.png" % i,size=(28,28))
                 if self.move_camera_bool:
                     self.move_camera_func()
                 if self.show_bool: 
