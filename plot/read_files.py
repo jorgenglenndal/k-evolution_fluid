@@ -363,13 +363,13 @@ plt.tight_layout()
 plt.show()
 """
 
-"""
-blowup, cs2,dt = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N1/source/",True,False)
+
+blowup, cs2,dt = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N5_new/source/",True,False)
 plt.title(r'$N_\mathrm{grid}=N_\mathrm{particles}=256^3, \ L = \ 300\mathrm{Mpc/h}, \ w = -0.9, \ \   c_s^2=10^{-7}$',size=12)
 print(blowup)
 print(dt)
 plt.scatter(blowup,dt,label="DE sourcing gravity",s=100)
-blowup, cs2,dt = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N1/not_source/",True,False)
+blowup, cs2,dt = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N5_new/not_source/",True,False)
 print(blowup)
 print(dt)
 plt.scatter(blowup,dt,marker="*",label="DE not sourcing gravity",s=100)
@@ -384,7 +384,7 @@ plt.tight_layout()
 plt.legend()
 #plt.savefig("fig7_N1.pdf")
 plt.show()
-"""
+sys.exit(0)
 """
 blowup, cs2 = blowup_redshifts_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig2/not_source/",False,False)
 plt.scatter(blowup,cs2,s=100)
@@ -400,6 +400,8 @@ plt.show()
 
 #z,rel_phi,rel_psi,max_phi,max_psi,avg_rel_phi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/not_source/N512/potentials.txt")
 
+
+"""
 fig,axs = plt.subplots(1,2,figsize=(6.5,6.5),sharey=True)
 
 z,rel_phi,rel_psi,max_phi,max_psi,avg_rel_phi = read_potentials("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/fig7/N1/not_source/dt_04/potentials.txt")
@@ -444,7 +446,9 @@ plt.subplot_tool()
 plt.setp(axs,ylim=(1e-5,1e+7),xlim=(101,0))
 
 plt.show()
-sys.exit(0)
+
+"""
+#sys.exit(0)
 
 
 
@@ -657,7 +661,7 @@ plt.show()
 
 
 
-sys.exit()
+#sys.exit()
 
 
 def CLASS_file(file):
@@ -682,9 +686,9 @@ def CLASS_file(file):
 
 
 
-z = CLASS_file("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/class_background.dat")
-print(z)
-sys.exit(0)
+#z = CLASS_file("/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/class_background.dat")
+#print(z)
+#sys.exit(0)
 
 
 
@@ -702,46 +706,117 @@ def equality(time,a,b): # same length of all lists
             return (time[i+1] + time[i])/2
 
 
+
+fig,axs = plt.subplots(2,2,figsize=(7.5,7.5),sharex='col', sharey='row')
+marker = "x"
+s=70
 a, z, DE, M ,Rad = read_DE_a("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_1/rho_i_rho_crit_0.txt")
-#print(equality(a,DE,M))
-#sys.exit(0)
-plt.title(r"$\rho_i/\rho_\mathrm{crit,0} \ , \quad c_s^2=1,\ w\approx -1$")
-plt.semilogy(np.log(a),DE,label="DE")
-plt.semilogy(np.log(a),Rad,label="Radiation")
-plt.semilogy(np.log(a),M,label="Matter")
-plt.semilogy(np.log(np.ones(2)*equality(a,DE,M)),np.array([1e-10,1e+30]),"--",label="Cosmic time = 10.3 [Gyr]",color="k")
-plt.xlabel("ln a")
-plt.legend()
-plt.xlim(-15,0.1)
-plt.ylim(1e-5,1e+23)
-plt.savefig("/uio/hume/student-u23/jorgeagl/src/master/master_project/rand_figs/coincidence_w1.pdf")
-#plt.gca().invert_xaxis()
-plt.show()
-#sys.exit(0)
+#axs[0,0].scatter(z,abs(avg_pi),label= "New"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="mediumblue")
+axs[0,0].set_title(r"$\rho_i/\rho_\mathrm{crit,0} \ , \quad c_s^2=1,\ w\approx -1$")
+axs[0,0].plot(np.log(a),DE,label="DE")
+axs[0,0].plot(np.log(a),Rad,label="Radiation")
+axs[0,0].plot(np.log(a),M,label="Matter")
+axs[0,0].plot(np.log(np.ones(2)*equality(a,DE,M)),np.array([1e-10,1e+30]),"--",label="Cosmic time = 10.3 [Gyr]",color="k")
+axs[0,0].set_xlim(-15,0.1)
+axs[0,0].set_ylim(1e-5,1e+23)
+axs[0,0].set_yscale('log')
+axs[0,0].set_xlabel(r"$\ln (a)$")
 
 
+
+a, z, DE, M ,Rad = read_DE_a("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_0/rho_i_rho_crit_0.txt")
+#axs[0,0].scatter(z,abs(avg_pi),label= "New"+ ", "  + r"N$_\mathrm{kess} =$ " +str(int(N_kessence)),color="mediumblue")
+axs[0,1].set_title(r"$\rho_i/\rho_\mathrm{crit,0} \ , \quad c_s^2=1,\ w\approx 0$")
+axs[0,1].plot(np.log(a),DE)#,label="DE")
+axs[0,1].plot(np.log(a),Rad)#,label="Radiation")
+axs[0,1].plot(np.log(a),M)#,label="Matter")
+#axs0110].plot(np.log(np.ones(2)*equality(a,DE,M)),np.array([1e-10,1e+30]),"--",label="Cosmic time = 10.3 [Gyr]",color="k")
+axs[0,1].set_xlim(-15,0.1)
+axs[0,1].set_ylim(1e-5,1e+23)
+axs[0,1].set_yscale('log')
+axs[0,1].set_xlabel(r"$\ln (a)$")
+
+#######################################################################################
+a, z, Omega_DE, Omega_M, Omega_Rad = Omega_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_1/Omega.txt")
+
+axs[1,0].set_title(r"$\Omega_i \ , \quad c_s^2=1,\ w\approx -1$")
+axs[1,0].plot(np.log(a),Omega_DE)#,label=r"$\Omega_\mathrm{DE}$")
+axs[1,0].plot(np.log(a),Omega_Rad)#,label=r"$\Omega_\mathrm{Rad}$")
+axs[1,0].plot(np.log(a),Omega_M)#,label=r"$\Omega_\mathrm{M}$")
+#axs[1,0].plot(np.log(np.ones(2)*equality(a,DE,M)),np.array([1e-10,1e+30]),"--",label="Cosmic time = 10.3 [Gyr]",color="k")
+axs[1,0].set_xlim(-15,0.1)
+#axs[1,0].set_ylim(1e-5,1e+23)
+#axs[1,0].set_yscale('log')
+axs[1,0].set_xlabel(r"$\ln (a)$")
 
 a, z, Omega_DE, Omega_M, Omega_Rad = Omega_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_0/Omega.txt")
-sum = np.zeros(len(a))
-#sum[:] = Omega_DE[:]+ Omega_CDM[:]+ Omega_b[:]+ Omega_g[:]
-plt.title(r"$\Omega_i \ , \quad c_s^2=1,\ w\approx 0$")
-plt.plot(np.log(a),Omega_DE,label=r"$\Omega_\mathrm{DE}$")
-plt.plot(np.log(a),Omega_Rad,label=r"$\Omega_\mathrm{Rad}$")
-plt.plot(np.log(a),Omega_M,label=r"$\Omega_\mathrm{M}$")
-#plt.plot(np.log(a),Omega_b,label=r"$\Omega_\mathrm{b}$")
-plt.xlabel(r"$\ln (a)$")
-#plt.plot(np.log(a),sum)
-#plt.plot(z,Omega_DE,label="DE")
-#plt.plot(z,Omega_CDM,label="CDM")
-#plt.plot(z,Omega_b,label="b")
-#plt.plot(z,Omega_g,label="g")
 
-plt.legend()
-#plt.gca().invert_xaxis()
-plt.xlim(-15,0.1)
-#plt.savefig("/uio/hume/student-u23/jorgeagl/src/master/master_project/rand_figs/Omega_w0.pdf")
+axs[1,1].set_title(r"$\Omega_i \ , \quad c_s^2=1,\ w\approx 0$")
+axs[1,1].plot(np.log(a),Omega_DE)#,label=r"$\Omega_\mathrm{DE}$")
+axs[1,1].plot(np.log(a),Omega_Rad)#,label=r"$\Omega_\mathrm{Rad}$")
+axs[1,1].plot(np.log(a),Omega_M)#,label=r"$\Omega_\mathrm{M}$")
+#axs[1,0].plot(np.log(np.ones(2)*equality(a,DE,M)),np.array([1e-10,1e+30]),"--",label="Cosmic time = 10.3 [Gyr]",color="k")
+axs[1,1].set_xlim(-15,0.1)
+#axs[1,0].set_ylim(1e-5,1e+23)
+#axs[1,0].set_yscale('log')
+axs[1,1].set_xlabel(r"$\ln (a)$")
+
+#loc=(0.19,0)
+fig.legend(loc="lower center",fancybox=True, shadow=True, ncol=4)
+
+plt.subplots_adjust(top=0.965,
+bottom=0.11,
+left=0.06,
+right=0.985,
+hspace=0.205,
+wspace=0.04)
+#plt.setp(axs, xlim=(1.9,1.7))#,ylim=(1e-8,1e+5))
+#axs[0,0].invert_xaxis()
+plt.subplot_tool()
 plt.show()
-sys.exit()
+
+
+
+#a, z, DE, M ,Rad = read_DE_a("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_1/rho_i_rho_crit_0.txt")
+##print(equality(a,DE,M))
+##sys.exit(0)
+#plt.title(r"$\rho_i/\rho_\mathrm{crit,0} \ , \quad c_s^2=1,\ w\approx -1$")
+#plt.semilogy(np.log(a),DE,label="DE")
+#plt.semilogy(np.log(a),Rad,label="Radiation")
+#plt.semilogy(np.log(a),M,label="Matter")
+#plt.semilogy(np.log(np.ones(2)*equality(a,DE,M)),np.array([1e-10,1e+30]),"--",label="Cosmic time = 10.3 [Gyr]",color="k")
+#plt.xlabel("ln a")
+#plt.legend()
+#plt.xlim(-15,0.1)
+#plt.ylim(1e-5,1e+23)
+##plt.savefig("/uio/hume/student-u23/jorgeagl/src/master/master_project/rand_figs/coincidence_w1.pdf")
+##plt.gca().invert_xaxis()
+#plt.show()
+#sys.exit(0)
+
+
+
+#a, z, Omega_DE, Omega_M, Omega_Rad = Omega_func("/mn/stornext/d5/data/jorgeagl/kevolution_output/results/coincidence_problem/w_0/Omega.txt")
+#sum = np.zeros(len(a))
+##sum[:] = Omega_DE[:]+ Omega_CDM[:]+ Omega_b[:]+ Omega_g[:]
+#plt.title(r"$\Omega_i \ , \quad c_s^2=1,\ w\approx 0$")
+#plt.plot(np.log(a),Omega_DE,label=r"$\Omega_\mathrm{DE}$")
+#plt.plot(np.log(a),Omega_Rad,label=r"$\Omega_\mathrm{Rad}$")
+#plt.plot(np.log(a),Omega_M,label=r"$\Omega_\mathrm{M}$")
+##plt.plot(np.log(a),Omega_b,label=r"$\Omega_\mathrm{b}$")
+#plt.xlabel(r"$\ln (a)$")
+##plt.plot(np.log(a),sum)
+##plt.plot(z,Omega_DE,label="DE")
+##plt.plot(z,Omega_CDM,label="CDM")
+##plt.plot(z,Omega_b,label="b")
+##plt.plot(z,Omega_g,label="g")
+#
+#plt.legend()
+##plt.gca().invert_xaxis()
+#plt.xlim(-15,0.1)
+##plt.savefig("/uio/hume/student-u23/jorgeagl/src/master/master_project/rand_figs/Omega_w0.pdf")
+#plt.show()
+#sys.exit()
 
 
 

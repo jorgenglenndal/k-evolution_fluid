@@ -173,7 +173,7 @@ class visualization_class:
                 rng = np.random.default_rng(self.mask_seed)
                 
             random = rng.random(size=self.n_grid**3)   
-            random = random.reshape(self.shape)
+            random = random.reshape(int(self.shape[2]),int(self.shape[1]),int(self.shape[0]))
             self.condition = random >= (100-self.mask_percent)/100
             actual_percent = len((self.condition[self.condition]).flatten())/self.n_grid**3*100
             if self.verbose_bool: print(f"Percent of data kept: {actual_percent:.3f}")
@@ -619,6 +619,9 @@ class visualization_class:
             #mlab.savefig("divergence_mayavi_061053.png")    
             #mlab.show()
             if self.plot_bool:
+                # Mod here
+                ###mlab.move(2.65,-0.19,0.22)
+                # End mod
                 #if self.mask_bool == False and self.verbose_bool: print("Plotting without masking... May be very slow.")
                 if self.save_bool:
                     if int(len(self.filename)) > 10001:
@@ -755,58 +758,3 @@ class visualization_class:
                 print(mlab.view()) 
                 yield
         anim()
-
-
-
-"""
-
-file = []
-root = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test/"
-for i in range(1,51):
-    #("tmp_%04d.png" % i)
-    #file.append(root + "snap_%03d_delta_rho_fluid.h5" % i)
-    file.append(root + "delta_rho_fluid_" + str(i) +  ".h5")
-#print(file)
-#sys.exit(0)
-
-
-divergence ="/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test4/" +"snap_000_div_v_upper_fluid.h5"
-overdensity ="/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/test4/"+ "snap_000_delta_rho_fluid.h5"
-#test_file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/new_update_funcs/" + "phi_old_test.h5"
-new_div = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/140601/"  + "snap_000_div_v_upper_fluid.h5"#"div_v_upper_fluid_1.h5"
-new_density = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/140601/"  + "snap_000_delta_rho_fluid.h5"#"div_v_upper_fluid_1.h5"
-
-test_file = "/mn/stornext/d5/data/jorgeagl/kevolution_output/test/tests/remove/hiclass_tests/test1/snap_001_v_upper_i_fluid.h5"
-#N = 25
-#A = np.zeros((N,N,N))
-#for k in range(N):
-#    for j in range(N):
-#        for i in range(N):
-#            A[k,j,i] = i**5-j**5+k**5
-#
-#np.save("A_test",A)
-
-
-#test = visualization_class("A_test.npy",filetype="npy")# 
-#test = visualization_class(filename=divergence)# ,indices=["singles",0])
-test = visualization_class(filename=test_file)#
-test.rescale_all_data(1000000000)
-
-##test = plot_class(test_file)
-#test = plot_class(file,indices=["singles",49])
-test.symmetric_colorbar()
-
-test.scatter(rescale_factor=1)
-#test.log_scale(method="split")
-#test.save()
-#test.move_camera()
-#test.help_indexing()
-test.mask(percentile=(0.5,99.9,"outside"),method="limits") 
-#test.mask(percent=2,method="rng")
-#test.offscreen_rendering()
-test.show()
-#test.move_camera()
-test.execute()
-#print(test.rescale_data_factor_positive)
-print("Done")
-"""
